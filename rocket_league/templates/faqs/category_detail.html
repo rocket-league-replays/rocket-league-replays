@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+    {% for faq in category.faq_set.all %}
+        <a href="{{ faq.get_absolute_url }}">{{ faq.question }} - {{ faq.answer }}</a>
+    {% empty %}
+        <p>This category has no questions in it yet</p>
+    {% endfor %}
+{% endblock content_primary %}

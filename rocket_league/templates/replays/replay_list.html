@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Map</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Region / Server</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for replay in object_list %}
+                <tr data-href="{{ replay.get_absolute_url }}">
+                    <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
+                    <td>{{ replay.map }}</td>
+                    <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                    <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
+                    <td>{{ replay.server_name }}</td>
+                    <td>{{ replay.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+$(function() {
+    $('tr[data-href]').on('click', function(e) {
+        window.location = $('a[href]:first-of-type', this).attr('href');
+        return false;
+    });
+})
+</script>
+{% endblock content_primary %}

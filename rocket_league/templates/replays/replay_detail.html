@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-6 columns">
+        <h3>Game information</h3>
+
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <td>
+                        Replay ID:
+                    </td>
+                    <td>
+                        <a href="{{ replay.file.url }}" target="_blank">{{ replay.replay_id }}</a>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Tiemstamp:</td>
+                    <td>{{ replay.timestamp }}</td>
+                </tr>
+
+                <tr>
+                    <td>Uploader:</td>
+                    <td>{{ replay.player_name }}</td>
+                </tr>
+
+                <tr>
+                    <td>Map name:</td>
+                    <td>{{ replay.map }}</td>
+                </tr>
+
+                <tr>
+                    <td>Server name:</td>
+                    <td>{{ replay.server_name }}</td>
+                </tr>
+
+                <tr>
+                    <td>Game size:</td>
+                    <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                </tr>
+
+                <tr>
+                    <td>Match type:</td>
+                    <td>{{ replay.match_type }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="medium-6 columns">
+        <h3>Teams</h3>
+
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th><span class="primary">Blue Team</span></th>
+                    <th><span class="secondary">Orange Team</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orange, blue in replay.player_pairs %}
+                <tr>
+                    <td>
+                        {% if orange %}{{ orange }}{% endif %}
+                    </td>
+                    <td>
+                        {% if blue %}{{ blue }}{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
+    </div>
+</div>
+<div class="row">
+
+    <div class="medium-12 columns">
+        <h3>Goals</h3>
+
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th colspan="2">Scorer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for goal in object.goal_set.all %}
+                <tr>
+                    <td>{{ goal.number }}</td>
+                    <td>
+                        {% if goal.player.team == 0 %}
+                            <span class="primary">{{ goal.player.player_name }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if goal.player.team == 1 %}
+                            <span class="secondary">{{ goal.player.player_name }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tr>
+                    <td>Final score:</td>
+                    <td>{{ replay.team_0_score }}</td>
+                    <td>{{ replay.team_1_score }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content_primary %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+    {% for category in faqcategory_list %}
+        <a href="{{ pages.current.get_absolute_url }}categories/{{ category.url_title }}">{{ category.title }}</a>
+    {% empty %}
+        <p>There have been no categories added yet.</p>
+    {% endfor %}
+{% endblock content_primary %}

@@ -1,0 +1,17 @@
+.navigation {
+    min-height: 60px;
+    margin: 0;
+    text-align: center;
+    list-style: none;
+    text-transform: uppercase;
+
+    li {
+        line-height: 60px;
+        display: inline-block;
+        font-size: 14px;
+
+        & + li {
+            margin-left: 15px;
+        }
+    }
+}

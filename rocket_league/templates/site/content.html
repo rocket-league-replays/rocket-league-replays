@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+{% with columns=pages.current.contentcolumn_set.all %}
+{% if columns %}
+<div class="content-columns">
+    {% for column in columns %}
+        <a class="medium-3 columns content-columns--column" href="{{ column.url }}">
+            <div class="content-columns--background" style="background-image:url({{ column.image.file.url }});"></div>
+            <h4 class="content-columns--heading">{{ column.title }}</h4>
+        </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block footer %}{% endblock %}

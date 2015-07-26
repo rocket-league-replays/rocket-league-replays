@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load html %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <table width="100%">
+            <tbody>
+                {% for faq in object_list %}
+                <tr>
+                    <th><a href="{{ faq.get_absolute_url }}">{{ faq.question }}</a></th>
+                </tr>
+                <tr>
+                    <td>{{ faq.answer|html }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content_primary %}

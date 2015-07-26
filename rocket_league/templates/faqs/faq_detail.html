@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load html %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <th>{{ faq.question }}</th>
+                </tr>
+                <tr>
+                    <td>{{ faq.answer|html }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock content_primary %}
