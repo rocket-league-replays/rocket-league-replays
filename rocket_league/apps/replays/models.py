@@ -13,6 +13,12 @@ class Map(models.Model):
         max_length=100,
     )
 
+    image = models.FileField(
+        upload_to='uploads/files',
+        blank=True,
+        null=True,
+    )
+
     def __unicode__(self):
         return self.title or self.slug
 
@@ -24,6 +30,7 @@ class Replay(models.Model):
     )
 
     replay_id = models.CharField(
+        "replay ID",
         max_length=100,
         blank=True,
         null=True,
@@ -78,6 +85,9 @@ class Replay(models.Model):
     processed = models.BooleanField(
         default=False,
     )
+
+    class Meta:
+        ordering = ['-timestamp']
 
     def __str__(self):
         return '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
