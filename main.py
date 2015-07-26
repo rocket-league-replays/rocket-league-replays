@@ -164,9 +164,9 @@ class ReplayParser(object):
     def get_playername(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
 
-        search = self.playername_regexp.search(hex_line)
+        search = self.playername_regexp.findall(hex_line)
         if search:
-            obj.playername = search.group(1).decode('hex')
+            obj.playername = search[-1].decode('hex')
 
     def get_matchtype(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
