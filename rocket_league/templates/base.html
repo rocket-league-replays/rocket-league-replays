@@ -49,17 +49,16 @@
 
         <header>
             <ul class="navigation">
-                {% get_navigation pages.homepage.navigation section=pages.homepage as navigation %}
-                {% for entry in navigation %}
-                    <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
-
-                    {% if not forloop.last %}
-                        <li class="separator">/</li>
-                    {% endif %}
-                {% endfor %}
-
+                <li><a href="/">Rocket League Replays</a></li>
                 <li class="separator">/</li>
+
                 <li><a href="{% url 'replay:list' %}">Replays</a></li>
+                <li class="separator">/</li>
+
+                <li><a href="/faqs/">FAQs</a></li>
+                <li class="separator">/</li>
+
+                <li><a href="{% url 'replay:upload' %}">Upload a replay</a></li>
             </ul>
         </header>
 

@@ -1,5 +1,5 @@
 # This Python file uses the following encoding: utf-8
-from ..apps.replays.models import Map
+from ..apps.replays.models import Replay, Map
 
 from datetime import datetime
 from glob import glob
@@ -133,12 +133,25 @@ class ReplayParser(object):
             for goal in search:
                 obj.goals.append((goal[0].decode('hex'), goal[1]),)
 
-    def get_id(self, obj, line):
+    def get_id(self, obj, line, check=False):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
 
         search = self.id_regexp.search(hex_line)
         if search:
-            obj.replay_id = search.group(1).decode('hex')
+            value = search.group(1).decode('hex')
+
+            if check:
+                # Is there already a replay with this ID?
+                existing_obj = Replay.objects.filter(
+                    replay_id=value,
+                )
+
+                if existing_obj:
+                    return existing_obj[0]
+                else:
+                    return False
+
+            obj.replay_id = value
 
     def get_playername(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
