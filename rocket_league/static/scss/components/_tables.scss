@@ -1,0 +1,8 @@
+tr[data-href] {
+    cursor: pointer;
+
+    &:hover td {
+        background-color: #efefef;
+    }
+}
+
