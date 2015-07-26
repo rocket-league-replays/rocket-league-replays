@@ -23,9 +23,9 @@ if platform.python_implementation() == "PyPy":
 
 # The name of this site.  Used for branding in the online admin area.
 
-SITE_NAME = "Example"
+SITE_NAME = "Rocket League Replays"
 
-SITE_DOMAIN = "example.com"
+SITE_DOMAIN = "rlreplays.com"
 
 PREPEND_WWW = True
 
@@ -152,8 +152,6 @@ INSTALLED_APPS = [
     'server_management',
     'django_extensions',
     'cachalot',
-
-    'social.apps.django_app.default',
 ]
 
 if sys.version_info[0] == 3:
@@ -281,42 +279,6 @@ NEWS_APPROVAL_SYSTEM = False
 
 GOOGLE_ANALYTICS = ''
 
-# You can get your Client ID & Secret here: https://creativesdk.adobe.com/myapps.html
-ADOBE_CREATIVE_SDK_ENABLED = False
-ADOBE_CREATIVE_SDK_CLIENT_SECRET = ''
-ADOBE_CREATIVE_SDK_CLIENT_ID = ''
-
-# Google Apps authentication.
-
-# SETUP:
-# 1. https://console.developers.google.com/project
-# 2. "Create project"
-# 3. APIs & auth -> Consent screen
-# 4. Select email address
-# 5. APIs & auth -> APIs
-# 6. Enable "Google+ API"
-# 7. APIs & auth -> Credentials
-# 8. Create new Client ID -> Web application
-# 9. Copy Client ID to KEY below.
-# 10. Copy Client Secret to SECRET below.
-# 11. Edit settings
-# 12. Set authorized domain
-
-AUTHENTICATION_BACKENDS = (
-    'social.backends.google.GooglePlusAuth',
-    'django.contrib.auth.backends.ModelBackend'
-)
-
-SOCIAL_AUTH_GOOGLE_PLUS_KEY = ''
-SOCIAL_AUTH_GOOGLE_PLUS_SECRET = ''
-WHITELISTED_DOMAINS = ['onespacemedia.com']
-SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['first_name', 'last_name']
-
-SOCIAL_AUTH_LOGIN_REDIRECT_URL = '/admin/'
-SOCIAL_AUTH_PIPELINE = DEFAULT_AUTH_PIPELINE + (
-    'cms.pipeline.make_staff',
-)
-
 SILENCED_SYSTEM_CHECKS = [
     '1_6.W001',
     # '1_6.W002'
@@ -345,5 +307,3 @@ if 'test' in sys.argv:
 
     if 'cms.middleware.LocalisationMiddleware' in MIDDLEWARE_CLASSES:
         MIDDLEWARE_CLASSES.remove('cms.middleware.LocalisationMiddleware')
-
-GEOIP_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../geoip/"))
