@@ -23,6 +23,8 @@ urlpatterns = patterns(
     url(r'^admin/password_change/done/$', 'django.contrib.auth.views.password_change_done', name='password_change_done'),
     url(r"^admin/", include(admin.site.urls)),
 
+    url(r'replays/', include('rocket_league.apps.replays.urls', namespace='replay')),
+
     # Permalink redirection service.
     url(r"^r/(?P<content_type_id>\d+)-(?P<object_id>[^/]+)/$", "django.contrib.contenttypes.views.shortcut", name="permalink_redirect"),
 

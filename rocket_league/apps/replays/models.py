@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from django.db import models
 
 
@@ -38,6 +39,12 @@ class Replay(models.Model):
 
     player_name = models.CharField(
         max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    player_team = models.IntegerField(
+        default=0,
         blank=True,
         null=True,
     )
@@ -86,6 +93,39 @@ class Replay(models.Model):
         default=False,
     )
 
+    def team_x_player_list(self, team):
+        return [
+            "{}{}".format(
+                player.player_name,
+                " ({})".format(player.goal_set.count()) if player.goal_set.count() > 0 else '',
+            ) for player in self.player_set.filter(
+                team=team,
+            )
+        ]
+
+    def team_x_players(self, team):
+        return ', '.join(self.team_x_player_list(team))
+
+    def team_0_players(self):
+        return self.team_x_players(0)
+
+    def team_1_players(self):
+        return self.team_x_players(1)
+
+    def team_0_player_list(self):
+        return self.team_x_player_list(0)
+
+    def team_1_player_list(self):
+        return self.team_x_player_list(1)
+
+    def player_pairs(self):
+        return map(None, self.team_0_player_list(), self.team_1_player_list())
+
+    def get_absolute_url(self):
+        return reverse('replay:detail', kwargs={
+            'pk': self.pk,
+        })
+
     class Meta:
         ordering = ['-timestamp']
 
@@ -122,6 +162,12 @@ class Replay(models.Model):
                     number=index + 1,
                     player=player,
                 )
+
+            player, created = Player.objects.get_or_create(
+                replay=self,
+                player_name=self.player_name,
+                team=self.player_team,
+            )
 
             self.processed = True
             self.save()

@@ -146,6 +146,7 @@ INSTALLED_APPS = [
     "cms.apps.news",
 
     "rocket_league.apps.replays",
+    "rocket_league.apps.site",
 
     'server_management',
     'django_extensions',

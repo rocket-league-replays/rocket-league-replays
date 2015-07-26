@@ -28,6 +28,11 @@ class ReplayParser(object):
     )
     server_regexp = re.compile(r'((?:EU|USE|USW|OCE)\d+-[A-Z][a-z]+)')
 
+    player_team_regexp = re.compile(
+        r'5072696D617279506C617965725465616D000C000000496E7450726F7065727479000'
+        r'400000000000000([0-9a-fA-F]{2})'
+    )
+
     def parse(self, obj):
         # Open the file and process it.
         with open(obj.file.path) as f:
@@ -59,6 +64,11 @@ class ReplayParser(object):
 
         if not obj.server_name:
             self.get_server_name(obj, full_file)
+
+        self.get_player_team(obj, full_file)
+
+        if not obj.player_team:
+            obj.player_team = 0
 
         return obj
 
@@ -149,3 +159,11 @@ class ReplayParser(object):
 
         if search:
             obj.server_name = search.group(0)
+
+    def get_player_team(self, obj, line):
+        hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
+
+        search = self.player_team_regexp.search(hex_line)
+
+        if search:
+            obj.player_team = search.group(1)

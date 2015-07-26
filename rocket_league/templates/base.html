@@ -21,10 +21,13 @@
 
         {% block feeds %}{% endblock %}
 
+        <link href='http://fonts.googleapis.com/css?family=Lato:700|Open+Sans:700' rel='stylesheet' type='text/css'>
         {% compress css %}
             <link rel="stylesheet" href="/static/css/normalize.css"/>
             <link rel="stylesheet" href="/static/css/screen.css"/>
         {% endcompress %}
+
+        <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     </head>
 
     <body class="{% block body_class %}{% endblock %}">
@@ -45,31 +48,33 @@
         {% include 'browser_update.html' %}
 
         <header>
-            <h1><a href="{{pages.homepage.get_absolute_url}}">{{settings.SITE_NAME}}</a></h1>
+            <ul class="navigation">
+                {% get_navigation pages.homepage.navigation section=pages.homepage as navigation %}
+                {% for entry in navigation %}
+                    <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+
+                    {% if not forloop.last %}
+                        <li class="separator">/</li>
+                    {% endif %}
+                {% endfor %}
+
+                <li class="separator">/</li>
+                <li><a href="{% url 'replay:list' %}">Replays</a></li>
+            </ul>
         </header>
 
-        <nav>
-            {% navigation pages.homepage.navigation section=pages.homepage %}
-        </nav>
 
-        <div>
-            <article>
-                {% if not pages.is_homepage %}
-                    <nav id="nav-breadcrumbs">{% block breadcrumbs %}{% breadcrumbs %}{% endblock %}</nav>
-                {% endif %}
-                {% block header_group %}
-                    <h1>{% block header %}{% header %}{% endblock %}</h1>
-                {% endblock %}
-                {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}
-            </article>
-            <aside>
-                {% block content_secondary %}{% endblock %}
-            </aside>
-        </div>
+        <main>
+            {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}
+        </main>
 
-        <footer>
-            <p>© {% now "Y" %} Site owner.</p>
+        {% block footer %}
+        <footer class="row">
+            <div class="small-12 columns">
+            <p><small>Rocket League Replays was created by <a href="http://danielsamuels.co.uk/" target="_blank">Daniel Samuels</a>.<br>All product and company names are trademarks&trade; or registered&reg; trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them.</small></p>
+            </div>
         </footer>
+        {% endblock %}
 
         {% compress js %}
           <script src="/static/js/build/app.js"></script>
