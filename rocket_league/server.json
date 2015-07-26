@@ -1,0 +1,22 @@
+{
+    "remote": {
+        "database": {
+            "password": "", 
+            "name": "rocket_league", 
+            "user": "rocket_league"
+        }, 
+        "server": {
+            "ip": ""
+        }
+    }, 
+    "local": {
+        "database": {
+            "name": "rocket_league"
+        }
+    }, 
+    "opbeat": {
+        "organization_id": "dde034beb33d4b77bb9937c39f0c158f", 
+        "app_id": "", 
+        "secret_token": ""
+    }
+}

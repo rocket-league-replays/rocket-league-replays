@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load pages %}
+
+
+{% block title %}{% title "Page Not Found" %}{% endblock %}
+
+
+{% block header %}Page Not Found{% endblock %}
+
+
+{% block breadcrumbs %}
+    {% breadcrumbs extended=1 %}
+    Page Not Found
+{% endblock %}
+
+
+{% block content_primary %}
+    <p>We're sorry, but the page you were looking for cannot be found.</p>
+            
+    <h2>Most likely causes</h2>
+    
+    <ul>
+        <li>There might be a typing error in the address.</li>
+        <li>If you clicked on a link, it may be out of date.</li>
+    </ul>
+    
+    <h2>What you can try</h2>
+    
+    <ul>
+        <li>Re-type the address.</li>
+        <li>Go to our <a href="/">homepage</a> and look for the information you want.</li>
+        <li>Contact us, so we can help you find what you are looking for.</li>
+    </ul>
+{% endblock %}
+

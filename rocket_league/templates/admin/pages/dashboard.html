@@ -1,0 +1,82 @@
+{% extends "admin/index.html" %}
+
+{% load compress %}
+
+{% block extrahead %}
+    {{block.super}}
+    {% include "admin/cms/scripts.html" %}
+
+    <script>
+    (function(w,d,s,g,js,fs){
+      g=w.gapi||(w.gapi={});g.analytics={q:[],ready:function(f){this.q.push(f);}};
+      js=d.createElement(s);fs=d.getElementsByTagName(s)[0];
+      js.src='https://apis.google.com/js/platform.js';
+      fs.parentNode.insertBefore(js,fs);js.onload=function(){g.load('analytics');};
+    }(window,document,'script'));
+    </script>
+
+{% endblock %}
+
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block below_content %}
+
+    {% if settings.ADMIN_ANALYTICS_GOOGLE_API_KEY and settings.ADMIN_ANALYTICS_ID %}
+
+        <div class="analytics_container" style="clear: both;">
+
+            <div id="embed-api-auth-container"></div>
+
+            <div class="graphs" style="display: none;">
+
+                <h2>Hits over the last 30 days</h2>
+                <div class="box" style="margin-top: 10px; margin-bottom: 10px;">
+                    <div id="views-chart"></div>
+                </div>
+
+                <h2>Organic searches over the last 30 days</h2>
+                <div class="box" style="margin-bottom: 10px;">
+                    <div id="keyword-table"></div>
+                </div>
+
+                <h2>Page views over the last 30 days</h2>
+                <div class="box" style="margin-bottom: 10px;">
+                    <div id="pageview-table"></div>
+                </div>
+
+                <a target="_blank" class="btn go-to-analytics" href="">Go to Google Analytics</a>
+
+                <a class="btn revoke-token" href="#">Log out of Google Analytics</a>
+
+            </div>
+
+        </div>
+
+        <script>
+            var CLIENT_ID = '{{ settings.ADMIN_ANALYTICS_GOOGLE_API_KEY }}';
+            var WEBSITE_ID = '{{ settings.ADMIN_ANALYTICS_ID }}';
+        </script>
+
+        {% compress js %}
+        <script src="/static/js/admin/analytics.js"></script>
+        {% endcompress %}
+
+    {% endif %}
+{% endblock %}
+
+{% block sidebar %}
+    <div id="content-related">
+        <div class="module" id="recent-actions-module">
+            <h4 class="italic-title">Sitemap</h4>
+            <noscript>
+                <p>Please turn on javascript to activate the sitemap.</p>
+            </noscript>
+        </div>
+        <script>
+            (function($) {
+                $("#recent-actions-module").cms("sitemap");
+            }(django.jQuery));
+        </script>
+    </div>
+{% endblock %}
