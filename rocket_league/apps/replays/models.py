@@ -127,7 +127,7 @@ class Replay(models.Model):
         })
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-pk']
 
     def __str__(self):
         return '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
