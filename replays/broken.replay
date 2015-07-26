@@ -1,0 +1,53 @@
+?	  ?,?c  	      TAGame.Replay_Soccar_TA
+TeamSize   IntProperty           
+Team0Score   IntProperty           
+Team1Score   IntProperty           
+Goals    ArrayProperty ?   
+    frame   IntProperty        ?  
+        PlayerName   StrProperty           Frumentari 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty          
+        PlayerName   StrProperty    LilCrowKill 
+        PlayerTeam   IntProperty              None 
+    frame   IntProperty        ?  
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        2  
+        PlayerName   StrProperty           Frumentari 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        u  
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        )  
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        ?  
+        PlayerName   StrProperty           Frumentari 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty          
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        ?  
+        PlayerName   StrProperty               Posix 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        O  
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        X  
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None 
+    frame   IntProperty        3   
+        PlayerName   StrProperty           renzelinho 
+        PlayerTeam   IntProperty               None
+
+RecordFPS    FloatProperty          ?
+KeyframeDelay    FloatProperty           A
+MaxChannels   IntProperty        ?  
+MaxReplaySizeMB   IntProperty        
+Id   StrProperty %       !   1A0F51D247A3539C2A99D0AF848A0284 
+MapName NameProperty           trainstation_p 
+Date   StrProperty           2015-07-12:20-54
+NumFrames   IntProperty        ?!
+MatchType  NameProperty           Online 
+PlayerName   StrProperty               Posix 
+None ?     ?)J      trainstation_sfx +   u
