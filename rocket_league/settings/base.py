@@ -145,6 +145,7 @@ INSTALLED_APPS = [
     "cms.apps.media",
     "cms.apps.news",
 
+    "rocket_league.apps.faqs",
     "rocket_league.apps.replays",
     "rocket_league.apps.site",
 
