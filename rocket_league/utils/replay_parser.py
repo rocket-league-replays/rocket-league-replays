@@ -2,7 +2,6 @@
 from ..apps.replays.models import Replay, Map
 
 from datetime import datetime
-from glob import glob
 import re
 import time
 
