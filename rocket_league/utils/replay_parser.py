@@ -46,7 +46,6 @@ class ReplayParser(object):
             self.get_score(obj, full_file)
 
         self.get_goals(obj, full_file)
-        print len(obj.goals), obj.team_0_score, obj.team_1_score
         assert len(obj.goals) == sum([obj.team_0_score, obj.team_1_score])
 
         if not obj.player_name:
@@ -150,11 +149,3 @@ class ReplayParser(object):
 
         if search:
             obj.server_name = search.group(0)
-
-if __name__ == '__main__':
-    files = glob('replays/*.replay')
-
-    parser = ReplayParser()
-    parser.main(files)
-    # print files[0]
-    # parser.main(['replays/smaller2.replay'])
