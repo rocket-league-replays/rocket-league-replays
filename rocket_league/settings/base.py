@@ -10,8 +10,6 @@ for the site, database, media and email sections below.
 """
 from __future__ import unicode_literals
 
-from social.pipeline import DEFAULT_AUTH_PIPELINE
-
 import os
 import platform
 import sys
@@ -147,7 +145,7 @@ INSTALLED_APPS = [
     "cms.apps.media",
     "cms.apps.news",
 
-    "rocket_league.apps.site",
+    "rocket_league.apps.replays",
 
     'server_management',
     'django_extensions',

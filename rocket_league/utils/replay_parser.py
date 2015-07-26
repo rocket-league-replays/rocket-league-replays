@@ -1,34 +1,10 @@
 # This Python file uses the following encoding: utf-8
+from ..apps.replays.models import Map
+
+from datetime import datetime
 from glob import glob
 import re
 import time
-
-
-class Replay(object):
-    id = None
-    playername = None
-    file_path = None
-    map_name = None
-    timestamp = None
-    team_sizes = None
-    matchtype = None
-    score = (0, 0)
-    goals = []
-    team_0_players = []
-    team_1_players = []
-
-    def __init__(self, file_path):
-        self.file_path = file_path
-
-    def __str__(self):
-        return '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
-            time.strftime('%Y-%m-%d %H:%M', self.timestamp),
-            '{size}v{size}'.format(size=self.team_sizes),
-            self.matchtype,
-            self.map_name,
-            '{}-{}'.format(self.score[0], self.score[1]),
-            self.playername,
-        )
 
 
 class ReplayParser(object):
@@ -50,50 +26,40 @@ class ReplayParser(object):
         r'4D6174636854797065000D0000004E616D6550726F706572747900[0-9a-fA-F]{2}0'
         r'0000000000000[0-9a-fA-F]{2}000000([0-9a-fA-F]+?)000B000000'
     )
+    server_regexp = re.compile(r'((?:EU|USE|USW|OCE)\d+-[A-Z][a-z]+)')
 
-    def main(self, files):
-        if not isinstance(files, list):
-            raise TypeError("You must supply a list of file names.")
-
-        for replay in files:
-            obj = self.process_file(replay)
-            print obj
-
-    def process_file(self, path):
-        # Create a new Replay object.
-        obj = Replay(path)
-
+    def parse(self, obj):
         # Open the file and process it.
-        with open(path) as f:
-            for line in f:
-                if not obj.id:
-                    self.get_id(obj, line)
+        with open(obj.file.path) as f:
+            full_file = f.read()
 
-                if not obj.timestamp:
-                    self.get_timestamp(obj, line)
+        if not obj.replay_id:
+            self.get_id(obj, full_file)
 
-                if not obj.team_sizes:
-                    self.get_team_sizes(obj, line)
+        if not obj.timestamp:
+            self.get_timestamp(obj, full_file)
 
-                if not obj.score[0] or not obj.score[1]:
-                    self.get_score(obj, line)
+        if not obj.team_sizes:
+            self.get_team_sizes(obj, full_file)
 
-            # To parse the goals we have to search the whole file.
-            f.seek(0)
-            self.get_goals(obj, f.read())
-            assert len(obj.goals) == sum(obj.score)
+        if not obj.team_0_score or not obj.team_1_score:
+            self.get_score(obj, full_file)
 
-            f.seek(0)
-            if not obj.playername:
-                self.get_playername(obj, f.read())
+        self.get_goals(obj, full_file)
+        print len(obj.goals), obj.team_0_score, obj.team_1_score
+        assert len(obj.goals) == sum([obj.team_0_score, obj.team_1_score])
 
-            f.seek(0)
-            if not obj.matchtype:
-                self.get_matchtype(obj, f.read())
+        if not obj.player_name:
+            self.get_playername(obj, full_file)
 
-            f.seek(0)
-            if not obj.map_name:
-                self.get_map(obj, f.read())
+        if not obj.match_type:
+            self.get_matchtype(obj, full_file)
+
+        if not obj.map:
+            self.get_map(obj, full_file)
+
+        if not obj.server_name:
+            self.get_server_name(obj, full_file)
 
         return obj
 
@@ -102,13 +68,17 @@ class ReplayParser(object):
 
         search = self.map_name_regexp.search(hex_line)
         if search:
-            obj.map_name = search.group(1).decode('hex')
+            map_obj, created = Map.objects.get_or_create(
+                slug=search.group(1).decode('hex'),
+            )
+
+            obj.map = map_obj
 
     def get_timestamp(self, obj, line):
         result = self.timestamp_regexp.search(line)
 
         if result:
-            obj.timestamp = time.strptime(result.group(0), '%Y-%m-%d:%H-%M')
+            obj.timestamp = datetime.fromtimestamp(time.mktime(time.strptime(result.group(0), '%Y-%m-%d:%H-%M')))
 
     def get_team_sizes(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
@@ -136,12 +106,12 @@ class ReplayParser(object):
         if team_0_index != -1:
             # We have found the value.
             index = team_0_index + len(team_0_score)
-            obj.score = (int(hex_line[index:index+2], 16), obj.score[1])
+            obj.team_0_score = int(hex_line[index:index+2], 16)
 
         if team_1_index != -1:
             # We have found the value.
             index = team_1_index + len(team_1_score)
-            obj.score = (obj.score[0], int(hex_line[index:index+2], 16))
+            obj.team_1_score = int(hex_line[index:index+2], 16)
 
     def get_goals(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
@@ -159,21 +129,27 @@ class ReplayParser(object):
 
         search = self.id_regexp.search(hex_line)
         if search:
-            obj.id = search.group(1).decode('hex')
+            obj.replay_id = search.group(1).decode('hex')
 
     def get_playername(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
 
         search = self.playername_regexp.findall(hex_line)
         if search:
-            obj.playername = search[-1].decode('hex')
+            obj.player_name = search[-1].decode('hex')
 
     def get_matchtype(self, obj, line):
         hex_line = "".join("{:02x}".format(ord(c)) for c in line).upper()
 
         search = self.matchtype_regexp.search(hex_line)
         if search:
-            obj.matchtype = search.group(1).decode('hex')
+            obj.match_type = search.group(1).decode('hex')
+
+    def get_server_name(self, obj, line):
+        search = self.server_regexp.search(line)
+
+        if search:
+            obj.server_name = search.group(0)
 
 if __name__ == '__main__':
     files = glob('replays/*.replay')
