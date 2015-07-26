@@ -33,7 +33,10 @@ class Replay(object):
 
 class ReplayParser(object):
     timestamp_regexp = re.compile(r'(\d{4}-\d{2}-\d{2}:\d{2}-\d{2})')
-    map_name_regexp = re.compile(r'4D61704E616D65000D0000004E616D6550726F706572747900[0-9a-fA-F]{2}00000000000000[0-9a-fA-F]{2}000000')
+    map_name_regexp = re.compile(
+        r'4D61704E616D65000D0000004E616D6550726F706572747900[0-9a-fA-F]{2}00000'
+        r'000000000[0-9a-fA-F]{2}000000([0-9a-fA-F]+?)0005000000'
+    )
     goal_regexp = re.compile(
         r'506C617965724E616D65000C00000053747250726F706572747900[0-9a-fA-F]{2}0'
         r'0000000000000[0-9a-fA-F]{2}000000([0-9a-fA-F]+?)000B000000506C6179657'
@@ -63,9 +66,6 @@ class ReplayParser(object):
                 if not obj.id:
                     self.get_id(obj, line)
 
-                if not obj.map_name:
-                    self.get_map(obj, line)
-
                 if not obj.timestamp:
                     self.get_timestamp(obj, line)
 
@@ -88,6 +88,10 @@ class ReplayParser(object):
             if not obj.matchtype:
                 self.get_matchtype(obj, f.read())
 
+            f.seek(0)
+            if not obj.map_name:
+                self.get_map(obj, f.read())
+
         return obj
 
     def get_map(self, obj, line):
@@ -95,11 +99,7 @@ class ReplayParser(object):
 
         search = self.map_name_regexp.search(hex_line)
         if search:
-            substring = hex_line[search.end():]
-            substring_search = substring.find('0005000000')
-
-            if substring_search != -1:
-                obj.map_name = substring[:substring_search].decode('hex')
+            obj.map_name = search.group(1).decode('hex')
 
     def get_timestamp(self, obj, line):
         result = self.timestamp_regexp.search(line)
