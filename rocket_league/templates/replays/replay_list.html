@@ -58,6 +58,10 @@
                     <td>{{ replay.server_name }}</td>
                     <td>{{ replay.timestamp }}</td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">There are currently no replays to display. Try adjusting the search options above.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
