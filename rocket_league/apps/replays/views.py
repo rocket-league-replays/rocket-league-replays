@@ -1,13 +1,17 @@
-from django.views.generic import ListView, DetailView, CreateView
 from django.db.models import Q
+from django.views.generic import DetailView, CreateView
 
-from .forms import ReplayUploadForm
+from .forms import ReplayUploadForm, ReplayFilter
 from .models import Replay
 
+from django_filters.views import FilterView
 
-class ReplayListView(ListView):
+
+class ReplayListView(FilterView):
     model = Replay
     paginate_by = 20
+    template_name_suffix = '_list'
+    filterset_class = ReplayFilter
 
     def get_queryset(self):
         qs = super(ReplayListView, self).get_queryset()
