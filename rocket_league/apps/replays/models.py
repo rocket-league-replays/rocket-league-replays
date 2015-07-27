@@ -1,6 +1,8 @@
 from django.core.urlresolvers import reverse
 from django.db import models
 
+import re
+
 
 class Map(models.Model):
 
@@ -120,6 +122,19 @@ class Replay(models.Model):
 
     def player_pairs(self):
         return map(None, self.team_0_player_list(), self.team_1_player_list())
+
+    def lag_report_url(self):
+        base_url = 'https://psyonixhr.wufoo.com/forms/game-server-performance-report'
+        if not self.server_name:
+            return base_url
+
+        # Split out the server name.
+        match = re.search(r'(EU|USE|USW|OCE)(\d+)-([A-Z][a-z]+)', self.server_name).groups()
+
+        return "{}/def/field1={}&field2={}&field13={}".format(
+            base_url,
+            *match
+        )
 
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
