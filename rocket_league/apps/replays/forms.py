@@ -28,6 +28,15 @@ class ReplayUploadForm(forms.ModelForm):
 
 class ReplayFilter(django_filters.FilterSet):
 
+    player_name = django_filters.filters.CharFilter(
+        name='player__player_name',
+        lookup_type='icontains',
+    )
+
+    server_name = django_filters.filters.CharFilter(
+        lookup_type='icontains',
+    )
+
     team_sizes = django_filters.filters.ChoiceFilter(
         choices=(
             (None, 'Any'),
@@ -48,4 +57,4 @@ class ReplayFilter(django_filters.FilterSet):
 
     class Meta:
         model = Replay
-        fields = ['player_name', 'map', 'server_name', 'team_sizes', 'match_type']
+        fields = ['map', 'server_name', 'team_sizes', 'match_type']
