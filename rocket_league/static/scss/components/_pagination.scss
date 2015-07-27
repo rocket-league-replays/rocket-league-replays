@@ -1,0 +1,26 @@
+/* Overrides for pagination. */
+ul.pagination {
+    display: inline-block;
+    line-height: 32px;
+    li {
+        min-width: 32px;
+        margin-left: 0px;
+        font-weight: $font-weight-bold;
+    }
+
+    li a, li span {
+        font-weight: $font-weight-bold;
+    }
+
+    li.next{
+        margin-left: 10px;
+    }
+
+    li.previous {
+        margin-right: 10px;
+    }
+}
+
+.pagination-outer {
+	text-align: center;
+}

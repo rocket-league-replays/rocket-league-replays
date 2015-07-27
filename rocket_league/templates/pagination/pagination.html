@@ -1,0 +1,58 @@
+{% load pagination %}
+
+{% if page_obj.has_other_pages %}
+    <div class="pagination-outer">
+
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="previous">
+                    <a rel="prev" href="{% pagination_url page_obj.previous_page_number %}">Previous</a>
+                </li>
+            {% else %}
+                <li class="unavailable previous">
+                    <span>Previous</span>
+                </li>
+            {% endif %}
+
+            {% for page_num in paginator.page_range|slice:":10" %}
+                {% if page_num == page_obj.number %}
+                    <li class="current">
+                        <a href="{% pagination_url page_num %}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="{% pagination_url page_num %}">{{ page_num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.number > 10 %}
+                {% if page_obj.number > 11 %}
+                <li class="current">
+                    ...
+                </li>
+                {% endif %}
+
+                <li class="current">
+                    <a href="{% pagination_url page_obj.number %}">{{ page_obj.number }}</a>
+                </li>
+                {% if page_obj.has_next %}
+                    <li>
+                        <a href="{% pagination_url page_obj.next_page_number %}">{{ page_obj.next_page_number }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            {% if page_obj.has_next %}
+                <li class="next">
+                    <a rel="next" href="{% pagination_url page_obj.next_page_number %}">Next</a>
+                </li>
+            {% else %}
+                <li class="unavailable next">
+                    <span>Next</span>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+
+{% endif %}

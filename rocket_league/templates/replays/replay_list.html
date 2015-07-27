@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load pagination %}
 
 {% block content_primary %}
 <div class="row">
@@ -27,8 +28,11 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        {% pagination page_obj %}
     </div>
 </div>
+
 
 <script>
 $(function() {

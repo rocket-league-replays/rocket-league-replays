@@ -7,6 +7,7 @@ from .models import Replay
 
 class ReplayListView(ListView):
     model = Replay
+    paginate_by = 20
 
     def get_queryset(self):
         qs = super(ReplayListView, self).get_queryset()
