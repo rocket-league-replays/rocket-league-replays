@@ -141,9 +141,9 @@ INSTALLED_APPS = [
     "watson",
 
     "cms.apps.pages",
-    "cms.apps.links",
+    # "cms.apps.links",
     "cms.apps.media",
-    "cms.apps.news",
+    # "cms.apps.news",
 
     "rocket_league.apps.faqs",
     "rocket_league.apps.replays",
