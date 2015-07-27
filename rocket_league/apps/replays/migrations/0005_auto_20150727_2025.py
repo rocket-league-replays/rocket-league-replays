@@ -1,0 +1,22 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('replays', '0004_auto_20150726_2048'),
+    ]
+
+    operations = [
+        migrations.AlterModelOptions(
+            name='map',
+            options={'ordering': ['title']},
+        ),
+        migrations.AlterModelOptions(
+            name='replay',
+            options={'ordering': ['-pk']},
+        ),
+    ]
