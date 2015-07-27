@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load cache %}
 
 {% block content_primary %}
+{% cache 3600 'replay_detail' replay.pk %}
 <div class="row">
     <div class="medium-6 columns">
         <h3>Game information</h3>
@@ -117,4 +119,5 @@
         </table>
     </div>
 </div>
+{% endcache %}
 {% endblock content_primary %}
