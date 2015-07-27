@@ -23,7 +23,7 @@ if platform.python_implementation() == "PyPy":
 
 SITE_NAME = "Rocket League Replays"
 
-SITE_DOMAIN = "rlreplays.com"
+SITE_DOMAIN = "rocketleaguereplays.com"
 
 PREPEND_WWW = True
 
