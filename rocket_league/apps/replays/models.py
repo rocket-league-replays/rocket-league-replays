@@ -25,6 +25,9 @@ class Map(models.Model):
     def __unicode__(self):
         return self.title or self.slug
 
+    class Meta:
+        ordering = ['title']
+
 
 class Replay(models.Model):
 
