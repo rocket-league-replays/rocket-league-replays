@@ -16,6 +16,9 @@ class ReplayUploadForm(forms.ModelForm):
         parser = ReplayParser()
         response = parser.get_id(None, cleaned_data['file'].read(), check=True)
 
+        if response is None:
+            raise forms.ValidationError("The file you selected does not seem to be a valid replay file.")
+
         if isinstance(response, Replay):
             raise forms.ValidationError(mark_safe("This replay has already been uploaded, <a href='{}'>you can view it here</a>.".format(
                 response.get_absolute_url()
