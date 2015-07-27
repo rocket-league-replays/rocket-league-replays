@@ -29,7 +29,12 @@
 
         min-height: 200px;
         height: calc(25vh - 15px);
+
         @media #{$medium-up} {
+            height: calc(50vh - 30px);
+        }
+
+        @media #{$large-up} {
             height: calc(100vh - 60px);
         }
 
@@ -58,7 +63,11 @@
         transition: transform 0.5s, opacity 0.5s;
 
         position: absolute;
+        left: 50px;
+        right: 50px;
         bottom: 50px;
+
+
         font-weight: 700;
         opacity: 0;
         color: #fff;
