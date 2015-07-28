@@ -175,6 +175,9 @@ class Replay(models.Model):
         )
 
     def match_length(self):
+        if not self.num_frames or not self.record_fps:
+            return 'N/A'
+
         calculation = self.num_frames / self.record_fps
         minutes, seconds = divmod(calculation, 60)
         return '%d:%02d' % (
@@ -307,6 +310,9 @@ class Goal(models.Model):
     )
 
     def goal_time(self):
+        if not self.frame or not self.replay.record_fps:
+            return 'N/A'
+
         calculation = self.frame / self.replay.record_fps
         minutes, seconds = divmod(calculation, 60)
         return '%d:%02d' % (
