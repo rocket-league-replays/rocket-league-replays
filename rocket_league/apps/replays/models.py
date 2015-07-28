@@ -174,6 +174,14 @@ class Replay(models.Model):
             *match
         )
 
+    def match_length(self):
+        calculation = self.num_frames / self.record_fps
+        minutes, seconds = divmod(calculation, 60)
+        return '%d:%02d' % (
+            int(minutes),
+            int(seconds),
+        )
+
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
             'pk': self.pk,
@@ -201,6 +209,11 @@ class Replay(models.Model):
             # Process the file.
             parser = ReplayParser()
             data = parser.parse(self)
+
+            Goal.objects.filter(
+                replay=self,
+                frame__isnull=True,
+            ).delete()
 
             for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
@@ -292,6 +305,14 @@ class Goal(models.Model):
         blank=True,
         null=True,
     )
+
+    def goal_time(self):
+        calculation = self.frame / self.replay.record_fps
+        minutes, seconds = divmod(calculation, 60)
+        return '%d:%02d' % (
+            int(minutes),
+            int(seconds),
+        )
 
     def __unicode__(self):
         return u'Goal {} by {}'.format(

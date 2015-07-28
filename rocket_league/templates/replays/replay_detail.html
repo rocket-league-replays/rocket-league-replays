@@ -47,6 +47,13 @@
                     <td>Match type:</td>
                     <td>{{ replay.match_type }}</td>
                 </tr>
+
+                <tr>
+                    <td>Match length:</td>
+                    <td>{{ replay.match_length }}</td>
+                </tr>
+
+
                 <tr>
                     <td colspan="2">Did this match feel laggy? <a href="{{ replay.lag_report_url }}" target="_blank">Report it here</a>.</td>
                 </tr>
@@ -90,13 +97,15 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th colspan="2">Scorer</th>
+                    <th>Time</th>
+                    <th colspan="2">Goal scorer</th>
                 </tr>
             </thead>
             <tbody>
                 {% for goal in object.goal_set.all %}
                 <tr>
                     <td>{{ goal.number }}</td>
+                    <td>{{ goal.goal_time }}</td>
                     <td>
                         {% if goal.player.team == 0 %}
                             <span class="primary">{{ goal.player.player_name }}</span>
@@ -110,11 +119,12 @@
                 </tr>
                 {% endfor %}
 
-                <tr>
-                    <td>Final score:</td>
+                <tfoot>
+                    <td>Total:</td>
+                    <td>{{ replay.match_length }}</td>
                     <td>{{ replay.team_0_score }}</td>
                     <td>{{ replay.team_1_score }}</td>
-                </tr>
+                </tfoot>
             </tbody>
         </table>
     </div>
