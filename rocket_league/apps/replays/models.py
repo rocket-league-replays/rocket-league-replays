@@ -1,7 +1,11 @@
 from django.core.urlresolvers import reverse
 from django.db import models
 
+from ...utils.replay_parser import ReplayParser
+
+from datetime import datetime
 import re
+import time
 
 
 class Map(models.Model):
@@ -94,6 +98,37 @@ class Replay(models.Model):
         null=True,
     )
 
+    # Parser V2 values.
+    keyframe_delay = models.FloatField(
+        blank=True,
+        null=True,
+    )
+
+    max_channels = models.IntegerField(
+        default=1023,
+        blank=True,
+        null=True,
+    )
+
+    max_replay_size_mb = models.IntegerField(
+        "max replay size (MB)",
+        default=10,
+        blank=True,
+        null=True,
+    )
+
+    num_frames = models.IntegerField(
+        blank=True,
+        null=True,
+    )
+
+    record_fps = models.FloatField(
+        "record FPS",
+        default=30.0,
+        blank=True,
+        null=True,
+    )
+
     processed = models.BooleanField(
         default=False,
     )
@@ -160,32 +195,62 @@ class Replay(models.Model):
     def save(self, *args, **kwargs):
         super(Replay, self).save(*args, **kwargs)
 
-        if self.file and not self.processed:
-            # Imported here to avoid circular imports.
-            from ...utils.replay_parser import ReplayParser
+        # Server name
 
+        if self.file and not self.processed:
             # Process the file.
             parser = ReplayParser()
-            parser.parse(self)
+            data = parser.parse(self)
 
-            for index, goal in enumerate(self.goals):
+            for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
                     replay=self,
-                    player_name=goal[0],
-                    team=goal[1],
+                    player_name=goal['PlayerName'],
+                    team=goal['PlayerTeam'],
                 )
 
                 Goal.objects.get_or_create(
                     replay=self,
                     number=index + 1,
                     player=player,
+                    frame=goal['frame'],
                 )
 
             player, created = Player.objects.get_or_create(
                 replay=self,
-                player_name=self.player_name,
-                team=self.player_team,
+                player_name=data['PlayerName'],
+                team=data.get('PlayerTeam', 0),
             )
+
+            self.replay_id = data['Id']
+            self.player_name = data['PlayerName']
+            self.player_team = data.get('PlayerTeam', 0)
+
+            map_obj, created = Map.objects.get_or_create(
+                slug=data['MapName'],
+            )
+
+            self.map = map_obj
+            self.timestamp = datetime.fromtimestamp(
+                time.mktime(
+                    time.strptime(
+                        data['Date'],
+                        '%Y-%m-%d:%H-%M'
+                    )
+                )
+            )
+            self.team_sizes = data['TeamSize']
+            self.team_0_score = data['Team0Score']
+            self.team_1_score = data['Team1Score']
+            self.match_type = data['MatchType']
+            self.server_name = data['ServerName']
+
+            # Parser V2 values
+            self.keyframe_delay = data['KeyframeDelay']
+            self.max_channels = data['MaxChannels']
+            self.max_replay_size_mb = data['MaxReplaySizeMB']
+            self.num_frames = data['NumFrames']
+            self.record_fps = data['RecordFPS']
 
             self.processed = True
             self.save()
@@ -223,8 +288,16 @@ class Goal(models.Model):
         Player,
     )
 
+    frame = models.IntegerField(
+        blank=True,
+        null=True,
+    )
+
     def __unicode__(self):
         return u'Goal {} by {}'.format(
             self.number,
             self.player,
         )
+
+    class Meta:
+        ordering = ['number']
