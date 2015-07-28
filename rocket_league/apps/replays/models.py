@@ -218,6 +218,10 @@ class Replay(models.Model):
                 frame__isnull=True,
             ).delete()
 
+            Player.objects.filter(
+                replay=self,
+            ).delete()
+
             for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
                     replay=self,
@@ -235,12 +239,12 @@ class Replay(models.Model):
             player, created = Player.objects.get_or_create(
                 replay=self,
                 player_name=data['PlayerName'],
-                team=data.get('PlayerTeam', 0),
+                team=data.get('PrimaryPlayerTeam', 0),
             )
 
             self.replay_id = data['Id']
             self.player_name = data['PlayerName']
-            self.player_team = data.get('PlayerTeam', 0)
+            self.player_team = data.get('PrimaryPlayerTeam', 0)
 
             map_obj, created = Map.objects.get_or_create(
                 slug=data['MapName'],
@@ -256,10 +260,10 @@ class Replay(models.Model):
                 )
             )
             self.team_sizes = data['TeamSize']
-            self.team_0_score = data['Team0Score']
-            self.team_1_score = data['Team1Score']
+            self.team_0_score = data.get('Team0Score', 0)
+            self.team_1_score = data.get('Team1Score', 0)
             self.match_type = data['MatchType']
-            self.server_name = data['ServerName']
+            self.server_name = data.get('ServerName', '')
 
             # Parser V2 values
             self.keyframe_delay = data['KeyframeDelay']
