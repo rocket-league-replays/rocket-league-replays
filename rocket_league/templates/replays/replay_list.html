@@ -44,7 +44,7 @@
                     <th>Type</th>
                     <th>Score</th>
                     <th>Length</th>
-                    <th>Region / Server</th>
+                    <th>Region</th>
                     <th>Date</th>
                 </tr>
             </thead>
@@ -57,13 +57,13 @@
                             <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
                             <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
                             <td>{{ replay.match_length }}</td>
-                            <td>{{ replay.server_name }}</td>
-                            <td>{{ replay.timestamp }}</td>
+                            <td>{{ replay.region }}</td>
+                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
                         </tr>
                     {% endcache %}
                 {% empty %}
                 <tr>
-                    <td colspan="6">There are currently no replays to display. Try adjusting the search options above.</td>
+                    <td colspan="7">There are currently no replays to display. Try adjusting the search options above.</td>
                 </tr>
                 {% endfor %}
             </tbody>

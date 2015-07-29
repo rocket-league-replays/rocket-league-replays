@@ -161,6 +161,13 @@ class Replay(models.Model):
     def player_pairs(self):
         return map(None, self.team_0_player_list(), self.team_1_player_list())
 
+    def region(self):
+        if not self.server_name:
+            return 'N/A'
+
+        match = re.search(r'(EU|USE|USW|OCE)(\d+)-([A-Z][a-z]+)', self.server_name).groups()
+        return match[0]
+
     def lag_report_url(self):
         base_url = 'https://psyonixhr.wufoo.com/forms/game-server-performance-report'
         if not self.server_name:
