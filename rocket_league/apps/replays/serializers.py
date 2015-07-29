@@ -32,6 +32,11 @@ class ReplaySerializer(HyperlinkedModelSerializer):
         read_only=True,
     )
 
+    map = MapSerializer(
+        many=False,
+        read_only=True,
+    )
+
     class Meta:
         model = Replay
         fields = ["url", "file", "replay_id", "player_name", "player_team",

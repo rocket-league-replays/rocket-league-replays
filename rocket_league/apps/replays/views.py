@@ -47,15 +47,27 @@ class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns a list of all maps in the system.
+    """
+
     queryset = Map.objects.all()
     serializer_class = MapSerializer
 
 
 class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns a list of all players in all games. These values are not unique.
+    """
+
     queryset = Player.objects.all()
     serializer_class = PlayerSerializer
 
 
 class GoalViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns a list of all goals in all games.
+    """
+
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
