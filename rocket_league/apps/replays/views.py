@@ -2,9 +2,11 @@ from django.db.models import Q
 from django.views.generic import DetailView, CreateView
 
 from .forms import ReplayUploadForm, ReplayFilter
-from .models import Replay
+from .models import Goal, Map, Player, Replay
+from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 
 from django_filters.views import FilterView
+from rest_framework import viewsets
 
 
 class ReplayListView(FilterView):
@@ -31,3 +33,29 @@ class ReplayDetailView(DetailView):
 class ReplayCreateView(CreateView):
     model = Replay
     form_class = ReplayUploadForm
+
+
+class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Returns a list of all processed replays in the system.
+    """
+
+    queryset = Replay.objects.filter(
+        processed=True,
+    )
+    serializer_class = ReplaySerializer
+
+
+class MapViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Map.objects.all()
+    serializer_class = MapSerializer
+
+
+class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Player.objects.all()
+    serializer_class = PlayerSerializer
+
+
+class GoalViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Goal.objects.all()
+    serializer_class = GoalSerializer

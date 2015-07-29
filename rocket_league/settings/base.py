@@ -152,6 +152,8 @@ INSTALLED_APPS = [
     'server_management',
     'django_extensions',
     'cachalot',
+    'rest_framework',
+    'rest_framework_swagger',
 ]
 
 if sys.version_info[0] == 3:
@@ -272,6 +274,20 @@ REDACTOR_OPTIONS = {
             "class": "button primary",
         }
     ]
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
+
+SWAGGER_SETTINGS = {
+    'info': {
+        'contact': 'api@{}'.format(SITE_DOMAIN),
+        'title': '{} - API Documentation'.format(SITE_NAME)
+    }
 }
 
 

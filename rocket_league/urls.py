@@ -10,8 +10,19 @@ from cms.sitemaps import registered_sitemaps
 from cms.views import TextTemplateView
 from cms.forms import CMSPasswordChangeForm
 
+from .apps.replays.views import GoalViewSet, ReplayViewSet, PlayerViewSet, MapViewSet
+
+from rest_framework import routers
+
 
 admin.autodiscover()
+
+
+router = routers.DefaultRouter()
+router.register(r'maps', MapViewSet)
+router.register(r'replays', ReplayViewSet)
+router.register(r'players', PlayerViewSet)
+router.register(r'goals', GoalViewSet)
 
 
 urlpatterns = patterns(
@@ -23,7 +34,7 @@ urlpatterns = patterns(
     url(r'^admin/password_change/done/$', 'django.contrib.auth.views.password_change_done', name='password_change_done'),
     url(r"^admin/", include(admin.site.urls)),
 
-    url(r'replays/', include('rocket_league.apps.replays.urls', namespace='replay')),
+    url(r'^replays/', include('rocket_league.apps.replays.urls', namespace='replay')),
 
     # Permalink redirection service.
     url(r"^r/(?P<content_type_id>\d+)-(?P<object_id>[^/]+)/$", "django.contrib.contenttypes.views.shortcut", name="permalink_redirect"),
@@ -38,7 +49,8 @@ urlpatterns = patterns(
     # There's no favicon here!
     url(r"^favicon.ico$", generic.RedirectView.as_view(permanent=True)),
 
-    url('', include('social.apps.django_app.urls', namespace='social'))
+    url(r'^api/', include(router.urls)),
+    url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
