@@ -1,0 +1,5 @@
+@media only screen and (max-width: #{rem-calc(728) + $column-gutter * 1.5}) {
+    .hide-below-banner-width {
+        display: none;
+    }
+}
