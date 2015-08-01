@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load html news %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>{{ article.title }}</h3>
+        <p>Date published: {{ article.date|date:"jS F Y" }}</p>
+
+        {{ article.content|html }}
+    </div>
+</div>
+
+{% endblock %}

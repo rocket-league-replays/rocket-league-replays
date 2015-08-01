@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load html news %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>{{ pages.current }}</h3>
+        {% article_list article_list %}
+    </div>
+</div>
+
+{% endblock %}

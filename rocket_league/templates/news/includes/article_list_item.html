@@ -1,0 +1,7 @@
+{% load news %}
+
+<h4>
+    <a href="{% article_url article %}">{{ article }}</a>
+</h4>
+
+<p>Date published: {{ article.date|date:"jS F Y" }}</p>
