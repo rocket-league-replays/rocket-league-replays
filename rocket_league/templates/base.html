@@ -1,4 +1,4 @@
-{% load pages html compress %}
+{% load pages html compress replays %}
 
 <!DOCTYPE html>
 <html>
@@ -25,6 +25,7 @@
         {% compress css %}
             <link rel="stylesheet" href="/static/css/normalize.css"/>
             <link rel="stylesheet" href="/static/css/screen.css"/>
+            <link rel="stylesheet" href="/static/css/dropzone.css"/>
         {% endcompress %}
 
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
@@ -94,6 +95,8 @@
         </main>
 
         {% block footer %}
+        {# {% upload_form %} #}
+
         <footer class="row">
             <div class="medium-12 columns text-center hide-below-banner-width">
                 <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -113,5 +116,39 @@
             </div>
         </footer>
         {% endblock %}
+
+        {% compress js %}
+        <script src="/static/js/vendor/dropzone.js"></script>
+        <script src="/static/js/vendor/jquery.cookie.js"></script>
+
+        <div class="dropzone-previews"></div>
+
+        <script>
+            upload_dropzone = new Dropzone(
+                document.body, {
+                    url: "{% url 'replay:upload' %}",
+                    headers: {
+                        'X-CSRFToken': $.cookie('csrftoken')
+                    },
+                    createImageThumbnails: false,
+                    previewsContainer: '.dropzone-previews',
+                    error: function(file, response) {
+                            $('.dz-error-message', file.previewElement).html(response);
+                    },
+                    success: function(file, response, xhr) {
+                            $('.dz-error-message', file.previewElement).html("Your replay has been successfully uploaded, you can view it <a href=\"" + response + "\" target=\"_blank\">here</a>.");
+                    },
+                    drop: function() {
+                        $('body').addClass('dz-have-files')
+                        $('main').on('click', function() {
+                            $('body').removeClass('dz-have-files');
+                            upload_dropzone.removeAllFiles();
+                        });
+                    }
+                }
+            );
+        </script
+        {% endcompress %}
+
     </body>
 </html>

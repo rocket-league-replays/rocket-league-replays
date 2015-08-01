@@ -4,6 +4,7 @@ from django.views.generic import DetailView, CreateView
 from .forms import ReplayUploadForm, ReplayFilter
 from .models import Goal, Map, Player, Replay
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
+from ...utils.forms import AjaxableResponseMixin
 
 from django_filters.views import FilterView
 from rest_framework import viewsets
@@ -30,7 +31,7 @@ class ReplayDetailView(DetailView):
     model = Replay
 
 
-class ReplayCreateView(CreateView):
+class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     form_class = ReplayUploadForm
 
