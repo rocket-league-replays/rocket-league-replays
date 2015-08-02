@@ -117,11 +117,11 @@
         </footer>
         {% endblock %}
 
+        <div class="dropzone-previews"></div>
+
         {% compress js %}
         <script src="/static/js/vendor/dropzone.js"></script>
         <script src="/static/js/vendor/jquery.cookie.js"></script>
-
-        <div class="dropzone-previews"></div>
 
         <script>
             upload_dropzone = new Dropzone(
