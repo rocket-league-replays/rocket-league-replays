@@ -5,7 +5,8 @@ from cms.apps.pages.models import ContentBase, Page
 
 
 class Content(ContentBase):
-    pass
+    class Meta:
+        verbose_name = 'homepage'
 
 
 class ContentColumn(models.Model):
@@ -21,3 +22,7 @@ class ContentColumn(models.Model):
     )
 
     image = ImageRefField()
+
+
+class Placeholder(ContentBase):
+    pass
