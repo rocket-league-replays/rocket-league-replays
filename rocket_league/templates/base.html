@@ -21,7 +21,8 @@
 
         {% block feeds %}{% endblock %}
 
-        <link href='http://fonts.googleapis.com/css?family=Lato:700|Open+Sans:700' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
+
         {% compress css %}
             <link rel="stylesheet" href="/static/css/normalize.css"/>
             <link rel="stylesheet" href="/static/css/screen.css"/>
@@ -67,68 +68,85 @@
 
         {% include 'browser_update.html' %}
 
-        <header>
-            <ul class="navigation">
-                <li><a href="/" class="secondary">Rocket League Replays</a></li>
-                <li class="separator">/</li>
+        <div class="row page-wrapper">
+            <header>
+                <ul class="social-icons">
+                    <li class="pretext">Find us:</li>
 
-                <li><a href="{% url 'replay:list' %}">Replays</a></li>
-                <li class="separator">/</li>
+                    <li>
+                        <a href="http://www.reddit.com/r/RocketLeagueReplays/" target="_blank">C</a>
+                    </li>
+                    <li>
+                        <a href="http://www.twitter.com/RLReplays" target="_blank">a</a>
+                    </li>
+                </ul>
 
-                <li><a href="{% url 'replay:upload' %}">Upload a replay</a></li>
-                <li class="separator">/</li>
+                <div class="row">
+                    <div class="small-6 medium-3 columns logo-container left">
+                        <a href="/" class="secondary">
+                            <img src="/static/img/social_logo.png">
+                            <span class="logo-text">Rocket League<br>Replays</span>
+                        </a>
+                    </div>
 
-                <li><a href="/news/">News</a></li>
-                <li class="separator">/</li>
+                    <ul class="small-6 medium-9 columns text-right primary-navigation">
+                        <li><a href="{% url 'replay:list' %}">Replays</a></li>
 
-                <li><a href="/faqs/">FAQs</a></li>
-                <li class="separator">/</li>
+                        <li><a href="{% url 'replay:upload' %}">Upload a replay</a></li>
 
-                {% if user.is_authenticated %}
-                <li><a href="{% url 'users:profile' %}">Account</a></li>
-                <li class="separator">/</li>
+                        <li><a href="/news/">News</a></li>
 
-                <li><a href="{% url 'auth:auth_logout' %}">Logout</a></li>
-                <li class="separator">/</li>
-                {% else %}
-                <li><a href="{% url 'register' %}">Register</a></li>
-                <li class="separator">/</li>
-
-                <li><a href="{% url 'auth:auth_login' %}">Log in</a></li>
-                <li class="separator">/</li>
-                {% endif %}
-
-                <li><a href="/api-docs/">API</a></li>
-            </ul>
-        </header>
+                        <li><a href="/faqs/">FAQs</a></li>
 
 
-        <main>
-            {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}
-        </main>
 
-        {% block footer %}
-        {# {% upload_form %} #}
+                        <li><a href="/api-docs/">API</a></li>
+                    </ul>
+                </div>
 
-        <footer class="row">
-            <div class="medium-12 columns text-center hide-below-banner-width">
-                <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-                <!-- Detail page -->
-                <ins class="adsbygoogle"
-                     style="display:inline-block;width:728px;height:90px"
-                     data-ad-client="ca-pub-1408820986188374"
-                     data-ad-slot="3142548889"></ins>
-                <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
-            </div>
+                <div class="row">
+                    <div class="small-12 columns text-right secondary-navigation">
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'users:profile' %}">Account</a>
 
-            <div class="small-12 columns">
-                <p>Rocket League Replays was created by <a href="http://danielsamuels.co.uk/" target="_blank">Daniel Samuels</a>. Source code available on <a href="https://github.com/danielsamuels/rocket-league-replays">Github</a>.</p>
-                <p>All product and company names are trademarks&trade; or registered&reg; trademarks of their respective holders.<br>Use of them does not imply any affiliation with or endorsement by them.</p>
-            </div>
-        </footer>
-        {% endblock %}
+                        <a href="{% url 'auth:auth_logout' %}">Logout</a>
+                        {% else %}
+                        <a href="{% url 'register' %}">Register</a>
+
+                        <a href="{% url 'auth:auth_login' %}">Log in</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+
+            <main>
+                {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}
+            </main>
+
+            {% block footer %}
+            {# {% upload_form %} #}
+
+            <footer class="row">
+                <div class="medium-12 columns text-center hide-below-banner-width">
+                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+                    <!-- Detail page -->
+                    <ins class="adsbygoogle"
+                         style="display:inline-block;width:728px;height:90px"
+                         data-ad-client="ca-pub-1408820986188374"
+                         data-ad-slot="3142548889"></ins>
+                    <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+
+                <div class="small-12 columns">
+                    <p>Rocket League Replays was created by <a href="http://danielsamuels.co.uk/" target="_blank">Daniel Samuels</a>. Source code available on <a href="https://github.com/danielsamuels/rocket-league-replays">Github</a>.</p>
+                    <p>All product and company names are trademarks&trade; or registered&reg; trademarks of their respective holders.<br>Use of them does not imply any affiliation with or endorsement by them.</p>
+                </div>
+            </footer>
+            {% endblock %}
+        </div>
 
         <div class="dropzone-previews"></div>
 

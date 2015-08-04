@@ -81,7 +81,7 @@ $include-html-global-classes: $include-html-classes;
 
 // $row-width: rem-calc(1000);
 // $total-columns: 12;
-// $column-gutter: rem-calc(30);
+$column-gutter: rem-calc(60);
 
 // c. Global
 // - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -124,11 +124,13 @@ $success-color: #388659;
 // $info-color: #a0d3e8;
 
 // We use these to control various global styles
-// $body-bg: $white;
+$body-bg: #fbfbfb;
 // $body-font-color: $jet;
 // $body-font-family: $font-family-sans-serif;
 // $body-font-weight: $font-weight-normal;
 // $body-font-style: normal;
+
+$layout-border-color: #ddd;
 
 // We use this to control font-smoothing
 // $font-smoothing: antialiased;
@@ -213,7 +215,7 @@ $xlarge-breakpoint: em-calc(1600);
 $header-font-family: "Open Sans", sans-serif;
 // $header-font-weight: $font-weight-normal;
 // $header-font-style: normal;
-// $header-font-color: $jet;
+$header-font-color: $secondary-color;
 // $header-line-height: 1.4;
 // $header-top-margin: .2rem;
 // $header-bottom-margin: .5rem;
@@ -996,7 +998,7 @@ $paragraph-font-size: rem-calc(14);
 
 // We use these to set default inner padding and bottom margin
 // $panel-margin-bottom: rem-calc(20);
-// $panel-padding: rem-calc(20);
+$panel-padding: rem-calc(20 0);
 
 // We use these to set default font colors
 // $panel-font-color: $oil;

@@ -5,36 +5,49 @@
 <div class="row">
     <div class="small-12 columns">
         <h3>All replays</h3>
+        <p>Below you can find all replays which have been uploaded to {{ settings.SITE_NAME }}.</p>
     </div>
-
-    <form action="" method="get">
-        <div class="medium-2 columns">
-            {{ filter.form.player_name.label }}
-            {{ filter.form.player_name }}
-        </div>
-        <div class="medium-2 columns">
-            {{ filter.form.map.label }}
-            {{ filter.form.map }}
-        </div>
-        <div class="medium-2 columns">
-            {{ filter.form.server_name.label }}
-            {{ filter.form.server_name }}
-        </div>
-        <div class="medium-2 columns">
-            {{ filter.form.team_sizes.label }}
-            {{ filter.form.team_sizes }}
-        </div>
-        <div class="medium-2 columns">
-            {{ filter.form.match_type.label }}
-            {{ filter.form.match_type }}
-        </div>
-        <div class="medium-2 columns">
-            <label>&nbsp;</label>
-            <input type="submit" class="button tiny">
-        </div>
-    </form>
 </div>
+
 <div class="row">
+    <div class="small-12 columns panel">
+        <form action="" method="get">
+            {% for field in filter.form %}
+                <div class="medium-3 columns">
+                    {{ field.label }}
+                    {{ field }}
+                </div>
+            {% endfor %}
+
+            <div class="medium-3 columns">
+                <label for="">Region</label>
+                <select name="" id="">
+                    <option value="">EU</option>
+                </select>
+            </div>
+
+            <div class="medium-3 columns">
+                <label for="">Total goals</label>
+                <input type="text" placeholder="11">
+            </div>
+
+            <div class="medium-3 columns">
+                <label for="">Match length</label>
+                <input type="text" placeholder="6:00">
+            </div>
+
+            <div class="medium-12 columns">
+                <label>&nbsp;</label>
+                <input type="submit" class="button tiny">
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="medium-12 columns text-center">
+        <p>{{ page_obj.paginator.count }} replays found.</p>
+    </div>
     <div class="medium-12 columns">
         <table width="100%">
             <thead>

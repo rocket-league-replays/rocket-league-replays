@@ -3,3 +3,32 @@
         display: none;
     }
 }
+
+.page-wrapper {
+    width: $row-width;
+    padding: 0 $column-gutter / 2;
+    min-height: 100%;
+    background-color: #FFF;
+    border-left: 1px solid $layout-border-color;
+    border-right: 1px solid $layout-border-color;
+}
+
+.panel {
+    border-left: none;
+    border-right: none;
+    // margin-bottom: $column-gutter / 2;
+    margin-bottom: 0;
+    margin-top: 20px;
+}
+
+table {
+    border-left: none;
+    border-right: none;
+    // border-top: none;
+    margin: 0 #{-$column-gutter / 2} $column-gutter / 2;
+    width: calc(100% + #{$column-gutter});
+}
+
+p {
+    margin: 10px 0;
+}
