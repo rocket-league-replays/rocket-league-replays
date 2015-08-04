@@ -84,8 +84,21 @@
                 <li><a href="/faqs/">FAQs</a></li>
                 <li class="separator">/</li>
 
-                <li><a href="/api-docs/">API</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'users:profile' %}">Account</a></li>
+                <li class="separator">/</li>
 
+                <li><a href="{% url 'auth:auth_logout' %}">Logout</a></li>
+                <li class="separator">/</li>
+                {% else %}
+                <li><a href="{% url 'register' %}">Register</a></li>
+                <li class="separator">/</li>
+
+                <li><a href="{% url 'auth:auth_login' %}">Log in</a></li>
+                <li class="separator">/</li>
+                {% endif %}
+
+                <li><a href="/api-docs/">API</a></li>
             </ul>
         </header>
 

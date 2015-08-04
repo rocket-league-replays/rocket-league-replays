@@ -10,6 +10,8 @@ for the site, database, media and email sections below.
 """
 from __future__ import unicode_literals
 
+from django.core.urlresolvers import reverse_lazy
+
 import os
 import platform
 import sys
@@ -154,6 +156,8 @@ INSTALLED_APPS = [
     'cachalot',
     'rest_framework',
     'rest_framework_swagger',
+
+    'social.apps.django_app.default',
 ]
 
 if sys.version_info[0] == 3:
@@ -299,6 +303,16 @@ SILENCED_SYSTEM_CHECKS = [
     '1_6.W001',
     # '1_6.W002'
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'social.backends.steam.SteamOpenId',
+    'django.contrib.auth.backends.ModelBackend'
+)
+
+LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
+
+SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'
+SOCIAL_AUTH_STEAM_EXTRA_DATA = ['player']
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load

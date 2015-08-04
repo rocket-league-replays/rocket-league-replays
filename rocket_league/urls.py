@@ -11,7 +11,9 @@ from cms.views import TextTemplateView
 from cms.forms import CMSPasswordChangeForm
 
 from .apps.replays.views import GoalViewSet, ReplayViewSet, PlayerViewSet, MapViewSet
+from .apps.site.forms import RegistrationForm
 
+from registration.backends.simple.views import RegistrationView
 from rest_framework import routers
 
 
@@ -51,6 +53,12 @@ urlpatterns = patterns(
 
     url(r'^api/', include(router.urls)),
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
+
+    url(r'^register/$', RegistrationView.as_view(form_class=RegistrationForm), name='register'),
+    url(r'', include('registration.auth_urls', namespace='auth')),
+    url(r'', include('rocket_league.apps.users.urls', namespace='users')),
+
+    url('', include('social.apps.django_app.urls', namespace='social'))
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
