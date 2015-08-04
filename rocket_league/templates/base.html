@@ -144,6 +144,7 @@
                         'X-CSRFToken': $.cookie('csrftoken')
                     },
                     createImageThumbnails: false,
+                    clickable: false,
                     previewsContainer: '.dropzone-previews',
                     error: function(file, response) {
                             $('.dz-error-message', file.previewElement).html(response);
