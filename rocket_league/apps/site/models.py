@@ -1,5 +1,6 @@
 from django.db import models
 
+from cms.models import HtmlField
 from cms.apps.media.models import ImageRefField
 from cms.apps.pages.models import ContentBase, Page
 
@@ -26,3 +27,11 @@ class ContentColumn(models.Model):
 
 class Placeholder(ContentBase):
     pass
+
+
+class StandardPage(ContentBase):
+
+    content_primary = HtmlField(
+        blank=True,
+        null=True,
+    )
