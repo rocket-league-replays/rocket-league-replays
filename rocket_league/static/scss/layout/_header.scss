@@ -20,16 +20,11 @@ header {
 }
 
 .primary-navigation {
-    // text-align: center;
     list-style: none;
-    // text-transform: uppercase;
     margin: 0;
     margin-top: 45px;
-    // min-height: $primary-nav-height;
-    // line-height: $primary-nav-height;
 
     li {
-        // line-height: $primary-nav-height;
         display: inline-block;
         font-size: 16px;
 
@@ -54,9 +49,7 @@ header {
 .secondary-navigation {
     list-style: none;
     margin: 0;
-    // border-top: 1px solid #fff;
     margin-top: 12px;
-    // background-color: rgb(233, 244, 255);
     padding: 10px $column-gutter / 2;
     border-top: 1px solid $layout-border-color;
     border-bottom: 1px solid $layout-border-color;
@@ -64,37 +57,5 @@ header {
 
     a {
         margin-left: 15px;
-        // color: #fff;
-    }
-}
-
-.social-icons {
-    position: absolute;
-    top: 0;
-    right: 0;
-
-    list-style: none;
-    background-color: #ddd;
-    padding: 4px 12px;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
-
-    font-size: 16px;
-
-    .pretext {
-        font-size: 14px;
-        color: #fff;
-    }
-
-    li {
-        display: inline-block;
-
-        & + li {
-            margin-left: 8px;
-        }
-    }
-
-    a {
-        color: #fff;
     }
 }
