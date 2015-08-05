@@ -1,9 +1,6 @@
 footer {
     text-align: center;
-}
-
-footer p:first-of-type {
-    padding-top: 30px;
-    margin-top: 20px;
-    border-top: 1px solid #efefef;
+    border-top: 1px solid $layout-border-color;
+    padding: 30px 0;
+    margin-top: 20px !important;
 }
