@@ -3,11 +3,45 @@
 {% block content_primary %}
 <div class="row">
     <div class="small-12 columns">
+        <h3>Log in to your account</h3>
+    </div>
+</div>
+
+<div class="row">
+    <div class="medium-6 columns">
         <form action="" method="post">
             {% csrf_token %}
-            {{ form }}
-            <input type="submit">
+
+            {{ form.username.label_tag }}
+            {{ form.username }}
+
+            {% for error in form.username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            {{ form.password.label_tag }}
+            {{ form.password }}
+
+            {% for error in form.password.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+
+            <input type="submit" class="button small" value="Log in">
         </form>
+    </div>
+
+    <div class="medium-6 columns">
+        <p>Don't have an account yet? <a href="{% url 'register' %}">Register today for free</a>. It doesn't take much, all we need is a username and password - not even an email address!</p>
+
+        <h5>Benefits</h5>
+
+        <ul>
+            <li>Manage your replay collection in one place</li>
+            <li>Name your replays</li>
+            <li>Create replay packs</li>
+            <li>Track your progress in ranked leagues</li>
+            <li>Automatic replay uploading (with desktop application)</li>
+        </ul>
     </div>
 </div>
 {% endblock %}

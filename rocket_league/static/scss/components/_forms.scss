@@ -1,0 +1,29 @@
+.double-input {
+    input {
+        margin-bottom: 0;
+    }
+
+    .field-error {
+        margin-top: 0;
+    }
+
+    &:not(.errored) + input[type=submit] {
+        margin-top: 16px;
+    }
+
+    .columns:first-of-type {
+        padding-right: $column-gutter / 4;
+    }
+
+    .columns:last-of-type {
+        padding-left: $column-gutter / 4;
+    }
+}
+
+.field-error {
+    display: block;
+    margin-top: -16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: $alert-color;
+}
