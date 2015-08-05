@@ -4,12 +4,25 @@
 <div class="row">
     <div class="medium-12 columns">
         <h3>Upload replay</h3>
+        <p>Uploading your replay to {{ settings.SITE_NAME }} is easy, simply click on the file uploader below and select your file. You can usually find your replay files in the following location on your computer: <code>Documents/My Games/Rocket League/TAGame/Demos</code></p>
+
+        <hr>
 
         <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
 
-            {{ form }}
-            <p>You can find your replay files in <code>Documents/My Games/Rocket League/TAGame/Demos</code>, you can use the created date to figure out which is the one you want. It might take a couple of seconds to process the file, please don't click upload more than once!</p>
+            {% for error in form.non_field_errors %}
+            <div class="alert-box alert">
+                {{ error }}
+            </div>
+            {% endfor %}
+
+            <label for="{{ form.file.id_for_label }}">
+                Select a file:
+                {{ form.file }}
+            </label>
+
+            <p>It might take a couple of seconds to process the file, please don't click upload more than once!</p>
 
             <p>
                 <input class="button tiny" type="submit" value="Upload">
