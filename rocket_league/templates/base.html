@@ -70,17 +70,6 @@
 
         <div class="row page-wrapper">
             <header>
-                <ul class="social-icons">
-                    <li class="pretext">Find us:</li>
-
-                    <li>
-                        <a href="http://www.reddit.com/r/RocketLeagueReplays/" target="_blank">C</a>
-                    </li>
-                    <li>
-                        <a href="http://www.twitter.com/RLReplays" target="_blank">a</a>
-                    </li>
-                </ul>
-
                 <div class="row">
                     <div class="small-6 medium-3 columns logo-container left">
                         <a href="/" class="secondary">
@@ -90,17 +79,21 @@
                     </div>
 
                     <ul class="small-6 medium-9 columns text-right primary-navigation">
-                        <li><a href="{% url 'replay:list' %}">Replays</a></li>
+                        {% get_navigation pages.homepage.navigation as nav %}
 
-                        <li><a href="{% url 'replay:upload' %}">Upload a replay</a></li>
+                        {% for item in nav %}
+                            {% if item.url == '/replays/' and request.path == '/replays/upload/' %}
+                                <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+                            {% else %}
+                                <li><a href="{{ item.url }}"{% if item.here or item.url == '/upload-replay/' and request.path == '/replays/upload/' %} class="active"{% endif %}>{{ item.title }}</a></li>
+                            {% endif %}
+                        {% endfor %}
 
-                        <li><a href="/news/">News</a></li>
+                        <li>&middot;</li>
 
-                        <li><a href="/faqs/">FAQs</a></li>
+                        <li><a href="http://www.reddit.com/r/RocketLeagueReplays/" target="_blank" title="Reddit" class="socicon">C</a></li>
+                        <li><a href="http://www.twitter.com/RLReplays" target="_blank" title="Twitter" class="socicon">a</a></li>
 
-
-
-                        <li><a href="/api-docs/">API</a></li>
                     </ul>
                 </div>
 

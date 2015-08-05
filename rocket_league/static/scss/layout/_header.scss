@@ -39,8 +39,15 @@ header {
     }
 
     a {
-        color: #000;
         font-weight: 600;
+    }
+
+    a:not(.active) {
+        color: $body-font-color;
+    }
+
+    .active {
+        @extend .secondary;
     }
 }
 
