@@ -143,7 +143,7 @@ INSTALLED_APPS = [
     "watson",
 
     "cms.apps.pages",
-    # "cms.apps.links",
+    "cms.apps.links",
     "cms.apps.media",
     "cms.apps.news",
 
