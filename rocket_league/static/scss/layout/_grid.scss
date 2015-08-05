@@ -21,10 +21,9 @@
     margin-top: 20px;
 }
 
-table {
+table.expand {
     border-left: none;
     border-right: none;
-    // border-top: none;
     margin: 0 #{-$column-gutter / 2} $column-gutter / 2;
     width: calc(100% + #{$column-gutter});
 }
