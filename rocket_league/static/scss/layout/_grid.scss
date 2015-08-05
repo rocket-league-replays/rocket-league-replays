@@ -31,3 +31,42 @@ table.expand {
 p {
     margin: 10px 0;
 }
+
+.news-article-list {
+    list-style: none;
+    margin: 0;
+
+    .date-circle {
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        background-color: $primary-color;
+        color: #fff;
+        line-height: 1.1;
+        font-size: 16px;
+        padding-top: 11px;
+        margin-right: 16px;
+    }
+
+    h4 {
+        padding-top: 10px;
+
+        a {
+            color: $body-font-color;
+        }
+    }
+
+    li {
+        @include clearfix;
+        display: block;
+
+        + li {
+            margin-top: 18px;
+        }
+    }
+}
+
+hr {
+    width: calc(100% + #{$column-gutter});
+    margin: 20px #{-$column-gutter / 2};
+}

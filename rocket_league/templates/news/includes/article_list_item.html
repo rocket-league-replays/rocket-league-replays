@@ -1,7 +1,9 @@
 {% load news %}
 
+<div class="date-circle left text-center">
+    {{ article.date|date:"jS" }}<br>{{ article.date|date:"M" }}
+</div>
+
 <h4>
     <a href="{% article_url article %}">{{ article }}</a>
 </h4>
-
-<p>Date published: {{ article.date|date:"jS F Y" }}</p>
