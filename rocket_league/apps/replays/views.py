@@ -1,7 +1,7 @@
 from django.db.models import Q
-from django.views.generic import DetailView, CreateView
+from django.views.generic import DetailView, CreateView, UpdateView
 
-from .forms import ReplayUploadForm, ReplayFilter
+from .forms import ReplayUploadForm, ReplayFilter, ReplayUpdateForm
 from .models import Goal, Map, Player, Replay
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 from ...utils.forms import AjaxableResponseMixin
@@ -36,6 +36,13 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
     form_class = ReplayUploadForm
 
 
+class ReplayUpdateView(UpdateView):
+    model = Replay
+    form_class = ReplayUpdateForm
+    template_name_suffix = '_update'
+
+
+# API ViewSets
 class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Returns a list of all processed replays in the system.

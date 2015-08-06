@@ -10,11 +10,12 @@
         </tr>
     </thead>
     <tbody>
+        {% with object_list=user.replay_set.all %}
         {% for replay in object_list %}
             {% cache 3600 'dashboard_replay_list_item' replay.pk %}
-                <tr data-href="{{ replay.get_absolute_url }}">
+                <tr data-href="{% url 'replay:update' pk=replay.pk %}">
                     <td><input type="checkbox"></td>
-                    <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
+                    <td><a href="{% url 'replay:update' pk=replay.pk %}">{{ replay.pk }}</a></td>
                     <td>{{ replay.map }}</td>
                     <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
                 </tr>
@@ -24,6 +25,7 @@
             <td colspan="4">You have not yet uploaded any replays.</td>
         </tr>
         {% endfor %}
+        {% endwith %}
     </tbody>
 </table>
 

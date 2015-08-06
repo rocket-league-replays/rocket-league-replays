@@ -73,3 +73,44 @@ class ReplayFilter(django_filters.FilterSet):
     class Meta:
         model = Replay
         fields = ['map', 'server_name', 'team_sizes', 'match_type']
+
+
+class ReplayUpdateForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ReplayUpdateForm, self).__init__(*args, **kwargs)
+
+        # How many players do we know about in Team 0?
+        for team in range(2):
+            team_players = kwargs['instance'].player_set.filter(
+                team=team,
+                user_entered=False,
+            ).count()
+
+            if team_players < kwargs['instance'].team_sizes:
+                # Fill in with extra fields.
+                for x in range(kwargs['instance'].team_sizes - team_players):
+                    # Is there a user-entered value for this player already?
+                    user_players = kwargs['instance'].player_set.filter(
+                        team=team,
+                        user_entered=True,
+                    )
+
+                    print user_players, x
+
+                    self.fields['team_{}_player_{}'.format(
+                        team,
+                        x + team_players + 1,
+                    )] = forms.CharField(
+                        label="{} team, player {}".format(
+                            'Blue' if team == 0 else 'Orange',
+                            x + team_players + 1,
+                        ),
+                        initial=user_players[x].player_name if len(user_players) >= x+1 else '',
+                    )
+
+        print kwargs['instance']
+
+    class Meta:
+        model = Replay
+        fields = ['title']

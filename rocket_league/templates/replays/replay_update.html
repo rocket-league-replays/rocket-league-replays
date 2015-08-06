@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <h3>Update replay</h3>
+
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="medium-6 columns">
+            {{ form }}
+        </div>
+
+        <div class="medium-8 columns">
+            <h3>Teams</h3>
+
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th width="50%"><span class="primary">Blue Team</span></th>
+                        <th width="50%"><span class="secondary">Orange Team</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            {% if form.team_0_player_1 %}
+                                {{ form.team_0_player_1 }}
+                            {% else %}
+                                {{ replay.player_pairs.0.0 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.team_1_player_1 %}
+                                {{ form.team_1_player_1 }}
+                            {% else %}
+                                {{ replay.player_pairs.0.1 }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            {% if form.team_0_player_2 %}
+                                {{ form.team_0_player_2 }}
+                            {% else %}
+                                {{ replay.player_pairs.1.0 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.team_1_player_2 %}
+                                {{ form.team_1_player_2 }}
+                            {% else %}
+                                {{ replay.player_pairs.1.1 }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            {% if form.team_0_player_3 %}
+                                {{ form.team_0_player_3 }}
+                            {% else %}
+                                {{ replay.player_pairs.2.0 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.team_1_player_3 %}
+                                {{ form.team_1_player_3 }}
+                            {% else %}
+                                {{ replay.player_pairs.2.1 }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            {% if form.team_0_player_4 %}
+                                {{ form.team_0_player_4 }}
+                            {% else %}
+                                {{ replay.player_pairs.3.0 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if form.team_1_player_4 %}
+                                {{ form.team_1_player_4 }}
+                            {% else %}
+                                {{ replay.player_pairs.3.1 }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+
+            <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
+        </div>
+
+        <div class="small-12 columns">
+            <p>
+                <input class="button tiny" type="submit" value="Update">
+            </p>
+        </div>
+    </form>
+</div>
+{% endblock content_primary %}
