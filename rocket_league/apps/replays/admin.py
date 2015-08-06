@@ -14,7 +14,7 @@ class GoalInlineAdmin(admin.StackedInline):
 
 
 class ReplayAdmin(admin.ModelAdmin):
-    list_display = ['replay_id', 'map', 'server_name', 'timestamp', 'processed']
+    list_display = ['replay_id', 'user', 'map', 'server_name', 'timestamp', 'processed']
     inlines = [PlayerInlineAdmin, GoalInlineAdmin]
 
 admin.site.register(Replay, ReplayAdmin)

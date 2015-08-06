@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.db import models
 
@@ -34,6 +35,19 @@ class Map(models.Model):
 
 
 class Replay(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+    )
+
+    title = models.CharField(
+        "replay name",
+        max_length=100,
+        blank=True,
+        null=True,
+    )
 
     file = models.FileField(
         upload_to='uploads/replay_files',
@@ -201,7 +215,7 @@ class Replay(models.Model):
         ordering = ['-timestamp', '-pk']
 
     def __str__(self):
-        return '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
+        return self.title or '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
             self.timestamp,
             '{size}v{size}'.format(size=self.team_sizes),
             self.match_type,
@@ -294,6 +308,10 @@ class Player(models.Model):
     )
 
     team = models.IntegerField()
+
+    user_entered = models.BooleanField(
+        default=False,
+    )
 
     def __unicode__(self):
         return u'{} on Team {}'.format(
