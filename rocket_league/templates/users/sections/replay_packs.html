@@ -1,0 +1,30 @@
+{% load cache %}
+
+<table width="100%">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Replays</th>
+            <th>Created on</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for replay in object_list %}
+            {% cache 3600 'replay_pack_list_item' replay.pk %}
+                <tr data-href="{{ replay.get_absolute_url }}">
+                    <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
+                    <td>{{ replay.map }}</td>
+                    <td>{{ replay.region }}</td>
+                    <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                </tr>
+            {% endcache %}
+        {% empty %}
+        <tr>
+            <td colspan="4">You have not yet created any replay packs.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# {% pagination page_obj %} #}

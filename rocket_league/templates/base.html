@@ -30,6 +30,7 @@
         {% endcompress %}
 
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script src="/static/js/vendor/modernizr.js"></script>
 
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/img/icons/apple-touch-icon-57x57.png">
@@ -147,7 +148,14 @@
         <script src="/static/js/vendor/dropzone.js"></script>
         <script src="/static/js/vendor/jquery.cookie.js"></script>
 
+        <script src="/static/js/vendor/fastclick.js"></script>
+
+        <script src="/static/js/vendor/foundation/foundation.js"></script>
+        <script src="/static/js/vendor/foundation/foundation.tab.js"></script>
+
         <script>
+            $(document).foundation();
+
             upload_dropzone = new Dropzone(
                 document.body, {
                     url: "{% url 'replay:upload' %}",

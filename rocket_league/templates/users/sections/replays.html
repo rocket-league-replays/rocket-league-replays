@@ -1,0 +1,38 @@
+{% load cache %}
+
+<table width="100%">
+    <thead>
+        <tr>
+            <th><input type="checkbox"></th>
+            <th>#</th>
+            <th>Map</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for replay in object_list %}
+            {% cache 3600 'dashboard_replay_list_item' replay.pk %}
+                <tr data-href="{{ replay.get_absolute_url }}">
+                    <td><input type="checkbox"></td>
+                    <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
+                    <td>{{ replay.map }}</td>
+                    <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                </tr>
+            {% endcache %}
+        {% empty %}
+        <tr>
+            <td colspan="4">You have not yet uploaded any replays.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<select name="" id="" style="width:50%">
+    <option value="">Choose an action</option>
+    <option value="">Create replay pack</option>
+    <option value="">Delete selected replays</option>
+</select>
+
+<input type="submit" class="button tiny" value="Go">
+
+{# {% pagination page_obj %} #}

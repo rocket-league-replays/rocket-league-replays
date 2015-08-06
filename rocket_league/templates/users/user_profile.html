@@ -11,86 +11,41 @@
 </div>
 
 <div class="row">
-    <div class="medium-12 columns text-center">
-        <p>Your replays packs.</p>
+    <div class="small-3 columns">
+        <ul class="tabs vertical" data-options="deep_linking:true" data-tab>
+            <li class="tab-title active"><a href="#replays-tab">Replays</a></li>
+            <li class="tab-title"><a href="#replay-packs-tab">Replay packs</a></li>
+            <li class="tab-title"><a href="#desktop-application-tab">Desktop application</a></li>
+            <li class="tab-title"><a href="#rank-tracker-tab">Rank tracker</a></li>
+            <li class="tab-title"><a href="#settings-tab">Settings</a></li>
+        </ul>
     </div>
-    <div class="medium-12 columns">
-        <table width="100%" class="expand">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Map</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th>Length</th>
-                    <th>Region</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for replay in object_list %}
-                    {% cache 3600 'replay_list_item' replay.pk %}
-                        <tr data-href="{{ replay.get_absolute_url }}">
-                            <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
-                            <td>{{ replay.map }}</td>
-                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
-                            <td>{{ replay.match_length }}</td>
-                            <td>{{ replay.region }}</td>
-                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-                        </tr>
-                    {% endcache %}
-                {% empty %}
-                <tr>
-                    <td colspan="7">You have not yet created any replay packs.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
 
-        {# {% pagination page_obj %} #}
-    </div>
-</div>
+    <div class="medium-9 columns tabs-content">
+        <div class="content active" id="replays-tab">
+            {% include "users/sections/replays.html" %}
+        </div>
 
-<div class="row">
-    <div class="medium-12 columns text-center">
-        <p>Your replays.</p>
-    </div>
-    <div class="medium-12 columns">
-        <table width="100%" class="expand">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Map</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th>Length</th>
-                    <th>Region</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for replay in object_list %}
-                    {% cache 3600 'replay_list_item' replay.pk %}
-                        <tr data-href="{{ replay.get_absolute_url }}">
-                            <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
-                            <td>{{ replay.map }}</td>
-                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
-                            <td>{{ replay.match_length }}</td>
-                            <td>{{ replay.region }}</td>
-                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-                        </tr>
-                    {% endcache %}
-                {% empty %}
-                <tr>
-                    <td colspan="7">You have not yet uploaded any replays.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="content" id="replay-packs-tab">
+            {% include "users/sections/replay_packs.html" %}
+        </div>
 
-        {# {% pagination page_obj %} #}
+        <div class="content" id="desktop-application-tab">
+            {% include "users/sections/desktop_application.html" %}
+        </div>
+
+        <div class="content" id="rank-tracker-tab">
+            {% include "users/sections/rank_tracker.html" %}
+        </div>
+
+        <div class="content" id="settings-tab">
+            {% include "users/sections/settings.html" %}
+        </div>
     </div>
+
+    {% comment %}
+
+    </div>
+    {% endcomment %}
 </div>
 {% endblock %}

@@ -81,7 +81,7 @@ $include-html-global-classes: $include-html-classes;
 
 // $row-width: rem-calc(1000);
 // $total-columns: 12;
-$column-gutter: rem-calc(60);
+$column-gutter: rem-calc(30);
 
 // c. Global
 // - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1349,7 +1349,7 @@ $panel-padding: rem-calc(20 0);
 // $tabs-navigation-font-family: $body-font-family;
 
 // $tabs-content-margin-bottom: rem-calc(24);
-// $tabs-content-padding: ($column-gutter/2);
+$tabs-content-padding: 0;
 
 // $tabs-vertical-navigation-margin-bottom: 1.25rem;
 

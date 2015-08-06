@@ -46,6 +46,7 @@ $tabs-vertical-navigation-margin-bottom: 1.25rem !default;
           font-family: $tabs-navigation-font-family;
           font-size: $tabs-navigation-font-size;
           padding: $tabs-navigation-padding $tabs-navigation-padding * 2;
+          outline: none;
 
           &:hover {
             background-color: $tabs-navigation-hover-bg-color;
@@ -83,8 +84,6 @@ $tabs-vertical-navigation-margin-bottom: 1.25rem !default;
 
     .tabs-content {
       @include clearfix;
-      margin-bottom: $tabs-content-margin-bottom;
-      width: 100%;
 
       > .content {
         display: none;
@@ -116,8 +115,7 @@ $tabs-vertical-navigation-margin-bottom: 1.25rem !default;
           float: $default-float;
           margin: 0;
           margin-bottom: $tabs-vertical-navigation-margin-bottom !important;
-          max-width: 20%;
-          width: 20%;
+          width: 100%;
         }
       }
 
