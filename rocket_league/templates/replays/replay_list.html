@@ -65,7 +65,7 @@
                 {% for replay in object_list %}
                     {% cache 3600 'replay_list_item' replay.pk %}
                         <tr data-href="{{ replay.get_absolute_url }}">
-                            <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
+                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
                             <td>{{ replay.map }}</td>
                             <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
                             <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>

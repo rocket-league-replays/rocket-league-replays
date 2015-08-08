@@ -44,7 +44,7 @@ class Replay(models.Model):
 
     title = models.CharField(
         "replay name",
-        max_length=100,
+        max_length=32,
         blank=True,
         null=True,
     )
@@ -215,7 +215,7 @@ class Replay(models.Model):
         ordering = ['-timestamp', '-pk']
 
     def __str__(self):
-        return self.title or '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
+        return self.title or str(self.pk) or '[{}] {} {} game on {}. Final score: {}, Uploaded by {}.'.format(
             self.timestamp,
             '{size}v{size}'.format(size=self.team_sizes),
             self.match_type,
