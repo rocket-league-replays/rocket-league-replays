@@ -13,9 +13,6 @@
     <form action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
-        {{ form.errors }}
-
-
         <div class="medium-6 columns">
             <h3>Replay information</h3>
 
@@ -53,6 +50,7 @@
                         </td>
                     </tr>
 
+                    {% if object.team_sizes >= 2 %}
                     <tr>
                         <td>
                             {% if form.team_0_player_2 %}
@@ -69,7 +67,9 @@
                             {% endif %}
                         </td>
                     </tr>
+                    {% endif %}
 
+                    {% if object.team_sizes >= 3 %}
                     <tr>
                         <td>
                             {% if form.team_0_player_3 %}
@@ -86,7 +86,9 @@
                             {% endif %}
                         </td>
                     </tr>
+                    {% endif %}
 
+                    {% if object.team_sizes >= 4 %}
                     <tr>
                         <td>
                             {% if form.team_0_player_4 %}
@@ -103,7 +105,7 @@
                             {% endif %}
                         </td>
                     </tr>
-
+                    {% endif %}
                 </tbody>
             </table>
         </div>
