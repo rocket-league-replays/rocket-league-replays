@@ -37,6 +37,12 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     form_class = ReplayUploadForm
 
+    def form_valid(self, form):
+        if self.request.user.is_authenticated():
+            form.instance.user = self.request.user
+
+        return super(ReplayCreateView, self).form_valid(form)
+
 
 class ReplayUpdateView(UpdateView):
     model = Replay
