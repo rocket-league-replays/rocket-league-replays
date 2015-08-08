@@ -96,8 +96,6 @@ class ReplayUpdateForm(forms.ModelForm):
                         user_entered=True,
                     )
 
-                    print user_players, x
-
                     self.fields['team_{}_player_{}'.format(
                         team,
                         x + team_players + 1,
@@ -107,9 +105,8 @@ class ReplayUpdateForm(forms.ModelForm):
                             x + team_players + 1,
                         ),
                         initial=user_players[x].player_name if len(user_players) >= x+1 else '',
+                        required=False,
                     )
-
-        print kwargs['instance']
 
     class Meta:
         model = Replay

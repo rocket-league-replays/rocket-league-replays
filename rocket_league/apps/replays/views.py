@@ -9,6 +9,8 @@ from ...utils.forms import AjaxableResponseMixin
 from django_filters.views import FilterView
 from rest_framework import viewsets
 
+import re
+
 
 class ReplayListView(FilterView):
     model = Replay
@@ -40,6 +42,28 @@ class ReplayUpdateView(UpdateView):
     model = Replay
     form_class = ReplayUpdateForm
     template_name_suffix = '_update'
+
+    def form_valid(self, form):
+        # Delete all user-entered players.
+        self.object.player_set.filter(user_entered=True).delete()
+
+        player_field_match = re.compile('team_(0|1)_player_(0|1|2|3)')
+
+        for field in form.cleaned_data:
+            match = player_field_match.match(field)
+
+            if match and form.cleaned_data[field]:
+                Player.objects.create(
+                    replay=self.object,
+                    player_name=form.cleaned_data[field],
+                    team=match.group(1),
+                    user_entered=True,
+                )
+
+        return super(ReplayUpdateView, self).form_valid(form)
+
+    def get_success_url(self):
+        return self.request.path
 
 
 # API ViewSets

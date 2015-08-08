@@ -13,12 +13,19 @@
     <form action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
 
+        {{ form.errors }}
+
+
         <div class="medium-6 columns">
-            {{ form }}
+            <h3>Replay information</h3>
+
+            {{ form.title.label_tag }}
+            {{ form.title }}
         </div>
 
         <div class="medium-8 columns">
             <h3>Teams</h3>
+            <p>Someone missing from your player list? Add them in here.</p>
 
             <table width="100%">
                 <thead>
@@ -98,8 +105,6 @@
 
                 </tbody>
             </table>
-
-            <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
         </div>
 
         <div class="small-12 columns">
