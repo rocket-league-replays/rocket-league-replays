@@ -6,6 +6,7 @@ from .models import Goal, Map, Player, Replay
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 from ...utils.forms import AjaxableResponseMixin
 
+from braces.views import LoginRequiredMixin
 from django_filters.views import FilterView
 from rest_framework import viewsets
 
@@ -44,7 +45,7 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         return super(ReplayCreateView, self).form_valid(form)
 
 
-class ReplayUpdateView(UpdateView):
+class ReplayUpdateView(LoginRequiredMixin, UpdateView):
     model = Replay
     form_class = ReplayUpdateForm
     template_name_suffix = '_update'
