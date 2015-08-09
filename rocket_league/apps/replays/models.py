@@ -357,3 +357,27 @@ class Goal(models.Model):
 
     class Meta:
         ordering = ['number']
+
+
+class ReplayPack(models.Model):
+
+    title = models.CharField(
+        max_length=50,
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+    )
+
+    replays = models.ManyToManyField(
+        Replay,
+        blank=True,
+    )
+
+    def __unicode__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse('replaypack:detail', kwargs={
+            'pk': self.pk,
+        })
