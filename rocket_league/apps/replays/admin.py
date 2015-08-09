@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Replay, Player, Goal, Map
+from .models import Replay, Player, Goal, Map, ReplayPack
 
 
 class PlayerInlineAdmin(admin.StackedInline):
@@ -19,3 +19,6 @@ class ReplayAdmin(admin.ModelAdmin):
 
 admin.site.register(Replay, ReplayAdmin)
 admin.site.register(Map)
+
+
+admin.site.register(ReplayPack)
