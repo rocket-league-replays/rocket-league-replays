@@ -3,27 +3,31 @@
 <table width="100%">
     <thead>
         <tr>
-            <th>#</th>
-            <th>Name</th>
+            <th>Title</th>
             <th>Replays</th>
-            <th>Created on</th>
+            <th>Last updated</th>
+            <th colspan="3">Actions</th>
         </tr>
     </thead>
     <tbody>
-        {% for replay in object_list %}
-            {% cache 3600 'replay_pack_list_item' replay.pk %}
-                <tr data-href="{{ replay.get_absolute_url }}">
-                    <td><a href="{{ replay.get_absolute_url }}">{{ replay.pk }}</a></td>
-                    <td>{{ replay.map }}</td>
-                    <td>{{ replay.region }}</td>
-                    <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+        {% with object_list=user.replaypack_set.all %}
+        {% for replaypack in object_list %}
+            {% cache 3600 'replaypack_list_item' replaypack.pk replaypack.last_updated %}
+                <tr>
+                    <td>{{ replaypack.title }}</td>
+                    <td>{{ replaypack.replays.count }}</td>
+                    <td>{{ replaypack.last_updated|date:"jS F, h:iA" }}</td>
+                    <td><a href="{{ replaypack.get_absolute_url }}">View</a></td>
+                    <td><a href="{% url 'replaypack:update' pk=replaypack.pk %}">Edit</a></td>
+                    <td><a href="{% url 'replaypack:delete' pk=replaypack.pk %}" class="alert">Delete</a></td>
                 </tr>
             {% endcache %}
         {% empty %}
         <tr>
-            <td colspan="4">You have not yet created any replay packs.</td>
+            <td colspan="4">You have not yet created any replay packs. <a href="{% url 'replaypack:create' %}">Make one now.</a></td>
         </tr>
         {% endfor %}
+        {% endwith %}
     </tbody>
 </table>
 
