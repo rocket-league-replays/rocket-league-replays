@@ -6,7 +6,7 @@
     <div class="small-12 columns">
         <h3>Your profile</h3>
 
-        <p>Welcome to your {{ settings.SITE_NAME }} dashboard, here you can manage your replays, update your stats and more.</p>
+        <p>Welcome to your {{ settings.SITE_NAME }} dashboard, here you can manage your replays, update your stats and more. You can view your public profile <a href="{% url 'users:profile' username=user.username %}">here</a>.</p>
     </div>
 </div>
 
