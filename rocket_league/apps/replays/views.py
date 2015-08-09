@@ -1,6 +1,9 @@
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.views.generic import ListView, DeleteView, DetailView, CreateView, UpdateView
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.views.generic import ListView, DeleteView, DetailView, CreateView, UpdateView, View
+from django.views.generic.detail import SingleObjectMixin
 
 from .forms import ReplayUploadForm, ReplayFilter, ReplayPackForm, ReplayUpdateForm
 from .models import Goal, Map, Player, Replay, ReplayPack
@@ -11,7 +14,9 @@ from braces.views import LoginRequiredMixin
 from django_filters.views import FilterView
 from rest_framework import viewsets
 
+from zipfile import ZipFile
 import re
+import StringIO
 
 
 class ReplayListView(FilterView):
@@ -124,6 +129,34 @@ class ReplayPackDeleteView(DeleteView):
             raise PermissionDenied
 
         return super(ReplayPackDeleteView, self).dispatch(request, *args, **kwargs)
+
+
+class ReplayPackDownloadView(SingleObjectMixin, View):
+    model = ReplayPack
+
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+        zip_filename = '{}.zip'.format(str(obj))
+        zip_string = StringIO.StringIO()
+
+        with ZipFile(zip_string, 'w') as f:
+            for replay in obj.replays.all():
+                filename = '{}.replay'.format(replay.replay_id)
+                f.write(replay.file.path, filename)
+
+            # Create a README file.
+            readme = render_to_string('replays/readme.html', {
+                'replaypack': obj,
+            })
+
+            f.writestr('README.txt', str(readme))
+        f.close()
+
+        # print zip_string.getvalue()
+
+        response = HttpResponse(zip_string.getvalue(), content_type="application/x-zip-compressed")
+        response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
+        return response
 
 
 # API ViewSets

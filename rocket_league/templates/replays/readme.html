@@ -1,0 +1,19 @@
+  _____            _        _     _                                   _____            _
+ |  __ \          | |      | |   | |                                 |  __ \          | |
+ | |__) |___   ___| | _____| |_  | |     ___  __ _  __ _ _   _  ___  | |__) |___ _ __ | | __ _ _   _ ___
+ |  _  // _ \ / __| |/ / _ \ __| | |    / _ \/ _` |/ _` | | | |/ _ \ |  _  // _ \ '_ \| |/ _` | | | / __|
+ | | \ \ (_) | (__|   <  __/ |_  | |___|  __/ (_| | (_| | |_| |  __/ | | \ \  __/ |_) | | (_| | |_| \__ \
+ |_|  \_\___/ \___|_|\_\___|\__| |______\___|\__,_|\__, |\__,_|\___| |_|  \_\___| .__/|_|\__,_|\__, |___/
+                                                    __/ |                       | |             __/ |
+                                                   |___/                        |_|            |___/
+
+                                     www.RocketLeagueReplays.com
+
+Replay pack ID: {{ replaypack.pk }}
+Replay pack: {{ replaypack.title }}
+Number of replays: {{ replaypack.replays.count }}
+Download date: {% now "r" %}
+
+Replay files:
+{% for replay in replaypack.replays.all %}
+{{ replay.replay_id }}.replay - {{ replay }} - {{ replay.team_sizes }}v{{ replay.team_sizes }} on {{ replay.map }}{% endfor %}
