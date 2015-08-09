@@ -37,6 +37,7 @@ urlpatterns = patterns(
     url(r"^admin/", include(admin.site.urls)),
 
     url(r'^replays/', include('rocket_league.apps.replays.urls', namespace='replay')),
+    url(r'^replay-packs/', include('rocket_league.apps.replays.replaypack_urls', namespace='replaypack')),
 
     # Permalink redirection service.
     url(r"^r/(?P<content_type_id>\d+)-(?P<object_id>[^/]+)/$", "django.contrib.contenttypes.views.shortcut", name="permalink_redirect"),
