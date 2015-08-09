@@ -374,6 +374,14 @@ class ReplayPack(models.Model):
         blank=True,
     )
 
+    date_created = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    last_updated = models.DateTimeField(
+        auto_now=True,
+    )
+
     def __unicode__(self):
         return self.title
 
@@ -381,3 +389,6 @@ class ReplayPack(models.Model):
         return reverse('replaypack:detail', kwargs={
             'pk': self.pk,
         })
+
+    class Meta:
+        ordering = ['-last_updated', '-date_created']
