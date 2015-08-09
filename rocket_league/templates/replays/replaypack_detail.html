@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load cache %}
+
+{% block content_primary %}
+{% cache 3600 'replaypack_detail' replaypack.pk %}
+
+{% if replaypack.title %}
+<div class="row">
+    <div class="medium-12 columns">
+        <h2>{{ replaypack.title }}</h2>
+        <hr>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="medium-6 columns">
+        <h3>Game information</h3>
+
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <th colspan="2" class="text-center">
+                        <a href="{% url 'replaypack:download' pk=replaypack.pk %}">Download replay pack</a>
+                    </th>
+                </tr>
+                <tr>
+                    <td>
+                        Number of replays
+                    </td>
+                    <td>
+                        {{ replaypack.replays.count }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Date created:</td>
+                    <td>{{ replaypack.date_created }}</td>
+                </tr>
+
+                <tr>
+                    <td>Last updated:</td>
+                    <td>{{ replaypack.last_updated }}</td>
+                </tr>
+
+                <tr>
+                    <td>Maps included:</td>
+                    <td>{{ replaypack.maps }}</td>
+                </tr>
+
+                <tr>
+                    <td>Total duration:</td>
+                    <td>{{ replaypack.total_duration }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="medium-6 columns">
+        <h3>Players</h3>
+
+        <table width="100%">
+            <tbody>
+                {% for player in replaypack.players %}
+                    {% if forloop.counter0|divisibleby:2 %}
+                        <tr>
+                    {% endif %}
+
+                    <td>{{ player }}</td>
+
+                    {% if forloop.counter|divisibleby:2 or forloop.last %}
+                        {% if forloop.last and forloop.counter0|divisibleby:2 %}
+                            <td></td>
+                        {% endif %}
+
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
+    </div>
+</div>
+<div class="row">
+
+    <div class="medium-12 columns">
+        <h3>Replays included</h3>
+
+        <table width="100%" class="expand">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Map</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Length</th>
+                    <th>Region</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for replay in replaypack.replays.all %}
+                    {% cache 3600 'replay_list_item' replay.pk %}
+                        <tr data-href="{{ replay.get_absolute_url }}">
+                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
+                            <td>{{ replay.map }}</td>
+                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
+                            <td>{{ replay.match_length }}</td>
+                            <td>{{ replay.region }}</td>
+                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                        </tr>
+                    {% endcache %}
+                {% empty %}
+                <tr>
+                    <td colspan="7">There are currently no replays to display. Try adjusting the search options above.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endcache %}
+{% endblock content_primary %}

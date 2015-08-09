@@ -382,6 +382,30 @@ class ReplayPack(models.Model):
         auto_now=True,
     )
 
+    def maps(self):
+        maps = set([
+            str(replay.map) for replay in self.replays.all()
+        ])
+
+        return ', '.join(maps)
+
+    def players(self):
+        players = set([
+            player.player_name
+            for replay in self.replays.all()
+            for player in replay.player_set.all()
+        ])
+
+        return players
+
+    def total_duration(self):
+        calculation = sum([replay.num_frames for replay in self.replays.all()]) / 30
+        minutes, seconds = divmod(calculation, 60)
+        return '%dm %02ds' % (
+            int(minutes),
+            int(seconds),
+        )
+
     def __unicode__(self):
         return self.title
 
