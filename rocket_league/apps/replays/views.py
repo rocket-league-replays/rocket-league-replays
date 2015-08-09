@@ -1,8 +1,9 @@
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.views.generic import DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DeleteView, DetailView, CreateView, UpdateView
 
-from .forms import ReplayUploadForm, ReplayFilter, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay
+from .forms import ReplayUploadForm, ReplayFilter, ReplayPackForm, ReplayUpdateForm
+from .models import Goal, Map, Player, Replay, ReplayPack
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 from ...utils.forms import AjaxableResponseMixin
 
@@ -71,6 +72,58 @@ class ReplayUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return self.request.path
+
+
+# Replay packs
+class ReplayPackCreateView(LoginRequiredMixin, CreateView):
+    model = ReplayPack
+    form_class = ReplayPackForm
+    template_name_suffix = '_create'
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        return super(ReplayPackCreateView, self).form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super(ReplayPackCreateView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+
+class ReplayPackUpdateView(LoginRequiredMixin, UpdateView):
+    model = ReplayPack
+    form_class = ReplayPackForm
+    template_name_suffix = '_create'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user != self.get_object().user:
+            raise PermissionDenied
+
+        return super(ReplayPackUpdateView, self).dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super(ReplayPackUpdateView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+
+class ReplayPackDetailView(DetailView):
+    model = ReplayPack
+
+
+class ReplayPackListView(ListView):
+    model = ReplayPack
+    paginate_by = 20
+
+
+class ReplayPackDeleteView(DeleteView):
+    model = ReplayPack
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user != self.get_object().user:
+            raise PermissionDenied
+
+        return super(ReplayPackDeleteView, self).dispatch(request, *args, **kwargs)
 
 
 # API ViewSets

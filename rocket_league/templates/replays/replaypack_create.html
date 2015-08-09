@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load cache replays %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>Create replay pack</h3>
+    </div>
+</div>
+
+<form action="" method="post">
+    {% csrf_token %}
+    <div class="row">
+        <div class="medium-6 columns">
+            {{ form.title.label_tag }}
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+
+        <div class="medium-6 columns">
+            <h5>What is a replay pack?</h5>
+
+            <p>A replay pack is a collection of replays, which makes it easier to share replays from tournaments, ranked play and everything else.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <h3>Your replays</h3>
+
+            <table width="100%" class="expand">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox"></th>
+                        <th>#</th>
+                        <th>Map</th>
+                        <th>Type</th>
+                        <th>Score</th>
+                        <th>Length</th>
+                        <th>Region</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for replay_pk, replay_title in form.replays.field.widget.choices %}
+                        <tr>
+                            <td><input type="checkbox" name="{{ form.replays.name }}" value="{{ replay_pk }}" {% if replay_pk in form.replays.value %}checked="checked"{% endif %}></td>
+
+                            {% cache 3600 'replay_create_item' replay_pk %}
+                            {% get_replay_by_pk replay_pk as replay %}
+                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
+                            <td>{{ replay.map }}</td>
+                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
+                            <td>{{ replay.match_length }}</td>
+                            <td>{{ replay.region }}</td>
+                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                            {% endcache %}
+                        </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7">You have not yet uploaded any replays.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <input type="submit" class="button small" value="{% if object %}Update{% else %}Create{% endif %}">
+</form>
+
+<script>
+$(function() {
+    $('th input[type=checkbox]').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('td input[type=checkbox]').prop('checked', true);
+        } else {
+            $('td input[type=checkbox]').prop('checked', false);
+        }
+    })
+});
+</script>
+{% endblock %}

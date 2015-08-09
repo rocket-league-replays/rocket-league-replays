@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load cache pagination %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>All replays</h3>
+        <p>Below you can find all replays which have been uploaded to {{ settings.SITE_NAME }}.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="small-12 columns panel">
+        <form action="" method="get">
+            {% for field in filter.form %}
+                <div class="medium-3 columns">
+                    {{ field.label }}
+                    {{ field }}
+                </div>
+            {% endfor %}
+
+            <div class="medium-3 columns">
+                <label for="">Region</label>
+                <select name="" id="">
+                    <option value="">EU</option>
+                </select>
+            </div>
+
+            <div class="medium-3 columns">
+                <label for="">Total goals</label>
+                <input type="text" placeholder="11">
+            </div>
+
+            <div class="medium-3 columns">
+                <label for="">Match length</label>
+                <input type="text" placeholder="6:00">
+            </div>
+
+            <div class="medium-12 columns">
+                <label>&nbsp;</label>
+                <input type="submit" class="button tiny">
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="medium-12 columns text-center">
+        <p>{{ page_obj.paginator.count }} replays found.</p>
+    </div>
+    <div class="medium-12 columns">
+        <table width="100%" class="expand">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Map</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Length</th>
+                    <th>Region</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for replay in object_list %}
+                    {% cache 3600 'replay_list_item' replay.pk %}
+                        <tr data-href="{{ replay.get_absolute_url }}">
+                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
+                            <td>{{ replay.map }}</td>
+                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
+                            <td>{{ replay.match_length }}</td>
+                            <td>{{ replay.region }}</td>
+                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                        </tr>
+                    {% endcache %}
+                {% empty %}
+                <tr>
+                    <td colspan="7">There are currently no replays to display. Try adjusting the search options above.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% pagination page_obj %}
+    </div>
+</div>
+
+
+<script>
+$(function() {
+    $('tr[data-href]').on('click', function(e) {
+        window.location = $('a[href]:first-of-type', this).attr('href');
+        return false;
+    });
+})
+</script>
+{% endblock content_primary %}

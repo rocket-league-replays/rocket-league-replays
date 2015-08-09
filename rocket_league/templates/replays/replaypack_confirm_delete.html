@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <h3>Delete replay pack "{{ object }}"</h3>
+        <p>Deleting a replay pack is a non-reversible operation. Once a replay pack is deleted, you can not recover it and you will need to re-create it using the account tools.</p>
+
+        <form action="" method="post">
+            {% csrf_token %}
+
+            {{ form }}
+
+            <hr>
+
+            <p>
+                <input class="button tiny alert" type="submit" value="Delete replay pack">
+
+                <span style="margin-left: 10px">or <a href="{% url 'users:profile' %}#replay-packs-tab">go back</a></span>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock content_primary %}

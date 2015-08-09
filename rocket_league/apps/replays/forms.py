@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.safestring import mark_safe
 
-from .models import Replay
+from .models import Replay, ReplayPack
 from ...utils.replay_parser import ReplayParser
 
 import django_filters
@@ -111,3 +111,21 @@ class ReplayUpdateForm(forms.ModelForm):
     class Meta:
         model = Replay
         fields = ['title']
+
+
+class ReplayPackForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user')
+        super(ReplayPackForm, self).__init__(*args, **kwargs)
+
+        self.fields['replays'].choices = [
+            (replay.pk, str(replay)) for replay in user.replay_set.all()
+        ]
+
+    class Meta:
+        model = ReplayPack
+        fields = ['title', 'replays']
+        widgets = {
+            'replays': forms.CheckboxSelectMultiple,
+        }
