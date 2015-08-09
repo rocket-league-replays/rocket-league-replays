@@ -389,6 +389,12 @@ class ReplayPack(models.Model):
 
         return ', '.join(maps)
 
+    def goals(self):
+        return sum([
+            replay.team_0_score + replay.team_1_score
+            for replay in self.replays.all()
+        ])
+
     def players(self):
         players = set([
             player.player_name

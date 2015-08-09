@@ -3,10 +3,11 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.views.generic import ListView, DeleteView, DetailView, CreateView, UpdateView, View
+from django.views.generic import DeleteView, DetailView, CreateView, UpdateView, View
 from django.views.generic.detail import SingleObjectMixin
 
-from .forms import ReplayUploadForm, ReplayFilter, ReplayPackForm, ReplayUpdateForm
+from .filters import ReplayFilter, ReplayPackFilter
+from .forms import ReplayUploadForm, ReplayPackForm, ReplayUpdateForm
 from .models import Goal, Map, Player, Replay, ReplayPack
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 from ...utils.forms import AjaxableResponseMixin
@@ -130,9 +131,11 @@ class ReplayPackDetailView(DetailView):
     model = ReplayPack
 
 
-class ReplayPackListView(ListView):
+class ReplayPackListView(FilterView):
     model = ReplayPack
     paginate_by = 20
+    template_name_suffix = '_list'
+    filterset_class = ReplayPackFilter
 
 
 class ReplayPackDeleteView(DeleteView):
