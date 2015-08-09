@@ -34,6 +34,16 @@
                 </tr>
 
                 <tr>
+                    <td>
+                        Creator
+                    </td>
+
+                    <td>
+                        <a href="{% url 'users:profile' username=replaypack.user.username %}">{{ replaypack.user }}</a>
+                    </td>
+                </tr>
+
+                <tr>
                     <td>Date created:</td>
                     <td>{{ replaypack.date_created }}</td>
                 </tr>

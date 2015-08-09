@@ -35,7 +35,13 @@
 
                 <tr>
                     <td>Uploader:</td>
-                    <td>{{ replay.player_name }}</td>
+                    <td>
+                        {% if replay.user %}
+                            <a href="{% url 'users:profile' username=replay.user.username %}">{{ replay.user }}</a>
+                        {% else %}
+                            {{ replay.player_name }}
+                        {% endif %}
+                    </td>
                 </tr>
 
                 <tr>
