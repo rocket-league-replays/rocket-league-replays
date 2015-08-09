@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
 from django.template.loader import render_to_string
@@ -79,6 +80,19 @@ class ReplayUpdateView(LoginRequiredMixin, UpdateView):
         return self.request.path
 
 
+class ReplayDeleteView(DeleteView):
+    model = Replay
+
+    def get_success_url(self):
+        return reverse('users:profile')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user != self.get_object().user:
+            raise PermissionDenied
+
+        return super(ReplayDeleteView, self).dispatch(request, *args, **kwargs)
+
+
 # Replay packs
 class ReplayPackCreateView(LoginRequiredMixin, CreateView):
     model = ReplayPack
@@ -123,6 +137,11 @@ class ReplayPackListView(ListView):
 
 class ReplayPackDeleteView(DeleteView):
     model = ReplayPack
+
+    def get_success_url(self):
+        return '{}#replay-packs-tab'.format(
+            reverse('users:profile')
+        )
 
     def dispatch(self, request, *args, **kwargs):
         if request.user != self.get_object().user:

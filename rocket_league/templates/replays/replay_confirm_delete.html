@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="medium-12 columns">
+        <h3>Delete replay "{{ object }}"</h3>
+        <p>Deleting a replay is a non-reversible operation. Once a replay is deleted, you can not recover it and you will need to re-upload it.</p>
+
+        <form action="" method="post">
+            {% csrf_token %}
+
+            {{ form }}
+
+            <hr>
+
+            <p>
+                <input class="button tiny alert" type="submit" value="Delete replay">
+
+                <span style="margin-left: 10px">or <a href="{% url 'users:profile' %}#replay-tab">go back</a></span>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock content_primary %}

@@ -8,5 +8,6 @@ urlpatterns = patterns(
     url(r'^map/(?P<slug>[^/]+)/$', views.ReplayListView.as_view(), name='list'),
     url(r'^(?P<pk>\d+)/$', views.ReplayDetailView.as_view(), name='detail'),
     url(r'^upload/$', views.ReplayCreateView.as_view(), name='upload'),
+    url(r'^delete/(?P<pk>\d+)/$', views.ReplayDeleteView.as_view(), name='delete'),
     url(r'^update/(?P<pk>\d+)/$', views.ReplayUpdateView.as_view(), name='update'),
 )
