@@ -1,11 +1,14 @@
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.safestring import mark_safe
 
 from ...utils.replay_parser import ReplayParser
 
 from datetime import datetime
 import re
+import struct
 import time
 
 
@@ -223,6 +226,26 @@ class Replay(models.Model):
             '{}-{}'.format(self.team_0_score, self.team_1_score),
             self.player_name,
         )
+
+    def clean(self):
+        if self.file:
+            # Process the file.
+            parser = ReplayParser()
+
+            try:
+                replay_data = parser.parse(self.file)
+
+                # Check if this replay has already been uploaded.
+                replay = Replay.objects.filter(
+                    replay_id=replay_data['Id']
+                )
+
+                if replay.count() > 0:
+                    raise ValidationError(mark_safe("This replay has already been uploaded, <a href='{}'>you can view it here</a>.".format(
+                        replay[0].get_absolute_url()
+                    )))
+            except struct.error:
+                raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
     def save(self, *args, **kwargs):
         super(Replay, self).save(*args, **kwargs)

@@ -1,42 +1,6 @@
 from django import forms
-from django.utils.safestring import mark_safe
 
 from .models import Replay, ReplayPack
-from ...utils.replay_parser import ReplayParser
-
-import struct
-
-
-class ReplayUploadForm(forms.ModelForm):
-
-    def clean(self):
-        cleaned_data = super(ReplayUploadForm, self).clean()
-
-        if cleaned_data.get('file'):
-            # Process the file.
-            parser = ReplayParser()
-
-            try:
-                replay_data = parser.parse(cleaned_data['file'])
-
-                # Check if this replay has already been uploaded.
-                try:
-                    replay = Replay.objects.get(
-                        replay_id=replay_data['Id']
-                    )
-
-                    raise forms.ValidationError(mark_safe("This replay has already been uploaded, <a href='{}'>you can view it here</a>.".format(
-                        replay.get_absolute_url()
-                    )))
-                except Replay.DoesNotExist:
-                    # This is a good thing.
-                    pass
-            except struct.error:
-                raise forms.ValidationError("The file you selected does not seem to be a valid replay file.")
-
-    class Meta:
-        model = Replay
-        fields = ['file']
 
 
 class ReplayUpdateForm(forms.ModelForm):

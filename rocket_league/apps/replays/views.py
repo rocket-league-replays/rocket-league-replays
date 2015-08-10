@@ -7,7 +7,7 @@ from django.views.generic import DeleteView, DetailView, CreateView, UpdateView,
 from django.views.generic.detail import SingleObjectMixin
 
 from .filters import ReplayFilter, ReplayPackFilter
-from .forms import ReplayUploadForm, ReplayPackForm, ReplayUpdateForm
+from .forms import ReplayPackForm, ReplayUpdateForm
 from .models import Goal, Map, Player, Replay, ReplayPack
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
 from ...utils.forms import AjaxableResponseMixin
@@ -44,7 +44,7 @@ class ReplayDetailView(DetailView):
 
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
-    form_class = ReplayUploadForm
+    fields = ['file']
 
     def form_valid(self, form):
         if self.request.user.is_authenticated():
