@@ -146,6 +146,10 @@ class Replay(models.Model):
         null=True,
     )
 
+    excitement_factor = models.FloatField(
+        default=0.00,
+    )
+
     processed = models.BooleanField(
         default=False,
     )
@@ -209,6 +213,56 @@ class Replay(models.Model):
             int(seconds),
         )
 
+    def calculate_excitement_factor(self):
+        # Multiplers for use in factor tweaking.
+        swing_rating_multiplier = 5
+        goal_count_multiplier = 1.5
+
+        # Calculate how the swing changed throughout the game.
+        swing = 0
+        swing_values = []
+
+        for goal in self.goal_set.all():
+            if goal.player.team == 0:
+                swing -= 1
+            else:
+                swing += 1
+
+            swing_values.append(swing)
+
+        if self.team_0_score > self.team_1_score:
+            # Team 0 won, but were they ever losing?
+            deficit_values = filter(lambda x: x > 0, swing_values)
+
+            if deficit_values:
+                deficit = max(swing_values)
+            else:
+                deficit = 0
+
+            score_min_def = self.team_0_score - deficit
+        else:
+            # Team 1 won, but were they ever losing?
+            deficit_values = filter(lambda x: x < 0, swing_values)
+
+            if deficit_values:
+                deficit = abs(min(deficit_values))
+            else:
+                deficit = 0
+
+            score_min_def = self.team_1_score - deficit
+
+        if score_min_def != 0:
+            swing_rating = float(deficit) / score_min_def * swing_rating_multiplier
+        else:
+            swing_rating = 0
+
+        # Now we have the swing rating, adjust it by the total number of goals.
+        # This gives us a "base value" for each replay and allows replays with
+        # lots of goals but not much swing to get reasonable rating.
+        swing_rating += (self.team_0_score + self.team_1_score) * goal_count_multiplier
+
+        return swing_rating
+
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
             'pk': self.pk,
@@ -228,6 +282,9 @@ class Replay(models.Model):
         )
 
     def clean(self):
+        if self.pk:
+            return
+
         if self.file:
             # Process the file.
             parser = ReplayParser()
@@ -316,6 +373,7 @@ class Replay(models.Model):
             self.num_frames = data['NumFrames']
             self.record_fps = data['RecordFPS']
 
+            self.excitement_factor = self.calculate_excitement_factor()
             self.processed = True
             self.save()
 

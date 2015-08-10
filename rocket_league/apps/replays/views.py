@@ -33,7 +33,7 @@ class ReplayListView(FilterView):
         qs = qs.exclude(
             Q(processed=False) |
             Q(replay_id='')
-        )
+        ).order_by('-excitement_factor')
 
         return qs
 

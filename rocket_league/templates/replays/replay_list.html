@@ -59,6 +59,7 @@
                     <th>Length</th>
                     <th>Region</th>
                     <th>Date</th>
+                    <th>Excitement Factor</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +73,7 @@
                             <td>{{ replay.match_length }}</td>
                             <td>{{ replay.region }}</td>
                             <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
+                            <td>{{ replay.excitement_factor|floatformat }}</td>
                         </tr>
                     {% endcache %}
                 {% empty %}
