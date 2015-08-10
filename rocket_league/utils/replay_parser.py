@@ -10,6 +10,7 @@ class ReplayParser(object):
     def parse(self, obj):
         if hasattr(obj, 'read'):
             replay_file = obj
+            replay_file.seek(0)
         else:
             replay_file = open(obj.file.path, 'rb')
 
