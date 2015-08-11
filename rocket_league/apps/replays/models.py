@@ -455,6 +455,12 @@ class ReplayPack(models.Model):
         blank=True,
     )
 
+    file = models.FileField(
+        upload_to='uploads/replaypack_files',
+        blank=True,
+        null=True,
+    )
+
     date_created = models.DateTimeField(
         auto_now_add=True,
     )

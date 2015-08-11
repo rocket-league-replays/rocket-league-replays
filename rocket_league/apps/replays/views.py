@@ -1,4 +1,5 @@
 from django.core.exceptions import PermissionDenied
+from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
@@ -126,6 +127,10 @@ class ReplayPackUpdateView(LoginRequiredMixin, UpdateView):
         kwargs['user'] = self.request.user
         return kwargs
 
+    def form_valid(self, form):
+        self.object.file.delete()
+        return super(ReplayPackUpdateView, self).form_valid(form)
+
 
 class ReplayPackDetailView(DetailView):
     model = ReplayPack
@@ -159,6 +164,12 @@ class ReplayPackDownloadView(SingleObjectMixin, View):
     def get(self, request, *args, **kwargs):
         obj = self.get_object()
         zip_filename = '{}.zip'.format(str(obj))
+
+        if obj.file:
+            response = HttpResponse(obj.file.read(), content_type="application/x-zip-compressed")
+            response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
+            return response
+
         zip_string = StringIO.StringIO()
 
         with ZipFile(zip_string, 'w') as f:
@@ -174,7 +185,7 @@ class ReplayPackDownloadView(SingleObjectMixin, View):
             f.writestr('README.txt', str(readme))
         f.close()
 
-        # print zip_string.getvalue()
+        obj.file.save(zip_filename, ContentFile(zip_string.getvalue()))
 
         response = HttpResponse(zip_string.getvalue(), content_type="application/x-zip-compressed")
         response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
