@@ -56,6 +56,8 @@ urlpatterns = patterns(
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
     url(r'^register/$', RegistrationView.as_view(form_class=RegistrationForm), name='register'),
+
+    url(r'^logout/$', 'django.contrib.auth.views.logout_then_login', name='auth_logout'),
     url(r'', include('registration.auth_urls', namespace='auth')),
     url(r'', include('rocket_league.apps.users.urls', namespace='users')),
 

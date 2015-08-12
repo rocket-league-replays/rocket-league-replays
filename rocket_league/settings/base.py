@@ -309,6 +309,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
+LOGIN_URL = reverse_lazy('auth:auth_login')
 LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
 
 SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'
