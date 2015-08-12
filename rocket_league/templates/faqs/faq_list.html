@@ -9,11 +9,13 @@
 
         <hr>
 
-        <ul>
-            {% for faq in object_list %}
-                <li><a href="{{ faq.get_absolute_url }}">{{ faq.question }}</a></li>
-            {% endfor %}
-        </ul>
+        <div class="small-7 small-centered columns">
+            <ul style="font-size:16px;">
+                {% for faq in object_list %}
+                    <li><a href="{{ faq.get_absolute_url }}">{{ faq.question }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </div>
 {% endblock content_primary %}
