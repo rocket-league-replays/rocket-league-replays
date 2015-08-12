@@ -111,7 +111,7 @@
             </thead>
             <tbody>
                 {% for replay in replaypack.replays.all %}
-                    {% cache 3600 'replay_list_item' replay.pk %}
+                    {% cache 3600 'replaypack_replay_list_item' replaypack.pk replay.pk %}
                         <tr data-href="{{ replay.get_absolute_url }}">
                             <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
                             <td>{{ replay.map }}</td>
