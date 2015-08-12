@@ -1,1 +1,53 @@
-Settings!
+<form action="" method="post">
+    {% csrf_token %}
+
+    {% for message in messages %}
+        <div class="alert-box success">{{ message }}</div>
+    {% endfor %}
+
+    <div class="row double-input {% if form.username.errors or form.old_password.errors %}errored{% endif %}">
+        <div class="medium-6 columns">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+
+            {% for error in form.username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div class="medium-6 columns">
+            {{ form.old_password.label_tag }}
+            {{ form.old_password }}
+
+            {% for error in form.old_password.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+
+    <div class="row double-input {% if form.new_password1.errors or form.new_password2.errors %}errored{% endif %}">
+        <div class="medium-6 columns">
+            {{ form.new_password1.label_tag }}
+            {{ form.new_password1 }}
+
+            {% for error in form.new_password1.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div class="medium-6 columns">
+            {{ form.new_password2.label_tag }}
+            {{ form.new_password2 }}
+
+            {% for error in form.new_password2.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% for error in form.non_field_errors %}
+        <span class="field-error">{{ error }}</span>
+    {% endfor %}
+
+    <input type="submit" class="button small" value="Update settings">
+</form>
