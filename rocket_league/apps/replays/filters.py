@@ -29,12 +29,8 @@ class ReplayFilter(django_filters.FilterSet):
         )
     )
 
-    match_type = django_filters.filters.ChoiceFilter(
-        choices=(
-            (None, 'Any'),
-            ('Online', 'Online'),
-            ('Offline', 'Offline'),
-        )
+    excitement_factor = django_filters.filters.NumberFilter(
+        lookup_type='gte',
     )
 
     total_goals = django_filters.filters.NumberFilter(
@@ -72,7 +68,7 @@ class ReplayFilter(django_filters.FilterSet):
 
     class Meta:
         model = Replay
-        fields = ['map', 'server_name', 'team_sizes', 'match_type']
+        fields = ['map', 'server_name', 'team_sizes', 'excitement_factor']
         strict = False
         order_by = [
             ('-excitement_factor', 'Excitement factor'),
