@@ -24,7 +24,7 @@ import StringIO
 
 class ReplayListView(FilterView):
     model = Replay
-    paginate_by = 20
+    paginate_by = 30
     template_name_suffix = '_list'
     filterset_class = ReplayFilter
 
