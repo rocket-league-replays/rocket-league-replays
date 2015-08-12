@@ -13,10 +13,12 @@
     <div class="small-12 columns panel">
         <form action="" method="get">
             {% for field in filter.form %}
-                <div class="medium-3 columns">
-                    {{ field.label }}
-                    {{ field }}
-                </div>
+                {% if field.name != 'order' %}
+                    <div class="medium-3 columns">
+                        {{ field.label }}
+                        {{ field }}
+                    </div>
+                {% endif %}
             {% endfor %}
 
             <div class="medium-3 columns">
@@ -56,10 +58,37 @@
                     <th>Map</th>
                     <th>Type</th>
                     <th>Score</th>
-                    <th>Length</th>
+                    <th class="orderable" data-order-key="num_frames">
+                        Length
+                        {% if filter.form.order.value == '-num_frames' %}
+                            <em class="icon-down-dir"></em>
+                        {% elif filter.form.order.value == 'num_frames' %}
+                            <em class="icon-up-dir"></em>
+                        {% else %}
+                            <em class="icon-sort"></em>
+                        {% endif %}
+                    </th>
                     <th>Region</th>
-                    <th>Date</th>
-                    <th>Excitement Factor</th>
+                    <th class="orderable" data-order-key="timestamp">
+                        Date
+                        {% if filter.form.order.value == '-timestamp' %}
+                            <em class="icon-down-dir"></em>
+                        {% elif filter.form.order.value == 'timestamp' %}
+                            <em class="icon-up-dir"></em>
+                        {% else %}
+                            <em class="icon-sort"></em>
+                        {% endif %}
+                    </th>
+                    <th class="orderable" data-order-key="excitement_factor">
+                        Excitement Factor (?)
+                        {% if filter.form.order.value == '-excitement_factor' or not filter.form.order.value %}
+                            <em class="icon-down-dir"></em>
+                        {% elif filter.form.order.value == 'excitement_factor' %}
+                            <em class="icon-up-dir"></em>
+                        {% else %}
+                            <em class="icon-sort"></em>
+                        {% endif %}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -88,12 +117,38 @@
     </div>
 </div>
 
+<style>
+th.orderable {
+    cursor: pointer;
+}
+</style>
 
 <script>
 $(function() {
     $('tr[data-href]').on('click', function(e) {
         window.location = $('a[href]:first-of-type', this).attr('href');
         return false;
+    });
+
+    $('th.orderable').on('click', function() {
+        {% if not filter.form.order.value %}
+        if (window.location.search.length > 0) {
+            window.location = window.location.href + '&{{ filter.order_by_field }}=-' + $(this).data('order-key');
+        } else {
+            window.location = window.location.href + '?{{ filter.order_by_field }}=-' + $(this).data('order-key');
+        }
+        {% else %}
+        if ('-' + $(this).data('order-key') === '{{ filter.form.order.value }}') {
+            // We're currently ordered by this key descending.
+            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ filter.form.order.value }}', '{{ filter.order_by_field }}=' + $(this).data('order-key'))
+
+        } else {
+            // We're currently ordered by a different key entirely.
+            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ filter.form.order.value }}', '{{ filter.order_by_field }}=-' + $(this).data('order-key'))
+        }
+
+        window.location = window.location.pathname + new_search;
+        {% endif %}
     });
 })
 </script>

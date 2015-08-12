@@ -34,9 +34,20 @@ class ReplayFilter(django_filters.FilterSet):
         )
     )
 
+    order_by_field = 'order'
+
     class Meta:
         model = Replay
         fields = ['map', 'server_name', 'team_sizes', 'match_type']
+        strict = False
+        order_by = [
+            ('-excitement_factor', 'Excitement factor'),
+            ('excitement_factor', 'Excitement factor'),
+            ('-timestamp', 'Date'),
+            ('timestamp', 'Date'),
+            ('-num_frames', 'Length'),
+            ('num_frames', 'Length'),
+        ]
 
 
 class ReplayPackFilter(django_filters.FilterSet):
