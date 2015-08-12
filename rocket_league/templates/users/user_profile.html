@@ -16,7 +16,7 @@
             <li class="tab-title active"><a href="#replays-tab">Replays</a></li>
             <li class="tab-title"><a href="#replay-packs-tab">Replay packs</a></li>
             <li class="tab-title"><a href="#desktop-application-tab">Desktop application</a></li>
-            <li class="tab-title"><a href="#rank-tracker-tab">Rank tracker</a></li>
+            {# <li class="tab-title"><a href="#rank-tracker-tab">Rank tracker</a></li> #}
             <li class="tab-title"><a href="#settings-tab">Settings</a></li>
         </ul>
     </div>
@@ -34,9 +34,11 @@
             {% include "users/sections/desktop_application.html" %}
         </div>
 
+        {% comment %}
         <div class="content" id="rank-tracker-tab">
             {% include "users/sections/rank_tracker.html" %}
         </div>
+        {% endcomment %}
 
         <div class="content" id="settings-tab">
             {% include "users/sections/settings.html" %}
