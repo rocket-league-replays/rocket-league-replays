@@ -186,8 +186,8 @@ class Replay(models.Model):
         if not self.server_name:
             return 'N/A'
 
-        match = re.search(r'(EU|USE|USW|OCE)(\d+)-([A-Z][a-z]+)', self.server_name).groups()
-        return match[0]
+        match = re.search(settings.SERVER_REGEX, self.server_name).groups()
+        return match[1]
 
     def lag_report_url(self):
         base_url = 'https://psyonixhr.wufoo.com/forms/game-server-performance-report'
@@ -195,7 +195,7 @@ class Replay(models.Model):
             return base_url
 
         # Split out the server name.
-        match = re.search(r'(EU|USE|USW|OCE)(\d+)-([A-Z][a-z]+)', self.server_name).groups()
+        match = re.search(r'(EU|USE|USW|OCE|SAM)(\d+)(-([A-Z][a-z]+))?', self.server_name).groups()
 
         return "{}/def/field1={}&field2={}&field13={}".format(
             base_url,

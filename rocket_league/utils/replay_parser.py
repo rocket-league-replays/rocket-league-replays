@@ -1,3 +1,5 @@
+from django.conf import settings
+
 import pprint
 import re
 import struct
@@ -134,7 +136,7 @@ class ReplayParser(object):
 
     # Temporary method while we learn the replay format.
     def manual_parse(self, results, replay_file):
-        server_regexp = re.compile(r'((?:EU|USE|USW|OCE)\d+-[A-Z][a-z]+)')
+        server_regexp = re.compile(settings.SERVER_REGEX)
 
         search = server_regexp.search(replay_file.read())
         if search:

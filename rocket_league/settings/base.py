@@ -314,6 +314,8 @@ LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
 SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'
 SOCIAL_AUTH_STEAM_EXTRA_DATA = ['player']
 
+SERVER_REGEX = r'((EU|USE|USW|OCE|SAM)\d+(-[A-Z][a-z]+)?)'
+
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
     # our real migration files, so point to a nonexistent one, which will make
