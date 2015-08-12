@@ -28,7 +28,6 @@ class UserSettingsForm(forms.ModelForm):
     )
 
     def clean(self):
-        print self.instance
         """
         Validates that the old_password field is correct.
         """
