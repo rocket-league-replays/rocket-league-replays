@@ -24,7 +24,7 @@ table.expand {
     border-left: none;
     border-right: none;
     margin: 0 #{-$column-gutter / 2} $column-gutter / 2;
-    width: calc(100% + #{$column-gutter});
+    width: calc(100% - -#{$column-gutter});
 }
 
 p {
@@ -66,6 +66,6 @@ p {
 }
 
 hr {
-    width: calc(100% + #{$column-gutter});
+    width: calc(100% - -#{$column-gutter});
     margin: 20px #{-$column-gutter / 2};
 }
