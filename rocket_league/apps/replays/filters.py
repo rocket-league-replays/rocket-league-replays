@@ -1,4 +1,7 @@
 from django.contrib.auth.models import User
+from django.db import models
+from django.db.models import F, Sum, ExpressionWrapper
+
 
 from .models import Replay, ReplayPack
 
@@ -31,6 +34,37 @@ class ReplayFilter(django_filters.FilterSet):
             (None, 'Any'),
             ('Online', 'Online'),
             ('Offline', 'Offline'),
+        )
+    )
+
+    total_goals = django_filters.filters.NumberFilter(
+        action=lambda qs, value: qs.annotate(
+            goals=Sum(F('team_0_score') + F('team_1_score'))
+        ).filter(goals__gte=value)
+    )
+
+    region = django_filters.filters.ChoiceFilter(
+        choices=(
+            (None, 'Any'),
+            ('EU', 'EU'),
+            ('USE', 'US East'),
+            ('USW', 'US West'),
+            ('OCE', 'Oceania'),
+            ('SAM', 'South America'),
+        ),
+        name='server_name',
+        lookup_type='startswith',
+    )
+
+    match_length = django_filters.filters.NumberFilter(
+        label='Match length (in seconds)',
+        action=lambda qs, value: qs.annotate(
+            seconds=ExpressionWrapper(
+                F('num_frames') / F('record_fps'),
+                output_field=models.IntegerField()
+            )
+        ).filter(
+            seconds__gte=value,
         )
     )
 
