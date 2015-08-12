@@ -101,7 +101,15 @@
             </tbody>
         </table>
 
-        <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
+        {% if replay.player_set.count != replay.team_sizes|add:replay.team_sizes %}
+        <p>
+            It looks like there might be some players missing from this list.
+            {% if replay.user == user %}
+                If you know their names, you can <a href="{% url 'replay:update' pk=replay.pk %}">add them here</a>.
+            {% else %}
+                <a href="/faqs/">Click here</a> to find out why.</p>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 <div class="row">
