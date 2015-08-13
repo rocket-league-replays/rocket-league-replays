@@ -1,8 +1,8 @@
-.dz-clickable:not(.dz-have-files) .dropzone-previews {
+body:not(.dz-have-files) .dropzone-previews {
     display: none;
 }
 
-.dz-clickable .dropzone-previews {
+.dropzone-previews {
     position: absolute;
     top: 70px;
     max-width: 500px;
