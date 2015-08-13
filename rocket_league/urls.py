@@ -11,9 +11,9 @@ from cms.views import TextTemplateView
 from cms.forms import CMSPasswordChangeForm
 
 from .apps.replays.views import GoalViewSet, ReplayViewSet, PlayerViewSet, MapViewSet
-from .apps.site.forms import RegistrationForm
+from .apps.users.forms import RegistrationForm
+from .apps.users.views import RegistrationView
 
-from registration.backends.simple.views import RegistrationView
 from rest_framework import routers
 
 
