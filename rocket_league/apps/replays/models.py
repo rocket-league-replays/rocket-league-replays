@@ -215,8 +215,8 @@ class Replay(models.Model):
 
     def calculate_excitement_factor(self):
         # Multiplers for use in factor tweaking.
-        swing_rating_multiplier = 5
-        goal_count_multiplier = 1.5
+        swing_rating_multiplier = 8
+        goal_count_multiplier = 1.2
 
         # Calculate how the swing changed throughout the game.
         swing = 0
