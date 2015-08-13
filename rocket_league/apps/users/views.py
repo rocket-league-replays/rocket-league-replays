@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
@@ -54,4 +55,4 @@ class RegistrationView(BaseRegistrationView):
         return new_user
 
     def get_success_url(self, user):
-        return '/'
+        return settings.LOGIN_REDIRECT_URL
