@@ -150,6 +150,7 @@ INSTALLED_APPS = [
     "rocket_league.apps.faqs",
     "rocket_league.apps.replays",
     "rocket_league.apps.site",
+    "rocket_league.apps.users",
 
     'server_management',
     'django_extensions',
@@ -311,11 +312,22 @@ AUTHENTICATION_BACKENDS = (
 
 LOGIN_URL = reverse_lazy('auth:auth_login')
 LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
+AUTH_PROFILE_MODULE = 'rocket_league.apps.users.models.Profile'
 
 SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'
 SOCIAL_AUTH_STEAM_EXTRA_DATA = ['player']
 
 SERVER_REGEX = r'((EU|USE|USW|OCE|SAM)\d+(-[A-Z][a-z]+)?)'
+
+PLAYLISTS = {
+    'UnrankedDuels': 1,
+    'UnrankedDoubles': 2,
+    'UnrankedStandard': 3,
+    'UnrankedChaos': 4,
+    'RankedDuels': 10,
+    'RankedDoubles': 11,
+    'RankedStandard': 12,
+}
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
