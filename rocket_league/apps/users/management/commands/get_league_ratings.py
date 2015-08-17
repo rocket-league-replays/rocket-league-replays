@@ -16,5 +16,4 @@ class Command(BaseCommand):
         headers = api_login()
 
         for user in users:
-            if user.user.profile.can_update_ratings():
-                get_league_data(user, headers)
+            get_league_data(user, headers)

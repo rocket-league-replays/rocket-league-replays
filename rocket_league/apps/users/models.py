@@ -7,16 +7,6 @@ from django.utils.timezone import now
 class Profile(models.Model):
     user = models.OneToOneField(User)
 
-    def can_update_ratings(self):
-        # Get the last update.
-        ratings = self.user.leaguerating_set.all()[:1]
-
-        if not ratings:
-            return True
-
-        diff = now() - ratings[0].timestamp
-        return diff.seconds > 300
-
     def latest_ratings(self):
         ratings = self.user.leaguerating_set.all()[:1]
 
