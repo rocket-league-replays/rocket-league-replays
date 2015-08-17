@@ -48,8 +48,7 @@ header {
 
 .secondary-navigation {
     list-style: none;
-    margin: 0;
-    margin-top: 12px;
+    margin-top: 12px !important;
     padding: 10px $column-gutter / 2;
     border-top: 1px solid $layout-border-color;
     border-bottom: 1px solid $layout-border-color;

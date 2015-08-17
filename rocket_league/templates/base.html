@@ -1,4 +1,4 @@
-{% load pages html compress %}
+{% load pages html compress ratings %}
 
 <!DOCTYPE html>
 <html>
@@ -27,10 +27,15 @@
             <link rel="stylesheet" href="/static/css/normalize.css"/>
             <link rel="stylesheet" href="/static/css/screen.css"/>
             <link rel="stylesheet" href="/static/css/dropzone.css"/>
+
+            <style>
+            span[title] {
+                cursor: help;
+            }
+            </style>
         {% endcompress %}
 
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-        <script src="/static/js/vendor/modernizr.js"></script>
 
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/img/icons/apple-touch-icon-57x57.png">
@@ -98,9 +103,24 @@
                     </ul>
                 </div>
 
-                <div class="row">
-                    <div class="small-12 columns text-right secondary-navigation">
+                <div class="row secondary-navigation">
+                    <div class="medium-6 columns ">
+                        {% if 'steam' not in backends.not_associated %}
+                            {% league_data as data %}
+                            {% if data %}
+                                <span title="This is your rating for ranked duels.">{{ data.10 }}</span> /
+                                <span title="This is your rating for ranked doubles.">{{ data.11 }}</span> /
+                                <span title="This is your rating for ranked standard.">{{ data.12 }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="medium-6 columns right text-right ">
                         {% if user.is_authenticated %}
+
+                        {% if 'steam' in backends.not_associated %}
+                            <a href="{% url 'social:begin' backend='steam' %}">Connect to Steam</a>
+                        {% endif %}
+
                         <a href="{% url 'users:profile' %}">Account</a>
 
                         <a href="{% url 'auth:auth_logout' %}">Logout</a>
