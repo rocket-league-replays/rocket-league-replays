@@ -32,8 +32,8 @@ def api_login():
     if r.text != '1':
         raise Exception("Unable to login.")
 
-    session_id = re.match(r'PHPSESSID=(.*); path=/', r.headers['set-cookie']).group(1)
-    HEADERS['Cookie'] = 'PHPSESSID=' + session_id
+    session_id = re.match(r'SESSIONID=(.*); path=/', r.headers['set-cookie']).group(1)
+    HEADERS['Cookie'] = 'SESSIONID=' + session_id
 
     return HEADERS
 
