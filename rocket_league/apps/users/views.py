@@ -32,6 +32,7 @@ class PublicProfileView(DetailView):
     slug_url_kwarg = 'username'
     slug_field = 'username'
     template_name = 'users/user_public_profile.html'
+    context_object_name = 'public_user'
 
 
 class RegistrationView(BaseRegistrationView):
