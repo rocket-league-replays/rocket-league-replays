@@ -9,12 +9,13 @@ import requests
 register = template.Library()
 
 API_BASE = 'https://psyonix-rl.appspot.com'
+API_VERSION = '105'
 
 
 def api_login():
 
     HEADERS = {
-        'DBVersion': '00.03.0003-00.01.0011',
+        'DBVersion': '00.03.0008-00.01.0011',
         'LoginSecretKey': 'dUe3SE4YsR8B0c30E6r7F2KqpZSbGiVx',
         'CallProcKey': 'pX9pn8F4JnBpoO8Aa219QC6N7g18FJ0F',
         'DB': 'BattleCars_Prod',
@@ -27,20 +28,19 @@ def api_login():
         'BuildID': 118497356,
     }
 
-    r = requests.post(API_BASE + '/login104/', headers=HEADERS, data=login_data)
+    r = requests.post(API_BASE + '/login{}/'.format(API_VERSION), headers=HEADERS, data=login_data)
 
     if r.text != '1':
         raise Exception("Unable to login.")
 
-    session_id = re.match(r'SESSIONID=(.*); path=/', r.headers['set-cookie']).group(1)
-    HEADERS['Cookie'] = 'SESSIONID=' + session_id
+    HEADERS['SessionID'] = r.headers['sessionid']
 
     return HEADERS
 
 
 def get_leaderboards(headers):
 
-    r = requests.post(API_BASE + '/callproc104/', headers=headers, data={
+    r = requests.post(API_BASE + '/callproc/'.format(API_VERSION), headers=headers, data={
         'Proc[]': [
             'GetLeaderboard',
         ],
@@ -79,7 +79,7 @@ def get_leaderboards(headers):
 
     print data
 
-    r = requests.post(API_BASE + '/callproc104/', headers=headers, data=data)
+    r = requests.post(API_BASE + '/callproc{}/'.format(API_VERSION), headers=headers, data=data)
 
     print dir(r.request)
     import urllib
@@ -92,39 +92,35 @@ def get_league_data(user, headers):
     # Does this user have their Steam account connected?
     player_id = user.uid
 
-    r = requests.post(API_BASE + '/callproc104/', headers=headers, data={
+    r = requests.post(API_BASE + '/callproc{}/'.format(API_VERSION), headers=headers, data={
         'Proc[]': [
-            'GetLeaderboardValueForUserSteam',
-            'GetLeaderboardValueForUserSteam',
-            'GetLeaderboardValueForUserSteam',
+            'GetPlayerSkillAndRankPointsSteam',
         ],
         'P0P[]': [
             player_id,
-            'Skill{}'.format(settings.PLAYLISTS['RankedDuels']),
-        ],
-        'P1P[]': [
-            player_id,
-            'Skill{}'.format(settings.PLAYLISTS['RankedDoubles']),
-        ],
-        'P2P[]': [
-            player_id,
-            'Skill{}'.format(settings.PLAYLISTS['RankedStandard']),
         ]
     })
 
-    matches = re.findall(r'LeaderboardID=Skill(\d+)&Value=(\d+)', r.text)
+    """
+    Playlist=0&Mu=20.6591&Sigma=4.11915&RankPoints=100
+    Playlist=10&Mu=27.0242&Sigma=2.96727&RankPoints=292
+    Playlist=11&Mu=37.0857&Sigma=2.5&RankPoints=618
+    Playlist=12&Mu=35.8244&Sigma=2.5&RankPoints=500
+    Playlist=13&Mu=33.5018&Sigma=2.5&RankPoints=468
+    """
+
+    matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', r.text)
 
     if not matches:
         return 'no matches'
 
     matches = dict(matches)
 
-    # Store this, cache it, do something with it.
+    # # Store this, cache it, do something with it.
     LeagueRating.objects.create(
         user_id=user.user_id,
         duels=matches[str(settings.PLAYLISTS['RankedDuels'])],
         doubles=matches[str(settings.PLAYLISTS['RankedDoubles'])],
+        solo_standard=matches[str(settings.PLAYLISTS['RankedSoloStandard'])],
         standard=matches[str(settings.PLAYLISTS['RankedStandard'])],
     )
-
-    return matches
