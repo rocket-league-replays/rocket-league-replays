@@ -65,3 +65,4 @@ docs/_build/
 node_modules/
 bower_components/
 */static/css/
+secrets.py
