@@ -14,6 +14,7 @@ class Profile(models.Model):
             return {
                 settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
                 settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
+                settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
                 settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
             }
 
