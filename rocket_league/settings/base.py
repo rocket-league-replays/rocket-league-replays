@@ -20,6 +20,10 @@ if platform.python_implementation() == "PyPy":
     from psycopg2cffi import compat
     compat.register()
 
+try:
+    from . import secrets
+except:
+    print 'Secrets config not found, environment variables have not been set.'
 
 # The name of this site.  Used for branding in the online admin area.
 
@@ -326,7 +330,8 @@ PLAYLISTS = {
     'UnrankedChaos': 4,
     'RankedDuels': 10,
     'RankedDoubles': 11,
-    'RankedStandard': 12,
+    'RankedSoloStandard': 12,
+    'RankedStandard': 13,
 }
 
 if 'test' in sys.argv:

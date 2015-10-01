@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
 from .....utils.unofficial_api import api_login, get_league_data
@@ -17,3 +18,5 @@ class Command(BaseCommand):
 
         for user in users:
             get_league_data(user, headers)
+
+        call_command('clean_league_ratings')
