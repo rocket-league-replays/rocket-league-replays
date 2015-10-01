@@ -108,9 +108,21 @@
                         {% if 'steam' not in backends.not_associated %}
                             {% league_data as data %}
                             {% if data %}
+                                {% if data.10 %}
                                 <span title="This is your rating for ranked duels.">{{ data.10 }}</span> /
+                                {% endif %}
+
+                                {% if data.11 %}
                                 <span title="This is your rating for ranked doubles.">{{ data.11 }}</span> /
-                                <span title="This is your rating for ranked standard.">{{ data.12 }}</span>
+                                {% endif %}
+
+                                {% if data.12 %}
+                                <span title="This is your rating for ranked solo standard.">{{ data.12 }}</span> /
+                                {% endif %}
+
+                                {% if data.13 %}
+                                <span title="This is your rating for ranked standard.">{{ data.13 }}</span>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </div>
