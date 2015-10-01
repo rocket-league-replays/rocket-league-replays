@@ -330,7 +330,8 @@ PLAYLISTS = {
     'UnrankedChaos': 4,
     'RankedDuels': 10,
     'RankedDoubles': 11,
-    'RankedStandard': 12,
+    'RankedSoloStandard': 12,
+    'RankedStandard': 13,
 }
 
 if 'test' in sys.argv:

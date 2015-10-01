@@ -26,6 +26,8 @@ class LeagueRating(models.Model):
 
     doubles = models.PositiveIntegerField()
 
+    solo_standard = models.PositiveIntegerField()
+
     standard = models.PositiveIntegerField()
 
     timestamp = models.DateTimeField(
