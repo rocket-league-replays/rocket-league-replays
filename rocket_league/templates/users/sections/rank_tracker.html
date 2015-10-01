@@ -1,21 +1,51 @@
 {% with ratings=user.profile.latest_ratings %}
 <div class="row text-center">
-    <div class="medium-4 columns">
+    <div class="medium-3 columns">
         Solo
 
-        <h4>{{ ratings.10 }}</h4>
+        <h4>
+            {% if ratings.10 %}
+                {{ ratings.10 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
     </div>
 
-    <div class="medium-4 columns">
+    <div class="medium-3 columns">
         Doubles
 
-        <h4>{{ ratings.11 }}</h4>
+        <h4>
+            {% if ratings.11 %}
+                {{ ratings.11 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
     </div>
 
-    <div class="medium-4 columns">
+    <div class="medium-3 columns">
+        Solo Standard
+
+        <h4>
+            {% if ratings.12 %}
+                {{ ratings.12 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
+    </div>
+
+    <div class="medium-3 columns">
         Standard
 
-        <h4>{{ ratings.12 }}</h4>
+        <h4>
+            {% if ratings.13 %}
+                {{ ratings.13 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
     </div>
 </div>
 {% endwith %}
@@ -41,10 +71,10 @@
                 title: "Date / Time",
                 labelFontSize: 14,
                 titleFontSize: 14,
-                labelFormatter: function(e) {
-                    return CanvasJS.formatDate(e.value, "DD/MM/YYYY");
-                },
-                valueFormatString: "DD/MM/YYYY HH:MM"
+                // labelFormatter: function(e) {
+                //     return "Update ", e.value, "DD/MM/YYYY");
+                // },
+                valueFormatString: " "
             },
             axisY: {
                 title: "Rating",
@@ -56,30 +86,40 @@
                 {
                     name: "Duels",
                     type: "line",
-                    xValueType: "dateTime",
+                    // xValueType: "dateTime",
                     dataPoints: [
                         {% for rating in ratings reversed %}
-                            { x: Date.parse("{{ rating.timestamp|date:'r' }}"), y: {{ rating.duels }}},
+                            { x: {{ forloop.counter }}, y: {{ rating.duels }}},
                         {% endfor %}
                     ]
                 },
                 {
                     name: "Doubles",
                     type: "line",
-                    xValueType: "dateTime",
+                    // xValueType: "dateTime",
                     dataPoints: [
                         {% for rating in ratings reversed %}
-                            { x: Date.parse("{{ rating.timestamp|date:'r' }}"), y: {{ rating.doubles }}},
+                            { x: {{ forloop.counter }}, y: {{ rating.doubles }}},
+                        {% endfor %}
+                    ]
+                },
+                {
+                    name: "Solo Standard",
+                    type: "line",
+                    // xValueType: "dateTime",
+                    dataPoints: [
+                        {% for rating in ratings reversed %}
+                            { x: {{ forloop.counter }}, y: {{ rating.solo_standard }}},
                         {% endfor %}
                     ]
                 },
                 {
                     name: "Standard",
                     type: "line",
-                    xValueType: "dateTime",
+                    // xValueType: "dateTime",
                     dataPoints: [
                         {% for rating in ratings reversed %}
-                            { x: Date.parse("{{ rating.timestamp|date:'r' }}"), y: {{ rating.standard }}},
+                            { x: {{ forloop.counter }}, y: {{ rating.standard }}},
                         {% endfor %}
                     ]
                 }
