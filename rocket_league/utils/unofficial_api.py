@@ -119,8 +119,8 @@ def get_league_data(user, headers):
     # # Store this, cache it, do something with it.
     LeagueRating.objects.create(
         user_id=user.user_id,
-        duels=matches[str(settings.PLAYLISTS['RankedDuels'])],
-        doubles=matches[str(settings.PLAYLISTS['RankedDoubles'])],
-        solo_standard=matches[str(settings.PLAYLISTS['RankedSoloStandard'])],
-        standard=matches[str(settings.PLAYLISTS['RankedStandard'])],
+        duels=matches.get(str(settings.PLAYLISTS['RankedDuels']), 0),
+        doubles=matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0),
+        solo_standard=matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0),
+        standard=matches.get(str(settings.PLAYLISTS['RankedStandard']), 0),
     )
