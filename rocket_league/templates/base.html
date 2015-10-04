@@ -1,4 +1,4 @@
-{% load pages html compress ratings %}
+{% load pages html compress ratings site %}
 
 <!DOCTYPE html>
 <html>
@@ -109,19 +109,87 @@
                             {% league_data as data %}
                             {% if data %}
                                 {% if data.10 %}
-                                <span title="This is your rating for ranked duels.">{{ data.10 }}</span> /
+                                <span title="This is your rating for ranked duels.">
+                                    Duels: {{ data.10 }}
+
+                                    {% if 10 in user.profile.rating_diff and user.profile.rating_diff.10 != 0 %}
+                                        {% if user.profile.rating_diff.10 < 0 %}
+                                            <span class="rating-down">
+                                                <em class="icon-down-dir"></em>
+                                                {{ user.profile.rating_diff.10|wrap:"abs" }}
+                                        {% else %}
+                                            <span class="rating-up">
+                                                <em class="icon-up-dir"></em>
+                                                {{ user.profile.rating_diff.10 }}
+                                        {% endif %}
+
+
+                                        </span>
+                                    {% endif %}
+                                </span> /
                                 {% endif %}
 
                                 {% if data.11 %}
-                                <span title="This is your rating for ranked doubles.">{{ data.11 }}</span> /
+                                <span title="This is your rating for ranked doubles.">
+                                    Doubles: {{ data.11 }}
+
+                                    {% if 11 in user.profile.rating_diff and user.profile.rating_diff.11 != 0 %}
+                                        {% if user.profile.rating_diff.11 < 0 %}
+                                            <span class="rating-down">
+                                                <em class="icon-down-dir"></em>
+                                                {{ user.profile.rating_diff.11|wrap:"abs" }}
+                                        {% else %}
+                                            <span class="rating-up">
+                                                <em class="icon-up-dir"></em>
+                                                {{ user.profile.rating_diff.11 }}
+                                        {% endif %}
+
+
+                                        </span>
+                                    {% endif %}
+                                </span> /
                                 {% endif %}
 
                                 {% if data.12 %}
-                                <span title="This is your rating for ranked solo standard.">{{ data.12 }}</span> /
+                                <span title="This is your rating for ranked solo standard.">
+                                    Solo Standard: {{ data.12 }}
+
+                                    {% if 12 in user.profile.rating_diff and user.profile.rating_diff.12 != 0 %}
+                                        {% if user.profile.rating_diff.12 < 0 %}
+                                            <span class="rating-down">
+                                                <em class="icon-down-dir"></em>
+                                                {{ user.profile.rating_diff.12|wrap:"abs" }}
+                                        {% else %}
+                                            <span class="rating-up">
+                                                <em class="icon-up-dir"></em>
+                                                {{ user.profile.rating_diff.12 }}
+                                        {% endif %}
+
+
+                                        </span>
+                                    {% endif %}
+                                </span> /
                                 {% endif %}
 
                                 {% if data.13 %}
-                                <span title="This is your rating for ranked standard.">{{ data.13 }}</span>
+                                <span title="This is your rating for ranked standard.">
+                                    Standard: {{ data.13 }}
+
+                                    {% if 13 in user.profile.rating_diff and user.profile.rating_diff.13 != 0 %}
+                                        {% if user.profile.rating_diff.13 < 0 %}
+                                            <span class="rating-down">
+                                                <em class="icon-down-dir"></em>
+                                                {{ user.profile.rating_diff.13|wrap:"abs" }}
+                                        {% else %}
+                                            <span class="rating-up">
+                                                <em class="icon-up-dir"></em>
+                                                {{ user.profile.rating_diff.13 }}
+                                        {% endif %}
+
+
+                                        </span>
+                                    {% endif %}
+                                </span>
                                 {% endif %}
                             {% endif %}
                         {% endif %}
