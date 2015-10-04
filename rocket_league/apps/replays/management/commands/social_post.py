@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         replay = Replay.objects.filter(
-            timestamp__startswith=now().date
+            timestamp__startswith=now().date()
         ).order_by('-excitement_factor')[:1]
 
         if not replay:
