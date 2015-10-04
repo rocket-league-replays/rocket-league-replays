@@ -3,6 +3,7 @@ from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.safestring import mark_safe
+from django.utils.timezone import now
 
 from ...utils.replay_parser import ReplayParser
 
@@ -260,6 +261,20 @@ class Replay(models.Model):
         # This gives us a "base value" for each replay and allows replays with
         # lots of goals but not much swing to get reasonable rating.
         swing_rating += (self.team_0_score + self.team_1_score) * goal_count_multiplier
+
+        # Decay the score based on the number of days since the game was played.
+        # This should keep the replay list fresh. Cap at a set number of days.
+        days_ago = (now().date() - self.timestamp.date()).days
+
+        day_cap = 75
+
+        if days_ago > day_cap:
+            days_ago = day_cap
+
+        # Make sure we're not dividing by zero.
+        if days_ago > 0:
+            days_ago = float(days_ago)
+            swing_rating -= swing_rating * days_ago / 100
 
         return swing_rating
 

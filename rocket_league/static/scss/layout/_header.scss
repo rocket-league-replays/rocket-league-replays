@@ -58,3 +58,21 @@ header {
         margin-left: 15px;
     }
 }
+
+.rating-down, .rating-up {
+    display: inline-block;
+    font-size: 10px;
+    transform: translateY(-1px);
+
+    [class^="icon-"]::before {
+        margin-right: 0;
+    }
+}
+
+.rating-down {
+    color: $alert-color;
+}
+
+.rating-up {
+    color: $success-color;
+}
