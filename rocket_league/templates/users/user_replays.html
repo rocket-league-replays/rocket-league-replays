@@ -1,4 +1,7 @@
+{% extends "users/base.html" %}
 {% load cache %}
+
+{% block content %}
 
 <table width="100%">
     <thead>
@@ -32,3 +35,4 @@
 </table>
 
 <p><a href="{% url 'replay:upload' %}" class="button small">Upload a replay</a></p>
+{% endblock %}
