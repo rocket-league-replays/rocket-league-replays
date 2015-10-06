@@ -160,6 +160,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'cachalot',
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_swagger',
 
     'social.apps.django_app.default',
