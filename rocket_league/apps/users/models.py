@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models import Max
 from django.utils.timezone import now
 
+from rest_framework.authtoken.models import Token
+
 from datetime import timedelta
 
 
@@ -76,3 +78,6 @@ class LeagueRating(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+
+
+User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
