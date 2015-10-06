@@ -193,7 +193,7 @@ class ReplayPackDownloadView(SingleObjectMixin, View):
 
 
 # API ViewSets
-class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
+class ReplayViewSet(viewsets.ModelViewSet):
     """
     Returns a list of all processed replays in the system.
     """
@@ -202,6 +202,9 @@ class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
         processed=True,
     )
     serializer_class = ReplaySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):
