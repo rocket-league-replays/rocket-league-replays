@@ -1,6 +1,6 @@
 from .models import Goal, Map, Player, Replay
 
-from rest_framework.serializers import HyperlinkedModelSerializer, HyperlinkedRelatedField
+from rest_framework.serializers import HyperlinkedModelSerializer
 
 
 class GoalSerializer(HyperlinkedModelSerializer):
