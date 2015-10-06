@@ -10,12 +10,12 @@ from django.views.generic.detail import SingleObjectMixin
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
 from .models import Goal, Map, Player, Replay, ReplayPack
-from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer
+from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer, ReplayListSerializer, ReplayCreateSerializer
 from ...utils.forms import AjaxableResponseMixin
 
 from braces.views import LoginRequiredMixin
 from django_filters.views import FilterView
-from rest_framework import viewsets
+from rest_framework import mixins, viewsets
 
 from zipfile import ZipFile
 import re
@@ -193,15 +193,65 @@ class ReplayPackDownloadView(SingleObjectMixin, View):
 
 
 # API ViewSets
-class ReplayViewSet(viewsets.ReadOnlyModelViewSet):
+class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
-    Returns a list of all processed replays in the system.
+    Returns a list of all processed replays in the system. To filter to replays \
+    owned by the currently logged in user, simply append ?owned to the URL.
     """
 
     queryset = Replay.objects.filter(
         processed=True,
     )
     serializer_class = ReplaySerializer
+
+    serializer_action_classes = {
+        'list': ReplayListSerializer,
+        'create': ReplayCreateSerializer,
+    }
+
+    def get_serializer_class(self):
+        """
+        Look for serializer class in self.serializer_action_classes, which
+        should be a dict mapping action name (key) to serializer class (value),
+        i.e.:
+
+        class MyViewSet(MultiSerializerViewSetMixin, ViewSet):
+            serializer_class = MyDefaultSerializer
+            serializer_action_classes = {
+               'list': MyListSerializer,
+               'my_action': MyActionSerializer,
+            }
+
+            @action
+            def my_action:
+                ...
+
+        If there's no entry for that action then just fallback to the regular
+        get_serializer_class lookup: self.serializer_class, DefaultSerializer.
+
+        Thanks gonz: http://stackoverflow.com/a/22922156/11440
+
+        """
+        try:
+            return self.serializer_action_classes[self.action]
+        except (KeyError, AttributeError):
+            return super(ReplayViewSet, self).get_serializer_class()
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned purchases to a given user,
+        by filtering against a `owned` query parameter in the URL.
+        """
+        queryset = Replay.objects.all()
+
+        if 'owned' in self.request.query_params and self.request.user.is_authenticated():
+            queryset = queryset.filter(
+                user=self.request.user,
+            )
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):

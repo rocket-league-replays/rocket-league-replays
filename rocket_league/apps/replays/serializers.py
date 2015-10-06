@@ -1,6 +1,6 @@
 from .models import Goal, Map, Player, Replay
 
-from rest_framework.serializers import HyperlinkedModelSerializer, HyperlinkedRelatedField
+from rest_framework.serializers import HyperlinkedModelSerializer
 
 
 class GoalSerializer(HyperlinkedModelSerializer):
@@ -44,6 +44,27 @@ class ReplaySerializer(HyperlinkedModelSerializer):
                   "team_1_score", "match_type", "keyframe_delay",
                   "max_channels", "max_replay_size_mb", "num_frames",
                   "record_fps", "processed", "map", "player_set", "goal_set",
-                  "lag_report_url", "match_length"]
+                  "lag_report_url", "match_length", "get_absolute_url"]
 
         depth = 1
+
+
+class ReplayListSerializer(HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Replay
+        fields = ['url']
+        depth = 0
+
+
+class ReplayCreateSerializer(HyperlinkedModelSerializer):
+
+    def validate(self, attrs):
+        instance = Replay(**attrs)
+        instance.clean()
+        return attrs
+
+    class Meta:
+        model = Replay
+        fields = ['file', 'url', 'get_absolute_url']
+        depth = 0

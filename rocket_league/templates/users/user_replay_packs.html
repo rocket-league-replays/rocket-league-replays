@@ -1,5 +1,7 @@
+{% extends "users/base.html" %}
 {% load cache %}
 
+{% block content %}
 <table width="100%">
     <thead>
         <tr>
@@ -32,3 +34,4 @@
 </table>
 
 <p><a href="{% url 'replaypack:create' %}" class="button small">Create new replay pack</a></p>
+{% endblock %}

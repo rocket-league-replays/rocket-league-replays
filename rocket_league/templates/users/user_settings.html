@@ -1,3 +1,6 @@
+{% extends "users/base.html" %}
+
+{% block content %}
 <form action="" method="post">
     {% csrf_token %}
 
@@ -51,3 +54,5 @@
 
     <input type="submit" class="button small" value="Update settings">
 </form>
+
+{% endblock %}

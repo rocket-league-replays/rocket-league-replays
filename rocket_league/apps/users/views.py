@@ -12,19 +12,40 @@ from registration import signals
 from registration.views import RegistrationView as BaseRegistrationView
 
 
-class ProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
-    template_name = 'users/user_profile.html'
+class UserMixin(LoginRequiredMixin, DetailView):
     model = User
-    form_class = UserSettingsForm
-    success_message = "Your settings were successfully updated."
 
     def get_object(self):
         return self.request.user
 
+
+class UserReplaysView(UserMixin):
+    template_name = 'users/user_replays.html'
+
+
+class UserReplayPacksView(UserMixin):
+    template_name = 'users/user_replay_packs.html'
+
+
+class UserDesktopApplicationView(UserMixin):
+    template_name = 'users/user_desktop_application.html'
+
+
+class UserRankTrackerView(UserMixin):
+    template_name = 'users/user_rank_tracker.html'
+
+
+class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    template_name = 'users/user_settings.html'
+    model = User
+    form_class = UserSettingsForm
+    success_message = "Your settings were successfully updated."
+
     def get_success_url(self):
-        return '{}#settings-tab'.format(
-            reverse('users:profile')
-        )
+        return reverse('users:settings')
+
+    def get_object(self):
+        return self.request.user
 
 
 class PublicProfileView(DetailView):
