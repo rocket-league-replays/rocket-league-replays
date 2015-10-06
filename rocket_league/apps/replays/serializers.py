@@ -44,6 +44,11 @@ class ReplaySerializer(HyperlinkedModelSerializer):
                   "team_1_score", "match_type", "keyframe_delay",
                   "max_channels", "max_replay_size_mb", "num_frames",
                   "record_fps", "processed", "map", "player_set", "goal_set",
-                  "lag_report_url", "match_length"]
+                  "lag_report_url", "match_length", "get_absolute_url"]
 
         depth = 1
+
+    def validate(self, attrs):
+        instance = Replay(**attrs)
+        instance.clean()
+        return attrs
