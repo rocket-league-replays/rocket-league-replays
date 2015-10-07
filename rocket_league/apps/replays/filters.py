@@ -36,7 +36,7 @@ class ReplayFilter(django_filters.FilterSet):
     total_goals = django_filters.filters.NumberFilter(
         action=lambda qs, value: qs.annotate(
             goals=Sum(F('team_0_score') + F('team_1_score'))
-        ).filter(goals__gte=value)
+        ).filter(goals=value)
     )
 
     region = django_filters.filters.ChoiceFilter(
