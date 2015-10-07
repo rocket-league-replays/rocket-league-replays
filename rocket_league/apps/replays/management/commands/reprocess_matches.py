@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
         for replay in replays:
             if replay.replay_id and replay.file:
-                print 'Processing', replay.replay_id
+                print 'Processing', replay.pk, '-', replay.replay_id
 
                 try:
                     replay.processed = False
