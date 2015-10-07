@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 
-from ...utils.replay_parser import ReplayParser
+from replay_parser import ReplayParser
 
 from datetime import datetime
 import re
@@ -305,7 +305,7 @@ class Replay(models.Model):
             parser = ReplayParser()
 
             try:
-                replay_data = parser.parse(self.file)
+                replay_data = parser.parse(self.file)['header']
 
                 # Check if this replay has already been uploaded.
                 replay = Replay.objects.filter(
@@ -327,7 +327,7 @@ class Replay(models.Model):
         if self.file and not self.processed:
             # Process the file.
             parser = ReplayParser()
-            data = parser.parse(self)
+            data = parser.parse(self.file)['header']
 
             Goal.objects.filter(
                 replay=self,
