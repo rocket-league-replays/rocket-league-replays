@@ -1,4 +1,8 @@
 # rocket-league-replays
+
+[![Build Status](https://travis-ci.org/danielsamuels/rocket-league-replay-parser.svg?branch=develop)](https://travis-ci.org/danielsamuels/rocket-league-replay-parser)
+[![Coverage Status](https://coveralls.io/repos/danielsamuels/rocket-league-replay-parser/badge.svg?branch=develop&service=github)](https://coveralls.io/github/danielsamuels/rocket-league-replay-parser?branch=develop)
+
 Replay database and parser for Rocket League
 
 ## Server cronjobs
