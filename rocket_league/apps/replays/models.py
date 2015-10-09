@@ -341,7 +341,7 @@ class Replay(models.Model):
             for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
                     replay=self,
-                    player_name=goal['PlayerName'].decode('latin-1'),
+                    player_name=goal['PlayerName'],
                     team=goal['PlayerTeam'],
                 )
 
@@ -354,12 +354,12 @@ class Replay(models.Model):
 
             player, created = Player.objects.get_or_create(
                 replay=self,
-                player_name=data['PlayerName'].decode('latin-1'),
+                player_name=data['PlayerName'],
                 team=data.get('PrimaryPlayerTeam', 0),
             )
 
             self.replay_id = data['Id']
-            self.player_name = data['PlayerName'].decode('latin-1')
+            self.player_name = data['PlayerName']
             self.player_team = data.get('PrimaryPlayerTeam', 0)
 
             map_obj, created = Map.objects.get_or_create(
