@@ -23,5 +23,5 @@ class Command(BaseCommand):
                 try:
                     replay.processed = False
                     replay.save()
-                except Exception:
-                    print 'Unable to process.'
+                except Exception as e:
+                    print 'Unable to process.', e

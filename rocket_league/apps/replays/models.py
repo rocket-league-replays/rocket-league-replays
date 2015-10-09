@@ -7,6 +7,7 @@ from django.utils.timezone import now
 
 from replay_parser import ReplayParser
 
+import chardet
 from datetime import datetime
 import re
 import struct
@@ -341,7 +342,7 @@ class Replay(models.Model):
             for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
                     replay=self,
-                    player_name=goal['PlayerName'],
+                    player_name=goal['PlayerName'].decode(chardet.detect(goal['PlayerName'])['encoding']),
                     team=goal['PlayerTeam'],
                 )
 
@@ -351,6 +352,10 @@ class Replay(models.Model):
                     player=player,
                     frame=goal['frame'],
                 )
+
+            data['PlayerName'] = data['PlayerName'].decode(
+                chardet.detect(data['PlayerName'])['encoding']
+            )
 
             player, created = Player.objects.get_or_create(
                 replay=self,
