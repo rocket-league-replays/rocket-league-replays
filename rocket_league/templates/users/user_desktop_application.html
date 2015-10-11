@@ -1,7 +1,10 @@
 {% extends "users/base.html" %}
 
 {% block content %}
-<h4>Coming soon..</h4>
-<p>The desktop application is not quite ready yet, we'll let you know when it is!</p>
-<p>In the mean time, here's your API key: <code>{{ user.token }}</code></p>
+<h3>Desktop application</h3>
+<p>The Rocket League Replays Manager desktop application is now available to download. It features automatic uploading of replays to RocketLeagueReplays.com and is completely free!</p>
+
+<p>To upload replays you'll need an API key, yours is: <code>{{ user.token }}</code></p>
+
+<a href="https://github.com/TcT2k/RLReplayManager/releases" target="_blank" class="button small">Download now</a>
 {% endblock %}
