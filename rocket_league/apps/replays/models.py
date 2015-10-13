@@ -501,6 +501,9 @@ class Player(models.Model):
             self.team,
         )
 
+    class Meta:
+        ordering = ('team', '-score')
+
 
 class Goal(models.Model):
 
