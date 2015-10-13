@@ -408,7 +408,7 @@ class Replay(models.Model):
             self.player_team = data.get('PrimaryPlayerTeam', 0)
 
             map_obj, created = Map.objects.get_or_create(
-                slug=data['MapName'],
+                slug=data['MapName'].lower(),
             )
 
             self.map = map_obj

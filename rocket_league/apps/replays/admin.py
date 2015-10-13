@@ -25,7 +25,16 @@ class ReplayAdmin(admin.ModelAdmin):
     actions = [reprocess_matches]
 
 admin.site.register(Replay, ReplayAdmin)
-admin.site.register(Map)
+
+
+class MapAdmin(admin.ModelAdmin):
+
+    def replay_count(self, obj):
+        return obj.replay_set.count()
+
+    list_display = ['title', 'slug', 'replay_count']
+
+admin.site.register(Map, MapAdmin)
 
 
 admin.site.register(ReplayPack)
