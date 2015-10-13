@@ -152,6 +152,10 @@ class Replay(models.Model):
         default=0.00,
     )
 
+    show_leaderboard = models.BooleanField(
+        default=False,
+    )
+
     processed = models.BooleanField(
         default=False,
     )
@@ -339,6 +343,42 @@ class Replay(models.Model):
                 replay=self,
             ).delete()
 
+            # If we have a stats table, pull in the data.
+            if 'PlayerStats' in data:
+                # We can show a leaderboard!
+                self.show_leaderboard = True
+
+                for player in data['PlayerStats']:
+                    """
+                    {
+                        'OnlineID': 0,
+                        'Name': 'Swabbie',
+                        'Saves': 0,
+                        'Platform': {
+                            'OnlinePlatform': 'OnlinePlatform_Unknown'
+                        },
+                        'Score': 115,
+                        'Goals': 1,
+                        'Shots': 1,
+                        'Team': 1,
+                        'bBot': True,
+                        'Assists': 0
+                    }
+                    """
+                    Player.objects.get_or_create(
+                        replay=self,
+                        player_name=player['Name'].decode(chardet.detect(player['Name'])['encoding']),
+                        platform=player['Platform'].get('OnlinePlatform', ''),
+                        saves=player['Saves'],
+                        score=player['Score'],
+                        goals=player['Goals'],
+                        shots=player['Shots'],
+                        team=player['Team'],
+                        assists=player['Assists'],
+                        bot=player['bBot'],
+                        online_id=player['OnlineID'],
+                    )
+
             for index, goal in enumerate(data['Goals']):
                 player, created = Player.objects.get_or_create(
                     replay=self,
@@ -409,6 +449,47 @@ class Player(models.Model):
     )
 
     team = models.IntegerField()
+
+    # 1.06 data
+    score = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+    )
+
+    goals = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+    )
+
+    shots = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+    )
+
+    assists = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+    )
+
+    saves = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+    )
+
+    platform = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    online_id = models.BigIntegerField(
+        blank=True,
+        null=True,
+    )
+
+    bot = models.BooleanField(
+        default=False,
+    )
 
     user_entered = models.BooleanField(
         default=False,
