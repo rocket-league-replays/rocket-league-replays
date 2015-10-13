@@ -1,0 +1,47 @@
+<h3 class="{% if team == 0 %}primary{% else %}secondary{% endif %}">{{ team_str }}</h3>
+<table width="100%">
+    <tr>
+        <th>{# Player name #}</th>
+        {# <th>Platform</th> #}
+        <th>Score</th>
+        <th>Goals</th>
+        <th>Assists</th>
+        <th>Saves</th>
+        <th>Shots</th>
+    </tr>
+    {% for player in players %}
+    <tr>
+        <td>
+            {% if player.platform == 'OnlinePlatform_Steam' %}
+            <a href="http://steamcommunity.com/profiles/{{ player.online_id }}" target="_blank">
+            {% endif %}
+
+            {{ player.player_name }}
+
+            {% if player.platform == 'OnlinePlatform_Steam' %}
+            </a>
+            {% endif %}
+        </td>
+        {% comment %}
+        <td>
+            {% if player.platform == 'OnlinePlatform_Steam' %}
+                PC
+            {% elif player.platform == 'OnlinePlatform_Unknown' %}
+                {% if player.bot %}
+                    Bot
+                {% else %}
+                    Unknown
+                {% endif %}
+            {% else %}
+                {{ player.platform }}
+            {% endif %}
+        </td>
+        {% endcomment %}
+        <td>{{ player.score }}</td>
+        <td>{{ player.goals }}</td>
+        <td>{{ player.assists }}</td>
+        <td>{{ player.saves }}</td>
+        <td>{{ player.shots }}</td>
+    </tr>
+    {% endfor %}
+</table>

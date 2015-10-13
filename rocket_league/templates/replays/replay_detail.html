@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache %}
+{% load cache replays %}
 
 {% block content_primary %}
 {% cache 3600 'replay_detail' replay.pk %}
@@ -78,6 +78,10 @@
     </div>
 
     <div class="medium-6 columns">
+    {% if replay.show_leaderboard %}
+        {% scoreboard 0 %}
+        {% scoreboard 1 %}
+    {% else %}
         <h3>Teams</h3>
 
         <table width="100%">
@@ -110,6 +114,7 @@
                 <a href="/faqs/">Click here</a> to find out why.</p>
             {% endif %}
         {% endif %}
+    {% endif %}
     </div>
 </div>
 <div class="row">
