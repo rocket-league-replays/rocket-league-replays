@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache pagination %}
+{% load cache pagination site %}
 
 {% block content_primary %}
 <div class="row">
@@ -47,44 +47,14 @@
 </div>
 
 
-<div class="row">
-    <div class="medium-12 columns">
-        <h4>Replays</h4>
-
-        <table width="100%" class="expand">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Map</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th>Length</th>
-                    <th>Region</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for replay in object.replay_set.all %}
-                    {% cache 3600 'replay_list_item' replay.pk %}
-                        <tr data-href="{{ replay.get_absolute_url }}">
-                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
-                            <td>{{ replay.map }}</td>
-                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
-                            <td>{{ replay.match_length }}</td>
-                            <td>{{ replay.region }}</td>
-                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-                        </tr>
-                    {% endcache %}
-                {% empty %}
-                <tr>
-                    <td colspan="7">{{ object }} does not currently have any replays.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{% with object_list=object.replay_set.all|order_by:"-excitement_factor" %}
+    {% if object_list %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h4>Uploaded replays</h4>
+            {% include "replays/includes/replay_table.html" with disable_highlight=True disable_ordering=True %}
+        </div>
     </div>
-</div>
-
-
+    {% endif %}
+{% endwith %}
 {% endblock %}

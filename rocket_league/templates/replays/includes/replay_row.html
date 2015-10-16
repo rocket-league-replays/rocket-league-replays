@@ -1,7 +1,7 @@
 {% load cache %}
 
 {% cache 3600 'replay_list_item' replay.pk %}
-    <tr data-href="{{ replay.get_absolute_url }}" data-user="{{ replay.user.pk }}">
+    <tr data-href="{{ replay.get_absolute_url }}" {% if not disable_highlight %}data-user="{{ replay.user.pk }}"{% endif %}>
         <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
         <td>{{ replay.map }}</td>
         <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
