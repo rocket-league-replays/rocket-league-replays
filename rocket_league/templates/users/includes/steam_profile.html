@@ -1,0 +1,90 @@
+{% load cache pagination replays site %}
+
+{% comment %}
+    [x] Link to Steam profile
+    [ ] Show all replays they have been involved in.
+    [ ] Allow profiles to work off Steam IDs?
+    [ ] "Appeared as" - all steam names used
+    Overall stats based on replays?
+        - [x] Winning goals scored.
+        - [ ] Bring in the usual player stats from the unofficial API?
+        - [ ] Time played, based on replays?
+        - [ ] % of games which have replays uploaded
+        - [ ] Times carried / dominated - score far greater than team-mates / other team / score greater than everyone else
+        - [ ] Team saver goals - scored in the last ~minute to go to overtime
+        - [ ] Preferred match type.
+    [ ] Allow users to rate each other (if they appeared in the same replay, thumbs up only).
+{% endcomment %}
+
+
+{% with steam_info=object.profile.steam_info %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>
+            <img src="{{ steam_info.avatar }}" alt="">
+
+            {{ steam_info.personaname }}
+            <a href="{{ steam_info.profileurl }}" class="right" target="_blank">
+                <em class="icon-steam-squared"></em>
+            </a>
+        </h3>
+        <hr>
+    </div>
+</div>
+
+{% steam_stats steam_info.steamid as stats %}
+
+<div class="row">
+    <div class="medium-6 columns">
+        <h4>Player stats</h4>
+
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <td>Winning goals scored:</td>
+                    <td>{{ stats.winning_goals }}</td>
+                </tr>
+
+                <tr>
+                    <td>Goals scored within the last minute of the game:</td>
+                    <td>{{ stats.last_minute_goals }}</td>
+                </tr>
+
+                <tr>
+                    <td>Number of times scored to put the game into overtime:</td>
+                    <td>{{ stats.overtime_triggering_goals }}</td>
+                </tr>
+
+                <tr>
+                    <td>Preferred match size:</td>
+                    <td>{{ stats.preferred_match_size }}</td>
+                </tr>
+                <tr>
+                    <td>Preferred role:</td>
+                    <td>{{ stats.preferred_role }}</td>
+                </tr>
+
+                <tr>
+                    <td>Time of times caused overtime and then won:</td>
+                    <td>{{ stats.overtime_trigger_and_win }}</td>
+                </tr>
+
+                <tr>
+                    <td title="Higher score than everyone else on your team put together">Number of times you've carried your team:</td>
+                    <td>{{ stats.carries }}</td>
+                </tr>
+
+                <tr>
+                    <td title="Higher score than everyone else put together">Number of times you've dominated the game:</td>
+                    <td>{{ stats.dominated }}</td>
+                </tr>
+
+                <tr>
+                    <td>Biggest win:</td>
+                    <td>{{ stats.biggest_win }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endwith %}
