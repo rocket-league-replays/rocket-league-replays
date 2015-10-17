@@ -2,9 +2,13 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Max
+from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 
+from datetime import datetime
 from rest_framework.authtoken.models import Token
+import requests
+from social.backends.steam import USER_INFO
 
 from datetime import timedelta
 
@@ -58,6 +62,41 @@ class Profile(models.Model):
             response[settings.PLAYLISTS['RankedStandard']] = todays_ratings['standard__max'] - yesterdays_rating['standard__max']
 
         return response
+
+    def has_steam_connected(self):
+        try:
+            self.user.social_auth.get(provider='steam')
+            return True
+        except:
+            return False
+
+    def steam_info(self):
+        steam = self.user.social_auth.get(provider='steam')
+
+        # Have we updated this profile recently?
+        if 'last_updated' in steam.extra_data:
+            # Parse the last updated date.
+            last_date = parse_datetime(steam.extra_data['last_updated'])
+
+            seconds_ago = (now() - last_date).seconds
+
+            # 3600 seconds = 1 hour
+            if seconds_ago < 3600:
+                return steam.extra_data['player']
+
+        player = requests.get(USER_INFO, params={
+            'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
+            'steamids': steam.uid
+        }).json()
+
+        if len(player['response']['players']) > 0:
+            steam.extra_data = {
+                'player': player['response']['players'][0],
+                'last_updated': now().isoformat(),
+            }
+            steam.save()
+
+        return steam.extra_data['player']
 
 
 class LeagueRating(models.Model):
