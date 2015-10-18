@@ -124,5 +124,33 @@
             </tbody>
         </table>
     </div>
+
+    <div class="medium-6 columns">
+        {% custom_scoreboard steam_info %}
+    </div>
 </div>
+
+{% with object_list=appears_in %}
+    {% if object_list %}
+        <div class="row">
+            <div class="medium-12 columns">
+                <h4>Appears in</h4>
+                {% include "replays/includes/replay_table.html" with disable_highlight=True disable_ordering=True %}
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% with object_list=uploaded %}
+    {% if object_list %}
+        <div class="row">
+            <div class="medium-12 columns">
+                <h4>Uploaded replays</h4>
+                {% include "replays/includes/replay_table.html" with disable_highlight=True disable_ordering=True %}
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+
+{# endless #}
 {% endblock %}

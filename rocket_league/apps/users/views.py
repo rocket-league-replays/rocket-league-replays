@@ -7,6 +7,7 @@ from django.shortcuts import redirect
 from django.views.generic import DetailView, TemplateView, UpdateView
 
 from .forms import UserSettingsForm
+from ..replays.models import Replay
 
 from braces.views import LoginRequiredMixin
 from registration import signals
@@ -100,10 +101,12 @@ class SteamView(TemplateView):
 
         # Is this Steam ID associated with a user?
         try:
-            context['steam_info'] = UserSocialAuth.objects.get(
+            social_obj = UserSocialAuth.objects.get(
                 uid=kwargs['steam_id'],
-            ).extra_data['player']
+            )
+            context['steam_info'] = social_obj.extra_data['player']
 
+            context['uploaded'] = social_obj.user.replay_set.all()
             context['has_user'] = True
         except UserSocialAuth.DoesNotExist:
             # Pull the profile data and pass it in.
@@ -119,5 +122,11 @@ class SteamView(TemplateView):
                     context['steam_info'] = player['response']['players'][0]
             except:
                 pass
+
+        context['appears_in'] = Replay.objects.filter(
+            show_leaderboard=True,
+            player__platform='OnlinePlatform_Steam',
+            player__online_id=kwargs['steam_id'],
+        )
 
         return context

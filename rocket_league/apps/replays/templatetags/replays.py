@@ -26,6 +26,30 @@ def scoreboard(context, team):
     }
 
 
+@register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
+def custom_scoreboard(context, steam_info):
+    player_data = Player.objects.filter(
+        platform='OnlinePlatform_Steam',
+        online_id=steam_info['steamid'],
+    ).aggregate(
+        score=Max('score'),
+        goals=Max('goals'),
+        shots=Max('shots'),
+        assists=Max('assists'),
+        saves=Max('saves'),
+    )
+
+    player_data['platform'] = None
+    player_data['player_name'] = None
+
+    return {
+        'players': [
+            player_data
+        ],
+        'team_str': 'Overall stats'
+    }
+
+
 @register.assignment_tag
 def steam_stats(uid):
     data = {}
