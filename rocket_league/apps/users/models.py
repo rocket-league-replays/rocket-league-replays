@@ -84,17 +84,20 @@ class Profile(models.Model):
             if seconds_ago < 3600:
                 return steam.extra_data['player']
 
-        player = requests.get(USER_INFO, params={
-            'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
-            'steamids': steam.uid
-        }).json()
+        try:
+            player = requests.get(USER_INFO, params={
+                'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
+                'steamids': steam.uid
+            }).json()
 
-        if len(player['response']['players']) > 0:
-            steam.extra_data = {
-                'player': player['response']['players'][0],
-                'last_updated': now().isoformat(),
-            }
-            steam.save()
+            if len(player['response']['players']) > 0:
+                steam.extra_data = {
+                    'player': player['response']['players'][0],
+                    'last_updated': now().isoformat(),
+                }
+                steam.save()
+        except:
+            pass
 
         return steam.extra_data['player']
 
