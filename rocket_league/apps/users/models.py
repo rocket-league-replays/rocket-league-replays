@@ -101,6 +101,21 @@ class Profile(models.Model):
 
         return steam.extra_data['player']
 
+    def display_names(self):
+        names = self.user.replay_set.all().exclude(
+            player_name=self.steam_info().get('personaname', '')
+        ).distinct('player_name').values_list(
+            'player_name',
+            flat=True
+        ).order_by()
+
+        if not names:
+            return None
+
+        if ',' in ''.join(names):
+            return '; '.join(names)
+        return ', '.join(names)
+
 
 class LeagueRating(models.Model):
 
