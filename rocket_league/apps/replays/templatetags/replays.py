@@ -28,24 +28,44 @@ def scoreboard(context, team):
 
 @register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
 def custom_scoreboard(context, steam_info):
-    player_data = Player.objects.filter(
-        platform='OnlinePlatform_Steam',
-        online_id=steam_info['steamid'],
-    ).aggregate(
-        score=Max('score'),
-        goals=Max('goals'),
-        shots=Max('shots'),
-        assists=Max('assists'),
-        saves=Max('saves'),
-    )
+    data_dicts = []
 
-    player_data['platform'] = None
-    player_data['player_name'] = None
+    for size in xrange(1, 5):
+        player_data = Player.objects.filter(
+            replay__team_sizes=size,
+            platform='OnlinePlatform_Steam',
+            online_id=steam_info['steamid'],
+        ).aggregate(
+            score=Max('score'),
+            goals=Max('goals'),
+            shots=Max('shots'),
+            assists=Max('assists'),
+            saves=Max('saves'),
+        )
+
+        if not any([player_data[k] for k in player_data]):
+            continue
+
+        # Replace any 'None' values with 0.
+        for key in player_data:
+            if not player_data[key]:
+                player_data[key] = 0
+
+        player_data['player_name'] = '{}v{}'.format(size, size)
+
+        data_dicts.append(player_data)
+
+    data_dicts.append({
+        'player_name': 'Totals',
+        'score': sum([key['score'] for key in data_dicts]),
+        'goals': sum([key['goals'] for key in data_dicts]),
+        'shots': sum([key['shots'] for key in data_dicts]),
+        'assists': sum([key['assists'] for key in data_dicts]),
+        'saves': sum([key['saves'] for key in data_dicts]),
+    })
 
     return {
-        'players': [
-            player_data
-        ],
+        'players': data_dicts,
         'team_str': 'Overall stats'
     }
 
