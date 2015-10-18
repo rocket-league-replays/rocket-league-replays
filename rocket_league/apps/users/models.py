@@ -1,11 +1,11 @@
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 
-from datetime import datetime
 from rest_framework.authtoken.models import Token
 import requests
 from social.backends.steam import USER_INFO
@@ -101,20 +101,15 @@ class Profile(models.Model):
 
         return steam.extra_data['player']
 
-    def display_names(self):
-        names = self.user.replay_set.all().exclude(
-            player_name=self.steam_info().get('personaname', '')
-        ).distinct('player_name').values_list(
-            'player_name',
-            flat=True
-        ).order_by()
+    def get_absolute_url(self):
+        if self.has_steam_connected():
+            return reverse('users:steam', kwargs={
+                'steam_id': self.user.social_auth.get(provider='steam').uid
+            })
 
-        if not names:
-            return None
-
-        if ',' in ''.join(names):
-            return '; '.join(names)
-        return ', '.join(names)
+        return reverse('users:profile', kwargs={
+            'username': self.user.username
+        })
 
 
 class LeagueRating(models.Model):

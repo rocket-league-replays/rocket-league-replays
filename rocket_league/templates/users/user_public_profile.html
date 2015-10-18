@@ -2,10 +2,5 @@
 {% load cache pagination site %}
 
 {% block content_primary %}
-    {# Has this user connected their account to Steam? #}
-    {% if object.profile.has_steam_connected %}
-        {% include "users/includes/steam_profile.html" %}
-    {% else %}
-        {% include "users/includes/basic_profile.html" %}
-    {% endif %}
+    {% include "users/includes/basic_profile.html" %}
 {% endblock %}

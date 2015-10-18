@@ -3,13 +3,17 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
-from django.views.generic import DetailView, UpdateView
+from django.shortcuts import redirect
+from django.views.generic import DetailView, TemplateView, UpdateView
 
 from .forms import UserSettingsForm
 
 from braces.views import LoginRequiredMixin
 from registration import signals
 from registration.views import RegistrationView as BaseRegistrationView
+import requests
+from social.backends.steam import USER_INFO
+from social.apps.django_app.default.models import UserSocialAuth
 
 
 class UserMixin(LoginRequiredMixin, DetailView):
@@ -55,6 +59,14 @@ class PublicProfileView(DetailView):
     template_name = 'users/user_public_profile.html'
     context_object_name = 'public_user'
 
+    def get(self, request, *args, **kwargs):
+        response = super(PublicProfileView, self).get(request, *args, **kwargs)
+
+        if self.object.profile.has_steam_connected():
+            return redirect('users:steam', steam_id=self.object.profile.steam_info()['steamid'])
+
+        return response
+
 
 class RegistrationView(BaseRegistrationView):
     """
@@ -78,3 +90,34 @@ class RegistrationView(BaseRegistrationView):
 
     def get_success_url(self, user):
         return settings.LOGIN_REDIRECT_URL
+
+
+class SteamView(TemplateView):
+    template_name = 'users/steam_profile.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(SteamView, self).get_context_data(**kwargs)
+
+        # Is this Steam ID associated with a user?
+        try:
+            context['steam_info'] = UserSocialAuth.objects.get(
+                uid=kwargs['steam_id'],
+            ).extra_data['player']
+
+            context['has_user'] = True
+        except UserSocialAuth.DoesNotExist:
+            # Pull the profile data and pass it in.
+            context['has_user'] = False
+
+            try:
+                player = requests.get(USER_INFO, params={
+                    'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
+                    'steamids': kwargs['steam_id'],
+                }).json()
+
+                if len(player['response']['players']) > 0:
+                    context['steam_info'] = player['response']['players'][0]
+            except:
+                pass
+
+        return context

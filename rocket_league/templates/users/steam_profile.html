@@ -1,9 +1,11 @@
+{% extends "base.html" %}
 {% load cache pagination replays site %}
 
+{% block content_primary %}
 {% comment %}
     [x] Link to Steam profile
     [ ] Show all replays they have been involved in.
-    [ ] Allow profiles to work off Steam IDs?
+    [x] Allow profiles to work off Steam IDs?
     [x] "Appeared as" - all steam names used
     Overall stats based on replays?
         - [x] Winning goals scored.
@@ -16,8 +18,6 @@
     [ ] Allow users to rate each other (if they appeared in the same replay, thumbs up only).
 {% endcomment %}
 
-
-{% with steam_info=object.profile.steam_info %}
 <div class="row">
     <div class="small-12 columns">
         <h3>
@@ -29,11 +29,10 @@
             </a>
         </h3>
 
-        {% with names=object.profile.display_names %}
+        {% display_names steam_info as names %}
         {% if names %}
         <p>Has also played as: {{ names }}</p>
         {% endif %}
-        {% endwith %}
         <hr>
     </div>
 </div>
@@ -126,4 +125,4 @@
         </table>
     </div>
 </div>
-{% endwith %}
+{% endblock %}

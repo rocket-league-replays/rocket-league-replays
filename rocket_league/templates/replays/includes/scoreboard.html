@@ -13,7 +13,7 @@
     <tr>
         <td>
             {% if player.platform == 'OnlinePlatform_Steam' %}
-            <a href="http://steamcommunity.com/profiles/{{ player.online_id }}" target="_blank">
+            <a href="{% url 'users:steam' player.online_id %}">
             {% endif %}
 
             {{ player.player_name }}
