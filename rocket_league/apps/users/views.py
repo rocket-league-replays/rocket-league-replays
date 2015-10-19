@@ -112,6 +112,7 @@ class SteamView(TemplateView):
             # Pull the profile data and pass it in.
             context['has_user'] = False
 
+            # TODO: Store this data, rather than requesting it every time.
             try:
                 player = requests.get(USER_INFO, params={
                     'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
