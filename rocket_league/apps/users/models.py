@@ -26,8 +26,6 @@ class Profile(models.Model):
             steamid=steam_id,
         )[:1]
 
-        print ratings
-
         if ratings:
             return {
                 settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
