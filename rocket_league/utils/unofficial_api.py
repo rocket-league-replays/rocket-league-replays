@@ -88,16 +88,14 @@ def get_leaderboards(headers):
     return
 
 
-def get_league_data(user, headers):
+def get_league_data(steam_id, headers):
     # Does this user have their Steam account connected?
-    player_id = user.uid
-
     r = requests.post(API_BASE + '/callproc{}/'.format(API_VERSION), headers=headers, data={
         'Proc[]': [
             'GetPlayerSkillAndRankPointsSteam',
         ],
         'P0P[]': [
-            player_id,
+            steam_id,
         ]
     })
 
@@ -118,7 +116,7 @@ def get_league_data(user, headers):
 
     # # Store this, cache it, do something with it.
     LeagueRating.objects.create(
-        user_id=user.user_id,
+        steamid=steam_id,
         duels=matches.get(str(settings.PLAYLISTS['RankedDuels']), 0),
         doubles=matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0),
         solo_standard=matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0),

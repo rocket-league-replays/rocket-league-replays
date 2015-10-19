@@ -1,6 +1,6 @@
 from django import template
 
-from ..models import Profile
+from ..models import Profile, LeagueRating
 
 
 register = template.Library()
@@ -25,3 +25,11 @@ def league_data(context):
             )
 
     return user.profile.latest_ratings()
+
+
+@register.assignment_tag
+def get_ratings(uid):
+    print 'getting ratings for', uid
+    return LeagueRating.objects.filter(
+        steamid=uid,
+    )

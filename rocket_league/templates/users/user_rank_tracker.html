@@ -1,6 +1,12 @@
 {% extends "users/base.html" %}
+{% load ratings %}
 
 {% block content %}
+
+{% if not user.profile.has_steam_connected %}
+    <p>You need to connect your Steam account before you can track your ranks on this page.</p>
+{% else %}
+
 {% with ratings=user.profile.latest_ratings %}
 <div class="row text-center">
     <div class="medium-3 columns">
@@ -54,14 +60,14 @@
 {% endwith %}
 
 <div id="chartContainer" style="height: 600px; width: 100%;"></div>
+{% endif %}
 {% endblock %}
 
 {% block additional_js %}
+{% if user.profile.has_steam_connected %}
 <script src="/static/js/vendor/jquery.canvasjs.min.js"></script>
 
-
-{# |slice:":10" #}
-{% with ratings=user.leaguerating_set.all %}
+{% get_ratings user.profile.steam_info.steamid as ratings %}
 <script>
 var chart = new CanvasJS.Chart("chartContainer",
 {
@@ -134,11 +140,11 @@ var chart = new CanvasJS.Chart("chartContainer",
 
 chart.render();
 </script>
-{% endwith %}
 
 <style>
 #chartContainer {
     margin-top: 30px;
 }
 </style>
+{% endif %}
 {% endblock %}

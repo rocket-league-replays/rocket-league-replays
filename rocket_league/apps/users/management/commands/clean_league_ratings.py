@@ -1,19 +1,19 @@
 from django.core.management.base import BaseCommand
 
-from social.apps.django_app.default.models import UserSocialAuth
+from ...models import LeagueRating
 
 
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        users = UserSocialAuth.objects.filter(
-            provider='steam',
-        )
+        steam_ids = LeagueRating.objects.all().distinct('steamid').values_list('steamid', flat=True).order_by()
 
-        for user in users:
+        for steam_id in steam_ids:
             # Get the LeagueRating objects for this user.
-            ratings = user.user.leaguerating_set.all()
-            print 'Working on', user
+            ratings = LeagueRating.objects.filter(
+                steamid=steam_id,
+            )
+            print 'Working on', steam_id
 
             duels = None
             doubles = None

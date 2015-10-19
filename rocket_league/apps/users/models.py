@@ -17,7 +17,16 @@ class Profile(models.Model):
     user = models.OneToOneField(User)
 
     def latest_ratings(self):
-        ratings = self.user.leaguerating_set.all()[:1]
+        if not self.has_steam_connected():
+            return {}
+
+        steam_id = self.user.social_auth.get(provider='steam').uid
+
+        ratings = LeagueRating.objects.filter(
+            steamid=steam_id,
+        )[:1]
+
+        print ratings
 
         if ratings:
             return {
@@ -28,8 +37,11 @@ class Profile(models.Model):
             }
 
     def rating_diff(self):
+        steam_id = self.user.social_auth.get(provider='steam').uid
+
         # Do we have ratings from today as well as yesterday?
-        yesterdays_rating = self.user.leaguerating_set.filter(
+        yesterdays_rating = LeagueRating.objects.filter(
+            steamid=steam_id,
             timestamp__startswith=now().date() - timedelta(days=1),
         ).aggregate(
             Max('duels'),
@@ -38,7 +50,8 @@ class Profile(models.Model):
             Max('standard'),
         )
 
-        todays_ratings = self.user.leaguerating_set.filter(
+        todays_ratings = LeagueRating.objects.filter(
+            steamid=steam_id,
             timestamp__startswith=now().date(),
         ).aggregate(
             Max('duels'),
@@ -114,7 +127,10 @@ class Profile(models.Model):
 
 class LeagueRating(models.Model):
 
-    user = models.ForeignKey(User)
+    steamid = models.BigIntegerField(
+        blank=True,
+        null=True,
+    )
 
     duels = models.PositiveIntegerField()
 
