@@ -1,0 +1,52 @@
+{% load ratings %}
+
+{% latest_ratings as ratings %}
+<div class="row text-center">
+    <div class="medium-3 columns">
+        Solo
+
+        <h4>
+            {% if ratings.10 %}
+                {{ ratings.10 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
+    </div>
+
+    <div class="medium-3 columns">
+        Doubles
+
+        <h4>
+            {% if ratings.11 %}
+                {{ ratings.11 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
+    </div>
+
+    <div class="medium-3 columns">
+        Solo Standard
+
+        <h4>
+            {% if ratings.12 %}
+                {{ ratings.12 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
+    </div>
+
+    <div class="medium-3 columns">
+        Standard
+
+        <h4>
+            {% if ratings.13 %}
+                {{ ratings.13 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </h4>
+    </div>
+</div>

@@ -40,7 +40,7 @@
 {% steam_stats steam_info.steamid as stats %}
 
 <div class="row">
-    <div class="medium-6 columns">
+    <div class="medium-5 columns">
         <h4>Player stats</h4>
 
         <table width="100%">
@@ -125,8 +125,13 @@
         </table>
     </div>
 
-    <div class="medium-6 columns">
+    <div class="medium-7 columns">
+        {# Scoreboard + totals #}
         {% custom_scoreboard steam_info %}
+
+        {# Rating graph #}
+        {% include "users/includes/latest_ratings.html" with steam_id=steam_info.steamid %}
+        {% include "users/includes/ratings_graph.html" with steam_id=steam_info.steamid %}
     </div>
 </div>
 
