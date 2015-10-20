@@ -10,3 +10,7 @@ tr[data-href] {
     }
 }
 
+tr.is-current-user,
+tr.is-current-user:nth-of-type(even) {
+    background-color: #BEB;
+}

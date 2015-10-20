@@ -27,3 +27,10 @@ th {
         border-bottom-color: #333;
     }
 }
+
+h3 a,
+h3 a:hover,
+h3 a:active,
+h3 a:visited {
+    color: $body-font-color;
+}

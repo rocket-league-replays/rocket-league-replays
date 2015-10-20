@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% load cache pagination %}
 
 {% block content_primary %}
 <div class="row">
@@ -34,69 +33,7 @@
         <p>{{ page_obj.paginator.count }} replays found.</p>
     </div>
     <div class="medium-12 columns">
-        <table width="100%" class="expand">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Map</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th class="orderable" data-order-key="num_frames">
-                        Length
-                        {% if filter.form.order.value == '-num_frames' %}
-                            <em class="icon-down-dir"></em>
-                        {% elif filter.form.order.value == 'num_frames' %}
-                            <em class="icon-up-dir"></em>
-                        {% else %}
-                            <em class="icon-sort"></em>
-                        {% endif %}
-                    </th>
-                    <th>Region</th>
-                    <th class="orderable" data-order-key="timestamp">
-                        Date
-                        {% if filter.form.order.value == '-timestamp' %}
-                            <em class="icon-down-dir"></em>
-                        {% elif filter.form.order.value == 'timestamp' %}
-                            <em class="icon-up-dir"></em>
-                        {% else %}
-                            <em class="icon-sort"></em>
-                        {% endif %}
-                    </th>
-                    <th class="orderable" data-order-key="excitement_factor">
-                        Excitement Factor
-                        {% if filter.form.order.value == '-excitement_factor' or not filter.form.order.value %}
-                            <em class="icon-down-dir"></em>
-                        {% elif filter.form.order.value == 'excitement_factor' %}
-                            <em class="icon-up-dir"></em>
-                        {% else %}
-                            <em class="icon-sort"></em>
-                        {% endif %}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for replay in object_list %}
-                    {% cache 3600 'replay_list_item' replay.pk %}
-                        <tr data-href="{{ replay.get_absolute_url }}">
-                            <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
-                            <td>{{ replay.map }}</td>
-                            <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                            <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
-                            <td>{{ replay.match_length }}</td>
-                            <td>{{ replay.region }}</td>
-                            <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-                            <td>{{ replay.excitement_factor|floatformat }}</td>
-                        </tr>
-                    {% endcache %}
-                {% empty %}
-                <tr>
-                    <td colspan="8">There are currently no replays to display. Try adjusting the search options above.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% pagination page_obj %}
+        {% include "replays/includes/replay_table.html" %}
     </div>
 </div>
 

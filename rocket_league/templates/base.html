@@ -254,6 +254,9 @@
         <script src="/static/js/vendor/foundation/foundation.js"></script>
         <script src="/static/js/vendor/foundation/foundation.tab.js"></script>
 
+        <script src="/static/js/vendor/jquery.canvasjs.min.js"></script>
+        <script src="/static/js/src/app.js"></script>
+
         <script>
             $(document).foundation();
 
@@ -281,6 +284,10 @@
                     }
                 }
             );
+
+            {% if user.is_authenticated %}
+            $('[data-user="{{ user.pk }}"').addClass('is-current-user');
+            {% endif %}
         </script>
 
         {% block additional_js %}{% endblock %}

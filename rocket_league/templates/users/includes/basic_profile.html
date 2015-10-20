@@ -1,0 +1,57 @@
+{% load cache pagination site %}
+
+<div class="row">
+    <div class="small-12 columns">
+        <h3>Profile: {{ object }}</h3>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="medium-12 columns">
+        <h4>Replay packs</h4>
+
+        <table width="100%" class="expand">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th width="350">Maps</th>
+                    <th>Goals</th>
+                    <th>Players</th>
+                    <th>Total duration</th>
+                    <th>Last updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for replaypack in object.replaypack_set.all %}
+                    {% cache 3600 'replaypack_profile_list_item' replaypack.pk %}
+                        <tr data-href="{{ replaypack.get_absolute_url }}">
+                            <td><a href="{{ replaypack.get_absolute_url }}">{{ replaypack }}</a></td>
+                            <td>{{ replaypack.maps }}</td>
+                            <td>{{ replaypack.goals }}</td>
+                            <td>{{ replaypack.players|length }}</td>
+                            <td>{{ replaypack.total_duration }}</td>
+                            <td>{{ replaypack.last_updated|date:"jS F, h:iA" }}</td>
+                        </tr>
+                    {% endcache %}
+                {% empty %}
+                <tr>
+                    <td colspan="7">{{ object }} does not currently have any replay packs.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+{% with object_list=object.replay_set.all|order_by:"-excitement_factor" %}
+    {% if object_list %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h4>Uploaded replays</h4>
+            {% include "replays/includes/replay_table.html" with disable_highlight=True disable_ordering=True %}
+        </div>
+    </div>
+    {% endif %}
+{% endwith %}

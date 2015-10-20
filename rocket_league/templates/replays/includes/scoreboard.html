@@ -1,7 +1,9 @@
-<h3 class="{% if team == 0 %}primary{% else %}secondary{% endif %}">{{ team_str }}</h3>
+<h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }}</h3>
 <table width="100%">
     <tr>
+        {% if players.0.player_name %}
         <th>{# Player name #}</th>
+        {% endif %}
         {# <th>Platform</th> #}
         <th>Score</th>
         <th>Goals</th>
@@ -11,9 +13,10 @@
     </tr>
     {% for player in players %}
     <tr>
+        {% if players.0.player_name %}
         <td>
             {% if player.platform == 'OnlinePlatform_Steam' %}
-            <a href="http://steamcommunity.com/profiles/{{ player.online_id }}" target="_blank">
+            <a href="{% url 'users:steam' player.online_id %}">
             {% endif %}
 
             {{ player.player_name }}
@@ -22,6 +25,8 @@
             </a>
             {% endif %}
         </td>
+        {% endif %}
+
         {% comment %}
         <td>
             {% if player.platform == 'OnlinePlatform_Steam' %}

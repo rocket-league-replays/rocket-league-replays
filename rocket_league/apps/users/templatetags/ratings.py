@@ -1,6 +1,7 @@
 from django import template
+from django.conf import settings
 
-from ..models import Profile
+from ..models import Profile, LeagueRating
 
 
 register = template.Library()
@@ -25,3 +26,25 @@ def league_data(context):
             )
 
     return user.profile.latest_ratings()
+
+
+@register.assignment_tag(takes_context=True)
+def latest_ratings(context):
+    ratings = LeagueRating.objects.filter(
+        steamid=context['steam_id'],
+    )[:1]
+
+    if ratings:
+        return {
+            settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
+            settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
+            settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
+            settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
+        }
+
+
+@register.assignment_tag
+def get_ratings(uid):
+    return LeagueRating.objects.filter(
+        steamid=uid,
+    )

@@ -1,0 +1,62 @@
+{% load pagination %}
+
+<table width="100%" class="expand">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Map</th>
+            <th>Type</th>
+            <th>Score</th>
+            <th class="orderable" data-order-key="num_frames">
+                Length
+                {% if not disable_ordering %}
+                    {% if filter.form.order.value == '-num_frames' %}
+                        <em class="icon-down-dir"></em>
+                    {% elif filter.form.order.value == 'num_frames' %}
+                        <em class="icon-up-dir"></em>
+                    {% else %}
+                        <em class="icon-sort"></em>
+                    {% endif %}
+                {% endif %}
+            </th>
+            <th>Region</th>
+            <th class="orderable" data-order-key="timestamp">
+                Date
+                {% if not disable_ordering %}
+                    {% if filter.form.order.value == '-timestamp' %}
+                        <em class="icon-down-dir"></em>
+                    {% elif filter.form.order.value == 'timestamp' %}
+                        <em class="icon-up-dir"></em>
+                    {% else %}
+                        <em class="icon-sort"></em>
+                    {% endif %}
+                {% endif %}
+            </th>
+            <th class="orderable" data-order-key="excitement_factor">
+                Excitement Factor
+                {% if not disable_ordering %}
+                    {% if filter.form.order.value == '-excitement_factor' or not filter.form.order.value %}
+                        <em class="icon-down-dir"></em>
+                    {% elif filter.form.order.value == 'excitement_factor' %}
+                        <em class="icon-up-dir"></em>
+                    {% else %}
+                        <em class="icon-sort"></em>
+                    {% endif %}
+                {% endif %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for replay in object_list %}
+            {% include "replays/includes/replay_row.html" with disable_highlight=disable_highlight|default:False %}
+        {% empty %}
+        <tr>
+            <td colspan="8">There are currently no replays to display. Try adjusting the search options above.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if page_obj %}
+    {% pagination page_obj %}
+{% endif %}
