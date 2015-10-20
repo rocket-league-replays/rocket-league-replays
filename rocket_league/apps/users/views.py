@@ -164,4 +164,9 @@ class SteamView(TemplateView):
             player__online_id=kwargs['steam_id'],
         )
 
+        if not context.get('steam_info', None):
+            context['steam_info'] = {
+                'steamid': kwargs['steam_id'],
+            }
+
         return context
