@@ -1,0 +1,27 @@
+{% load ratings %}
+
+<div id="chartContainer" style="height: 350px; width: 100%;"></div>
+
+{% get_ratings steam_id as ratings %}
+<script>
+var duels = [
+    {% for rating in ratings reversed %}
+        { x: {{ forloop.counter }}, y: {{ rating.duels }}},
+    {% endfor %}
+],
+doubles = [
+    {% for rating in ratings reversed %}
+        { x: {{ forloop.counter }}, y: {{ rating.doubles }}},
+    {% endfor %}
+],
+solo_standard = [
+    {% for rating in ratings reversed %}
+        { x: {{ forloop.counter }}, y: {{ rating.solo_standard }}},
+    {% endfor %}
+],
+standard = [
+    {% for rating in ratings reversed %}
+        { x: {{ forloop.counter }}, y: {{ rating.standard }}},
+    {% endfor %}
+];
+</script>
