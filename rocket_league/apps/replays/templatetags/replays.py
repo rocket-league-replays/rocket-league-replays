@@ -195,11 +195,12 @@ def steam_stats(uid):
     )
 
     for replay in replays:
-        # Which team was the player on?
-        player = replay.player_set.get(
+        # Which team was the player on? Split screen players will break a .get()
+        # here, so we have to filter().
+        player = replay.player_set.filter(
             platform='OnlinePlatform_Steam',
             online_id=uid,
-        )
+        )[0]
 
         # What was the total score for this team?
         team_score = Player.objects.filter(
@@ -222,6 +223,9 @@ def steam_stats(uid):
         ).aggregate(
             score=Sum('score'),
         )['score']
+
+        if not other_team_score:
+            other_team_score = 0
 
         if player.score > team_score + other_team_score:
             data['dominations'] += 1
