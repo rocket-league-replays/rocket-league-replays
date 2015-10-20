@@ -9,6 +9,8 @@ from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
 import requests
 from social.backends.steam import USER_INFO
+from social.apps.django_app.default.fields import JSONField
+from social.apps.django_app.default.models import UID_LENGTH
 
 from datetime import timedelta
 
@@ -147,3 +149,13 @@ class LeagueRating(models.Model):
 
 
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
+
+
+# Used for caching Steam data for users who don't have accounts.
+class SteamCache(models.Model):
+
+    uid = models.CharField(
+        max_length=UID_LENGTH
+    )
+
+    extra_data = JSONField()

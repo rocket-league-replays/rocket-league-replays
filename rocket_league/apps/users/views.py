@@ -4,9 +4,12 @@ from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import now
 from django.views.generic import DetailView, TemplateView, UpdateView
 
 from .forms import UserSettingsForm
+from .models import SteamCache
 from ..replays.models import Replay
 
 from braces.views import LoginRequiredMixin
@@ -111,16 +114,47 @@ class SteamView(TemplateView):
         except UserSocialAuth.DoesNotExist:
             # Pull the profile data and pass it in.
             context['has_user'] = False
+            context['steam_info'] = None
 
-            # TODO: Store this data, rather than requesting it every time.
+            # Do we have a cache object for this already?
             try:
-                player = requests.get(USER_INFO, params={
-                    'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
-                    'steamids': kwargs['steam_id'],
-                }).json()
+                cache = SteamCache.objects.get(
+                    uid=kwargs['steam_id']
+                )
 
-                if len(player['response']['players']) > 0:
-                    context['steam_info'] = player['response']['players'][0]
+                # Have we updated this profile recently?
+                if 'last_updated' in cache.extra_data:
+                    # Parse the last updated date.
+                    last_date = parse_datetime(cache.extra_data['last_updated'])
+
+                    seconds_ago = (now() - last_date).seconds
+
+                    # 3600 seconds = 1 hour
+                    if seconds_ago < 3600:
+                        context['steam_info'] = cache.extra_data['player']
+
+            except SteamCache.DoesNotExist:
+                pass
+
+            try:
+                if not context['steam_info']:
+                    player = requests.get(USER_INFO, params={
+                        'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
+                        'steamids': kwargs['steam_id'],
+                    }).json()
+
+                    if len(player['response']['players']) > 0:
+                        context['steam_info'] = player['response']['players'][0]
+
+                        # Store this data in a SteamCache object.
+                        cache_obj, _ = SteamCache.objects.get_or_create(
+                            uid=kwargs['steam_id']
+                        )
+                        cache_obj.extra_data = {
+                            'player': context['steam_info'],
+                            'last_updated': now().isoformat(),
+                        }
+                        cache_obj.save()
             except:
                 pass
 

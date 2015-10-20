@@ -45,7 +45,6 @@ def latest_ratings(context):
 
 @register.assignment_tag
 def get_ratings(uid):
-    print 'getting ratings for', uid
     return LeagueRating.objects.filter(
         steamid=uid,
     )
