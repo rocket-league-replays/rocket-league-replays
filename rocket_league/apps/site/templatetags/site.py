@@ -17,6 +17,9 @@ def order_by(qs, ordering):
 
 @register.assignment_tag
 def display_names(steam_info):
+    if not steam_info:
+        return None
+
     names = Player.objects.filter(
         platform='OnlinePlatform_Steam',
         online_id=steam_info['steamid'],
