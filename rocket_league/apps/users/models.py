@@ -149,6 +149,7 @@ class LeagueRating(models.Model):
 
 
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
+User.profile = property(lambda u: Profile.objects.get_or_create(user=u)[0])
 
 
 # Used for caching Steam data for users who don't have accounts.
