@@ -104,9 +104,9 @@ def get_league_data(steam_ids):
     Playlist=13&Mu=33.5018&Sigma=2.5&RankPoints=468
     """
 
-    steam_ids = list(steam_ids)
+    all_steam_ids = list(steam_ids)
 
-    for steam_ids in chunks(steam_ids, 100):
+    for steam_ids in chunks(all_steam_ids, 100):
         data = {
             'Proc[]': [
                 'GetPlayerSkillAndRankPointsSteam'
@@ -132,7 +132,7 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', r.text)
+            matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', response)
 
             if not matches:
                 print 'no matches'
