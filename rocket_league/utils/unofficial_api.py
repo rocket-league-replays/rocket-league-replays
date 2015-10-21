@@ -5,6 +5,7 @@ from ..apps.users.models import LeagueRating
 
 import re
 import requests
+import time
 
 register = template.Library()
 
@@ -30,7 +31,13 @@ def api_login():
 
     r = requests.post(API_BASE + '/login{}/'.format(API_VERSION), headers=HEADERS, data=login_data)
 
-    if r.text != '1':
+    if r.text.strip() == 'SCRIPT ERROR PlatformAuthError:':
+        # Wait a few seconds and try again.
+        print 'Hit PlatformAuthError, trying again in 5 seconds.'
+        time.sleep(5)
+        return api_login()
+
+    elif r.text != '1':
         raise Exception("Unable to login.")
 
     HEADERS['SessionID'] = r.headers['sessionid']
@@ -88,17 +95,7 @@ def get_leaderboards(headers):
     return
 
 
-def get_league_data(steam_id, headers):
-    # Does this user have their Steam account connected?
-    r = requests.post(API_BASE + '/callproc{}/'.format(API_VERSION), headers=headers, data={
-        'Proc[]': [
-            'GetPlayerSkillAndRankPointsSteam',
-        ],
-        'P0P[]': [
-            steam_id,
-        ]
-    })
-
+def get_league_data(steam_ids):
     """
     Playlist=0&Mu=20.6591&Sigma=4.11915&RankPoints=100
     Playlist=10&Mu=27.0242&Sigma=2.96727&RankPoints=292
@@ -107,18 +104,52 @@ def get_league_data(steam_id, headers):
     Playlist=13&Mu=33.5018&Sigma=2.5&RankPoints=468
     """
 
-    matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', r.text)
+    steam_ids = list(steam_ids)
 
-    if not matches:
-        return 'no matches'
+    for steam_ids in chunks(steam_ids, 100):
+        data = {
+            'Proc[]': [
+                'GetPlayerSkillAndRankPointsSteam'
+            ] * len(steam_ids),
+        }
 
-    matches = dict(matches)
+        for index, steam_id in enumerate(steam_ids):
+            data['P{}P[]'.format(index)] = [str(steam_id)]
 
-    # # Store this, cache it, do something with it.
-    LeagueRating.objects.create(
-        steamid=steam_id,
-        duels=matches.get(str(settings.PLAYLISTS['RankedDuels']), 0),
-        doubles=matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0),
-        solo_standard=matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0),
-        standard=matches.get(str(settings.PLAYLISTS['RankedStandard']), 0),
-    )
+        headers = api_login()
+        r = requests.post(
+            API_BASE + '/callproc{}/'.format(API_VERSION),
+            headers=headers,
+            data=data
+        )
+
+        if r.text.strip() == 'SCRIPT ERROR SessionNotActive:':
+            print 'Hit SessionNotActive'
+            continue
+
+        # Split the response into individual chunks.
+        response_chunks = r.text.strip().split('\r\n\r\n')
+
+        for index, response in enumerate(response_chunks):
+            print 'Getting rating data for', steam_ids[index]
+            matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', r.text)
+
+            if not matches:
+                print 'no matches'
+
+            matches = dict(matches)
+
+            # Store this, cache it, do something with it.
+            LeagueRating.objects.create(
+                steamid=steam_ids[index],
+                duels=matches.get(str(settings.PLAYLISTS['RankedDuels']), 0),
+                doubles=matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0),
+                solo_standard=matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0),
+                standard=matches.get(str(settings.PLAYLISTS['RankedStandard']), 0),
+            )
+
+
+def chunks(input_list, chunk_length):
+    """Yield successive n-sized chunks from l."""
+    for i in xrange(0, len(input_list), chunk_length):
+        yield input_list[i:i+chunk_length]
