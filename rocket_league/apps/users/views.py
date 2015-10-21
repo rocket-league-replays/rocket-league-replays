@@ -118,9 +118,15 @@ class SteamView(TemplateView):
 
             # Do we have a cache object for this already?
             try:
-                cache = SteamCache.objects.get(
+                cache = SteamCache.objects.filter(
                     uid=kwargs['steam_id']
                 )
+
+                if cache.count() > 0:
+                    for cache_item in cache[1:]:
+                        cache_item.delete()
+
+                    cache = cache[0]
 
                 # Have we updated this profile recently?
                 if 'last_updated' in cache.extra_data:
