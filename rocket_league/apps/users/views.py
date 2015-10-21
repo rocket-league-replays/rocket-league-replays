@@ -128,16 +128,16 @@ class SteamView(TemplateView):
 
                     cache = cache[0]
 
-                # Have we updated this profile recently?
-                if 'last_updated' in cache.extra_data:
-                    # Parse the last updated date.
-                    last_date = parse_datetime(cache.extra_data['last_updated'])
+                    # Have we updated this profile recently?
+                    if 'last_updated' in cache.extra_data:
+                        # Parse the last updated date.
+                        last_date = parse_datetime(cache.extra_data['last_updated'])
 
-                    seconds_ago = (now() - last_date).seconds
+                        seconds_ago = (now() - last_date).seconds
 
-                    # 3600 seconds = 1 hour
-                    if seconds_ago < 3600:
-                        context['steam_info'] = cache.extra_data['player']
+                        # 3600 seconds = 1 hour
+                        if seconds_ago < 3600:
+                            context['steam_info'] = cache.extra_data['player']
 
             except SteamCache.DoesNotExist:
                 pass
