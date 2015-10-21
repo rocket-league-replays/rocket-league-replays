@@ -22,7 +22,15 @@ class Command(BaseCommand):
             provider='steam',
         ).distinct('uid').values_list('uid', flat=True).order_by()
 
-        steam_ids = set(list(player_ids) + list(social_auth_ids))
+        steam_ids = []
+
+        for steam_id in player_ids:
+            steam_ids.append(str(steam_id))
+
+        for steam_id in social_auth_ids:
+            steam_ids.append(str(steam_id))
+
+        steam_ids = set(steam_ids)
 
         get_league_data(steam_ids)
 
