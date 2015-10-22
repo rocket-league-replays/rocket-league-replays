@@ -14,12 +14,12 @@ from .models import SteamCache
 from ..replays.models import Replay
 
 from braces.views import LoginRequiredMixin
-from bs4 import BeautifulSoup
 from registration import signals
 from registration.views import RegistrationView as BaseRegistrationView
 import requests
 from social.backends.steam import USER_INFO
 from social.apps.django_app.default.models import UserSocialAuth
+import xml.etree.ElementTree as ET
 
 
 class UserMixin(LoginRequiredMixin, DetailView):
@@ -109,7 +109,9 @@ class SteamView(TemplateView):
                     kwargs['steam_id']
                 ))
 
-                kwargs['steam_id'] = BeautifulSoup(data.text, 'xml').steamID64.text
+                xml = ET.fromstring(data.text)
+
+                kwargs['steam_id'] = xml.findall('steamID64')[0].text
                 return redirect('users:steam', steam_id=kwargs['steam_id'])
             except Exception as e:
                 raise Http404(e)
