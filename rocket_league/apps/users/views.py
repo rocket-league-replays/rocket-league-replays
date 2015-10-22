@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
+from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
@@ -13,6 +14,7 @@ from .models import SteamCache
 from ..replays.models import Replay
 
 from braces.views import LoginRequiredMixin
+from bs4 import BeautifulSoup
 from registration import signals
 from registration.views import RegistrationView as BaseRegistrationView
 import requests
@@ -98,6 +100,21 @@ class RegistrationView(BaseRegistrationView):
 
 class SteamView(TemplateView):
     template_name = 'users/steam_profile.html'
+
+    def get(self, request, *args, **kwargs):
+        if not kwargs['steam_id'].isnumeric():
+            # Try to get the 64 bit ID for a user.
+            try:
+                data = requests.get('http://steamcommunity.com/id/{}/?xml=1'.format(
+                    kwargs['steam_id']
+                ))
+
+                kwargs['steam_id'] = BeautifulSoup(data.text, 'xml').steamID64.text
+                return redirect('users:steam', steam_id=kwargs['steam_id'])
+            except Exception as e:
+                raise Http404(e)
+
+        return super(SteamView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(SteamView, self).get_context_data(**kwargs)
