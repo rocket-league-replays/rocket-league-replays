@@ -153,3 +153,46 @@ def chunks(input_list, chunk_length):
     """Yield successive n-sized chunks from l."""
     for i in xrange(0, len(input_list), chunk_length):
         yield input_list[i:i+chunk_length]
+
+
+def debug_id(steam_id):
+    """
+    Playlist=0&Mu=20.6591&Sigma=4.11915&RankPoints=100
+    Playlist=10&Mu=27.0242&Sigma=2.96727&RankPoints=292
+    Playlist=11&Mu=37.0857&Sigma=2.5&RankPoints=618
+    Playlist=12&Mu=35.8244&Sigma=2.5&RankPoints=500
+    Playlist=13&Mu=33.5018&Sigma=2.5&RankPoints=468
+    """
+    data = {
+        'Proc[]': [
+            'GetPlayerSkillAndRankPointsSteam'
+        ],
+        'P0P[]': [str(steam_id)]
+    }
+
+    headers = api_login()
+    r = requests.post(
+        API_BASE + '/callproc{}/'.format(API_VERSION),
+        headers=headers,
+        data=data
+    )
+
+    if r.text.strip() == 'SCRIPT ERROR SessionNotActive:':
+        print 'Hit SessionNotActive'
+
+    print r.text
+
+    matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', r.text)
+
+    if not matches:
+        print 'no matches'
+
+    matches = dict(matches)
+
+    import pprint
+    pprint.pprint(matches)
+
+    print 'duels', matches.get(str(settings.PLAYLISTS['RankedDuels']), 0)
+    print 'doubles', matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0)
+    print 'solo_standard', matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0)
+    print 'standard', matches.get(str(settings.PLAYLISTS['RankedStandard']), 0)
