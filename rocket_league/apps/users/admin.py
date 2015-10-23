@@ -7,6 +7,7 @@ from .models import LeagueRating
 
 class LeagueRatingAdmin(admin.ModelAdmin):
     list_display = ['steamid', 'duels', 'doubles', 'solo_standard', 'standard', 'timestamp']
+    search_fields = ['steamid']
 
 admin.site.register(LeagueRating, LeagueRatingAdmin)
 

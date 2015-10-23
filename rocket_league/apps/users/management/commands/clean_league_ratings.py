@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 from ...models import LeagueRating
 from ....replays.models import Player
@@ -18,6 +19,11 @@ class Command(BaseCommand):
         ).distinct('uid').values_list('uid', flat=True).order_by()
 
         steam_ids = set(list(player_ids) + list(social_auth_ids))
+
+        # Delete any rows which contain a 0.
+        LeagueRating.objects.filter(
+            Q(duels=0) | Q(doubles=0) | Q(solo_standard=0) | Q(standard=0)
+        ).delete()
 
         for steam_id in steam_ids:
             # Get the LeagueRating objects for this user.
