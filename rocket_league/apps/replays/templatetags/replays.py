@@ -224,6 +224,9 @@ def steam_stats(uid):
             score=Sum('score'),
         )['score']
 
+        if not team_score:
+            team_score = 0
+
         if not other_team_score:
             other_team_score = 0
 
