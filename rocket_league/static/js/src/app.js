@@ -1,8 +1,8 @@
 if ($('#chartContainer').length == 1 && (
-    duels.length > 0 ||
-    doubles.length > 0 ||
-    solo_standard.length > 0 ||
-    standard.length > 00
+    'undefined' !== typeof duels && duels.length > 0 ||
+    'undefined' !== typeof doubles && doubles.length > 0 ||
+    'undefined' !== typeof solo_standard && solo_standard.length > 0 ||
+    'undefined' !== typeof standard && standard.length > 0
 )) {
 
     var chart = new CanvasJS.Chart("chartContainer",
@@ -16,9 +16,6 @@ if ($('#chartContainer').length == 1 && (
             title: "Date / Time",
             labelFontSize: 14,
             titleFontSize: 14,
-            // labelFormatter: function(e) {
-            //     return "Update ", e.value, "DD/MM/YYYY");
-            // },
             valueFormatString: " "
         },
         axisY: {

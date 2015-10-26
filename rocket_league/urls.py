@@ -59,6 +59,7 @@ urlpatterns = patterns(
 
     url(r'^logout/$', 'django.contrib.auth.views.logout_then_login', name='auth_logout'),
     url(r'', include('registration.auth_urls', namespace='auth')),
+    url(r'', include('rocket_league.apps.site.urls', namespace='site')),
     url(r'', include('rocket_league.apps.users.urls', namespace='users')),
 
     url('', include('social.apps.django_app.urls', namespace='social'))
