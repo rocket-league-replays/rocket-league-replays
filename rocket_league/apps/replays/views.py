@@ -142,6 +142,13 @@ class ReplayPackListView(FilterView):
     template_name_suffix = '_list'
     filterset_class = ReplayPackFilter
 
+    def get_queryset(self):
+        qs = super(ReplayPackListView, self).get_queryset()
+        qs = qs.exclude(
+            replays__isnull=True,
+        )
+        return qs
+
 
 class ReplayPackDeleteView(DeleteView):
     model = ReplayPack
