@@ -37,4 +37,7 @@ class MapAdmin(admin.ModelAdmin):
 admin.site.register(Map, MapAdmin)
 
 
-admin.site.register(ReplayPack)
+class ReplayPackAdmin(admin.ModelAdmin):
+    filter_horizontal = ['replays']
+
+admin.site.register(ReplayPack, ReplayPackAdmin)
