@@ -246,11 +246,12 @@ def steam_stats(uid):
     }).order_by('-goal_diff')
 
     for replay in replays:
-        # What team was this player on?
-        player = replay.player_set.get(
+        # Which team was the player on? Split screen players will break a .get()
+        # here, so we have to filter().
+        player = replay.player_set.filter(
             platform='OnlinePlatform_Steam',
             online_id=uid,
-        )
+        )[0]
 
         # Check if the player was on the winning team.
         if (

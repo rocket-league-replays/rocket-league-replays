@@ -187,7 +187,7 @@ class SteamView(TemplateView):
             show_leaderboard=True,
             player__platform='OnlinePlatform_Steam',
             player__online_id=kwargs['steam_id'],
-        )
+        ).distinct()
 
         if not context.get('steam_info', None):
             context['steam_info'] = {
