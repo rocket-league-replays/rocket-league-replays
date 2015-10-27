@@ -38,7 +38,6 @@
             <thead>
                 <tr>
                     <th>Title</th>
-                    <th width="350">Maps</th>
                     <th>Replays</th>
                     <th>Goals</th>
                     <th>Players</th>
@@ -51,7 +50,6 @@
                     {% cache 3600 'replaypack_list_item' replaypack.pk %}
                         <tr data-href="{{ replaypack.get_absolute_url }}">
                             <td><a href="{{ replaypack.get_absolute_url }}">{{ replaypack }}</a></td>
-                            <td>{{ replaypack.maps }}</td>
                             <td>{{ replaypack.replays.count }}</td>
                             <td>{{ replaypack.goals }}</td>
                             <td>{{ replaypack.players|length }}</td>
