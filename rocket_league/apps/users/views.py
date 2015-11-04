@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
+from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.dateparse import parse_datetime
@@ -11,7 +12,7 @@ from django.views.generic import DetailView, TemplateView, UpdateView
 
 from .forms import UserSettingsForm
 from .models import SteamCache
-from ..replays.models import Replay
+from ..replays.models import Replay, Player
 
 from braces.views import LoginRequiredMixin
 from registration import signals
@@ -56,6 +57,32 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserRatingsView(UserMixin):
+    template_name = 'users/user_ratings.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(UserRatingsView, self).get_context_data(**kwargs)
+
+        if self.request.user.profile.has_steam_connected():
+            steam_id = self.request.user.social_auth.get(provider='steam').uid
+
+            replay_ids = Player.objects.filter(
+                platform='OnlinePlatform_Steam',
+                online_id=steam_id,
+            ).values_list('replay_id', flat=True)
+
+            print Player.objects.filter(
+                replay_id__in=replay_ids,
+                platform='OnlinePlatform_Steam',
+            ).exclude(
+                online_id=steam_id,
+            ).annotate(
+                num_played=Count('online_id')
+            )
+
+        return context
 
 
 class PublicProfileView(DetailView):

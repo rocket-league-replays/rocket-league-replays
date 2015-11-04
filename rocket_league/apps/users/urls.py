@@ -11,4 +11,5 @@ urlpatterns = patterns(
     url(r'^profile/desktop-application/$', views.UserDesktopApplicationView.as_view(), name='desktop_application'),
     url(r'^profile/rank-tracker/$', views.UserRankTrackerView.as_view(), name='rank_tracker'),
     url(r'^profile/settings/$', views.UserSettingsView.as_view(), name='settings'),
+    url(r'^profile/user-ratings/$', views.UserRatingsView.as_view(), name='user_ratings'),
 )

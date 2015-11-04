@@ -19,6 +19,9 @@
             {% url 'users:replay_packs' as url %}
             <li class="tab-title {% if request.path == url %}active{% endif %}"><a href="{{ url }}">Replay packs</a></li>
 
+            {% url 'users:user_ratings' as url %}
+            <li class="tab-title {% if request.path == url %}active{% endif %}"><a href="{{ url }}">User ratings</a></li>
+
             {% url 'users:desktop_application' as url %}
             <li class="tab-title {% if request.path == url %}active{% endif %}"><a href="{{ url }}">Desktop application</a></li>
 
