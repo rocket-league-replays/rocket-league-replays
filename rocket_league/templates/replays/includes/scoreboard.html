@@ -1,3 +1,5 @@
+{% load humanize %}
+
 <h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }}</h3>
 <table width="100%">
     <tr>
@@ -42,11 +44,11 @@
             {% endif %}
         </td>
         {% endcomment %}
-        <td>{{ player.score }}</td>
-        <td>{{ player.goals }}</td>
-        <td>{{ player.assists }}</td>
-        <td>{{ player.saves }}</td>
-        <td>{{ player.shots }}</td>
+        <td>{{ player.score|intcomma }}</td>
+        <td>{{ player.goals|intcomma }}</td>
+        <td>{{ player.assists|intcomma }}</td>
+        <td>{{ player.saves|intcomma }}</td>
+        <td>{{ player.shots|intcomma }}</td>
     </tr>
     {% endfor %}
 </table>

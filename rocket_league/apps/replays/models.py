@@ -598,7 +598,10 @@ class ReplayPack(models.Model):
     def total_duration(self):
         calculation = sum([replay.num_frames for replay in self.replays.all()]) / 30
         minutes, seconds = divmod(calculation, 60)
-        return '%dm %02ds' % (
+        hours, minutes = divmod(minutes, 60)
+
+        return '{} {}m {}s'.format(
+            '{}h'.format(hours) if hours > 0 else '',
             int(minutes),
             int(seconds),
         )

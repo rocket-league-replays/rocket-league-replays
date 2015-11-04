@@ -36,11 +36,11 @@ def custom_scoreboard(context, steam_info):
             platform='OnlinePlatform_Steam',
             online_id=steam_info['steamid'],
         ).aggregate(
-            score=Max('score'),
-            goals=Max('goals'),
-            shots=Max('shots'),
-            assists=Max('assists'),
-            saves=Max('saves'),
+            score=Sum('score'),
+            goals=Sum('goals'),
+            shots=Sum('shots'),
+            assists=Sum('assists'),
+            saves=Sum('saves'),
         )
 
         if not any([player_data[k] for k in player_data]):
