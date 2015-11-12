@@ -45,6 +45,7 @@ class Replay(models.Model):
         settings.AUTH_USER_MODEL,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     title = models.CharField(
@@ -81,6 +82,7 @@ class Replay(models.Model):
         Map,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     server_name = models.CharField(
@@ -97,6 +99,7 @@ class Replay(models.Model):
     team_sizes = models.PositiveIntegerField(
         blank=True,
         null=True,
+        db_index=True,
     )
 
     team_0_score = models.IntegerField(
@@ -480,11 +483,13 @@ class Player(models.Model):
         max_length=100,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     online_id = models.BigIntegerField(
         blank=True,
         null=True,
+        db_index=True,
     )
 
     bot = models.BooleanField(
@@ -509,6 +514,7 @@ class Goal(models.Model):
 
     replay = models.ForeignKey(
         Replay,
+        db_index=True,
     )
 
     # Goal 1, 2, 3 etc..
@@ -516,6 +522,7 @@ class Goal(models.Model):
 
     player = models.ForeignKey(
         Player,
+        db_index=True,
     )
 
     frame = models.IntegerField(
@@ -552,6 +559,7 @@ class ReplayPack(models.Model):
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        db_index=True,
     )
 
     replays = models.ManyToManyField(

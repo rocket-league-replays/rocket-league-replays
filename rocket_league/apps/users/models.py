@@ -130,6 +130,7 @@ class LeagueRating(models.Model):
     steamid = models.BigIntegerField(
         blank=True,
         null=True,
+        db_index=True,
     )
 
     duels = models.PositiveIntegerField()
@@ -156,7 +157,8 @@ User.profile = property(lambda u: Profile.objects.get_or_create(user=u)[0])
 class SteamCache(models.Model):
 
     uid = models.CharField(
-        max_length=UID_LENGTH
+        max_length=UID_LENGTH,
+        db_index=True,
     )
 
     extra_data = JSONField()
