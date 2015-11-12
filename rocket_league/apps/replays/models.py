@@ -449,6 +449,7 @@ class Player(models.Model):
 
     player_name = models.CharField(
         max_length=100,
+        db_index=True,
     )
 
     team = models.IntegerField()
