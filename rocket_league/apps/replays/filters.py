@@ -71,6 +71,8 @@ class ReplayFilter(django_filters.FilterSet):
         fields = ['map', 'server_name', 'team_sizes', 'excitement_factor']
         strict = False
         order_by = [
+            ('-average_rating', 'Average rating'),
+            ('average_rating', 'Average rating'),
             ('-excitement_factor', 'Excitement factor'),
             ('excitement_factor', 'Excitement factor'),
             ('-timestamp', 'Date'),
