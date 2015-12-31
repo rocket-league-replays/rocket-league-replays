@@ -27,13 +27,13 @@ module.exports = function(env) {
       extensions: [''].concat(extensions)
     },
     module: {
-//      preLoaders: [
-//        {
-//          test: /\.js$/,
-//          loader: 'eslint',
-//          exclude: /(node_modules|bower_components)/
-//        }
-//      ],
+      preLoaders: [
+        {
+          test: /\.js$/,
+          loader: 'eslint',
+          exclude: /(node_modules|bower_components)/
+        }
+      ],
       loaders: [
         {
           test: /\.js$/,
