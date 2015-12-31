@@ -4,7 +4,7 @@ if(!config.tasks.css) return
 var gulp         = require('gulp')
 var browserSync  = require('browser-sync')
 var sourcemaps   = require('gulp-sourcemaps')
-var postcss      = require('gulp-postcss')
+var sass         = require('gulp-sass')
 var handleErrors = require('../lib/handleErrors')
 var path         = require('path')
 
@@ -16,7 +16,8 @@ var paths = {
 var cssTask = function () {
   return gulp.src(paths.src)
     .pipe(sourcemaps.init())
-    .pipe(postcss(require('../lib/postCssProcessors')))
+    .pipe(sass())
+    //.pipe(postcss(require('../lib/postCssProcessors')))
     .pipe(sourcemaps.write())
     .pipe(gulp.dest(paths.dest))
     .pipe(browserSync.stream({match: '**/*.css'}))
@@ -29,6 +30,6 @@ var cssProductionTask = function () {
     .pipe(browserSync.stream({match: '**/*.css'}))
 }
 
-gulp.task('css', ['stylelint'], cssTask)
-gulp.task('css:production', ['css', 'stylelint'], cssProductionTask)
+gulp.task('css', cssTask)
+//gulp.task('css:production', ['css'], cssProductionTask)
 module.exports = cssTask

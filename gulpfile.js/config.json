@@ -18,15 +18,15 @@
       "dest": "js",
       "extractSharedJs": true,
       "entries": {
-        "app": ["./index.js"]
+        "app": ["./app.js"]
       },
       "extensions": ["js"]
     },
 
     "css": {
-      "src": "css",
+      "src": "scss",
       "dest": "css",
-      "extensions": ["css"]
+      "extensions": ["scss"]
     },
 
     "stylelint": {
