@@ -17,6 +17,7 @@ class PlayerInlineAdmin(admin.StackedInline):
 class GoalInlineAdmin(admin.StackedInline):
     model = Goal
     extra = 0
+    raw_id_fields = ['player']
 
 
 class ReplayAdmin(admin.ModelAdmin):
