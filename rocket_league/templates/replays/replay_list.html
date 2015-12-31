@@ -51,20 +51,20 @@ $(function() {
     });
 
     $('th.orderable').on('click', function() {
-        {% if not filter.form.order.value %}
+        {% if not request.GET.order %}
         if (window.location.search.length > 0) {
             window.location = window.location.href + '&{{ filter.order_by_field }}=-' + $(this).data('order-key');
         } else {
             window.location = window.location.href + '?{{ filter.order_by_field }}=-' + $(this).data('order-key');
         }
         {% else %}
-        if ('-' + $(this).data('order-key') === '{{ filter.form.order.value }}') {
+        if ('-' + $(this).data('order-key') === '{{ request.GET.order }}') {
             // We're currently ordered by this key descending.
-            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ filter.form.order.value }}', '{{ filter.order_by_field }}=' + $(this).data('order-key'))
+            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ request.GET.order }}', '{{ filter.order_by_field }}=' + $(this).data('order-key'))
 
         } else {
             // We're currently ordered by a different key entirely.
-            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ filter.form.order.value }}', '{{ filter.order_by_field }}=-' + $(this).data('order-key'))
+            new_search = window.location.search.replace('{{ filter.order_by_field }}={{ request.GET.order }}', '{{ filter.order_by_field }}=-' + $(this).data('order-key'))
         }
 
         window.location = window.location.pathname + new_search;
