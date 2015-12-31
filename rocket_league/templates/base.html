@@ -201,7 +201,9 @@
                             <a href="{% url 'social:begin' backend='steam' %}">Connect to Steam</a>
                         {% endif %}
 
-                        <a href="{% url 'users:profile' %}">Account</a>
+                        <a href="{% url 'users:profile' username=user.username %}">Profile</a>
+
+                        <a href="{% url 'users:profile' %}">Dashboard</a>
 
                         <a href="{% url 'auth:auth_logout' %}">Logout</a>
                         {% else %}
