@@ -37,6 +37,7 @@
     </div>
 </div>
 
+{% cache 21600 player_stats steam_info.steamid %}
 {% steam_stats steam_info.steamid as stats %}
 
 <div class="row">
@@ -82,6 +83,7 @@
                     <td>{{ stats.preferred_role }}</td>
                 </tr>
 
+                {% comment %}
                 <tr>
                     <td title="Higher score than everyone else on your team put together">Number of times you've carried your team:</td>
                     <td>{{ stats.carries }}</td>
@@ -96,6 +98,7 @@
                     <td>Biggest win:</td>
                     <td>{{ stats.biggest_win }}</td>
                 </tr>
+                {% endcomment %}
 
                 <tr>
                     <td>Highest score in a game:</td>
@@ -124,7 +127,9 @@
             </tbody>
         </table>
     </div>
+{% endcache %}
 
+    {% cache 21600 player_ratings_and_graph steam_info.steamid %}
     <div class="medium-7 columns">
         {# Scoreboard + totals #}
         {% custom_scoreboard steam_info %}
@@ -133,6 +138,7 @@
         {% include "users/includes/latest_ratings.html" with steam_id=steam_info.steamid %}
         {% include "users/includes/ratings_graph.html" with steam_id=steam_info.steamid %}
     </div>
+    {% endcache %}
 </div>
 
 {% with object_list=appears_in|slice:':10' %}
