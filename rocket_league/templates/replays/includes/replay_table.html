@@ -4,22 +4,22 @@
     <thead>
         <tr>
             <th>#</th>
-            <th>Map</th>
-            <th>Type</th>
-            <th>Score</th>
-            <th class="orderable" data-order-key="num_frames">
-                Length
+
+            <th class="orderable" data-order-key="average_rating">
+                Average Rating
                 {% if not disable_ordering %}
-                    {% if filter.form.order.value == '-num_frames' %}
+                    {% if filter.form.order.value == '-average_rating' or not filter.form.order.value %}
                         <em class="icon-down-dir"></em>
-                    {% elif filter.form.order.value == 'num_frames' %}
+                    {% elif filter.form.order.value == 'average_rating' %}
                         <em class="icon-up-dir"></em>
                     {% else %}
                         <em class="icon-sort"></em>
                     {% endif %}
                 {% endif %}
             </th>
-            <th>Region</th>
+            <th>Score</th>
+            <th>Map</th>
+            <th>Type</th>
             <th class="orderable" data-order-key="timestamp">
                 Date
                 {% if not disable_ordering %}

@@ -7,6 +7,8 @@ from django.utils.timezone import now
 
 from replay_parser import ReplayParser
 
+from ..users.models import LeagueRating
+
 import chardet
 from datetime import datetime
 import re
@@ -159,6 +161,12 @@ class Replay(models.Model):
         default=False,
     )
 
+    average_rating = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        default=0,
+    )
+
     processed = models.BooleanField(
         default=False,
     )
@@ -285,6 +293,49 @@ class Replay(models.Model):
             swing_rating -= swing_rating * days_ago / 100
 
         return swing_rating
+
+    def calculate_average_rating(self):
+
+        players = self.player_set.filter(
+            platform='OnlinePlatform_Steam',
+        ).exclude(
+            online_id__isnull=True,
+        )
+
+        team_sizes = self.player_set.count() / 2
+
+        num_player_ratings = 0
+        total_player_ratings = 0
+
+        for player in players:
+            # Get the latest rating for this player.
+            ratings = LeagueRating.objects.filter(
+                steamid=player.online_id,
+            ).exclude(
+                duels=0,
+                doubles=0,
+                solo_standard=0,
+                standard=0,
+            )[:1]
+
+            if len(ratings) > 0:
+                rating = ratings[0]
+            else:
+                continue
+
+            if team_sizes == 1:  # Duels
+                total_player_ratings += rating.duels
+                num_player_ratings += 1
+            elif team_sizes == 2:  # Doubles
+                total_player_ratings += rating.doubles
+                num_player_ratings += 1
+            elif team_sizes == 3:  # Standard or Solo Standard (can't tell which)
+                total_player_ratings += (rating.solo_standard + rating.standard) / 2
+                num_player_ratings += 1
+
+        if num_player_ratings > 0:
+            return total_player_ratings / num_player_ratings
+        return 0
 
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
@@ -437,6 +488,7 @@ class Replay(models.Model):
             self.record_fps = data['RecordFPS']
 
             self.excitement_factor = self.calculate_excitement_factor()
+            self.average_rating = self.calculate_average_rating()
             self.processed = True
             self.save()
 
