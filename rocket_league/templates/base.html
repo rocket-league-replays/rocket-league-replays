@@ -24,9 +24,9 @@
         <link href='http://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
 
         {% compress css %}
-            <link rel="stylesheet" href="/static/css/normalize.css"/>
-            <link rel="stylesheet" href="/static/css/screen.css"/>
-            <link rel="stylesheet" href="/static/css/dropzone.css"/>
+            <link rel="stylesheet" href="/static/build/css/normalize.css"/>
+            <link rel="stylesheet" href="/static/build/css/screen.css"/>
+            <link rel="stylesheet" href="/static/build/css/dropzone.css"/>
 
             <style>
             span[title] {
@@ -38,23 +38,23 @@
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-        <link rel="apple-touch-icon" sizes="57x57" href="/static/img/icons/apple-touch-icon-57x57.png">
-        <link rel="apple-touch-icon" sizes="60x60" href="/static/img/icons/apple-touch-icon-60x60.png">
-        <link rel="apple-touch-icon" sizes="72x72" href="/static/img/icons/apple-touch-icon-72x72.png">
-        <link rel="apple-touch-icon" sizes="76x76" href="/static/img/icons/apple-touch-icon-76x76.png">
-        <link rel="apple-touch-icon" sizes="114x114" href="/static/img/icons/apple-touch-icon-114x114.png">
-        <link rel="apple-touch-icon" sizes="120x120" href="/static/img/icons/apple-touch-icon-120x120.png">
-        <link rel="apple-touch-icon" sizes="144x144" href="/static/img/icons/apple-touch-icon-144x144.png">
-        <link rel="apple-touch-icon" sizes="152x152" href="/static/img/icons/apple-touch-icon-152x152.png">
-        <link rel="apple-touch-icon" sizes="180x180" href="/static/img/icons/apple-touch-icon-180x180.png">
-        <link rel="icon" type="image/png" href="/static/img/icons/favicon-16x16.png" sizes="16x16">
-        <link rel="icon" type="image/png" href="/static/img/icons/favicon-32x32.png" sizes="32x32">
-        <link rel="icon" type="image/png" href="/static/img/icons/favicon-96x96.png" sizes="96x96">
-        <link rel="icon" type="image/png" href="/static/img/icons/android-chrome-192x192.png" sizes="192x192">
-        <meta name="msapplication-square70x70logo" content="/static/img/icons/smalltile.png" />
-        <meta name="msapplication-square150x150logo" content="/static/img/icons/mediumtile.png" />
-        <meta name="msapplication-wide310x150logo" content="/static/img/icons/widetile.png" />
-        <meta name="msapplication-square310x310logo" content="/static/img/icons/largetile.png" />
+        <link rel="apple-touch-icon" sizes="57x57" href="/static/build/img/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/static/build/img/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/static/build/img/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/static/build/img/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/build/img/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/static/build/img/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/build/img/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/static/build/img/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/build/img/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/static/build/img/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="icon" type="image/png" href="/static/build/img/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/static/build/img/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/static/build/img/icons/android-chrome-192x192.png" sizes="192x192">
+        <meta name="msapplication-square70x70logo" content="/static/build/img/icons/smalltile.png" />
+        <meta name="msapplication-square150x150logo" content="/static/build/img/icons/mediumtile.png" />
+        <meta name="msapplication-wide310x150logo" content="/static/build/img/icons/widetile.png" />
+        <meta name="msapplication-square310x310logo" content="/static/build/img/icons/largetile.png" />
     </head>
 
     <body class="{% block body_class %}{% endblock %}">
@@ -79,7 +79,7 @@
                 <div class="row">
                     <div class="small-6 medium-3 columns logo-container left">
                         <a href="/" class="secondary">
-                            <img src="/static/img/social_logo.png">
+                            <img src="/static/build/img/social_logo.png">
                             <span class="logo-text">Rocket League<br>Replays</span>
                         </a>
                     </div>
@@ -257,7 +257,8 @@
         <script src="/static/js/vendor/foundation/foundation.tab.js"></script>
 
         <script src="/static/js/vendor/jquery.canvasjs.min.js"></script>
-        <script src="/static/js/src/app.js"></script>
+        <script src="/static/build/js/shared.js"></script>
+        <script src="/static/build/js/app.js"></script>
 
         <script>
             $(document).foundation();
