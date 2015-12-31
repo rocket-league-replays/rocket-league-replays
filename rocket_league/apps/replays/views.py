@@ -34,7 +34,16 @@ class ReplayListView(FilterView):
         qs = qs.exclude(
             Q(processed=False) |
             Q(replay_id='')
-        ).order_by('-average_rating', '-excitement_factor')
+        ).extra(
+            select={
+                'null_position': 'CASE WHEN replays_replay.average_rating IS NULL THEN 0 ELSE 1 END'
+             }
+        )
+
+        if 'order' in self.request.GET:
+            qs = qs.order_by(*self.request.GET.getlist('order'))
+        else:
+            qs = qs.order_by('-null_position', '-average_rating', '-excitement_factor')
 
         return qs
 
