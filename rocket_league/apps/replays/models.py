@@ -164,6 +164,7 @@ class Replay(models.Model):
     average_rating = models.PositiveIntegerField(
         blank=True,
         null=True,
+        default=0,
     )
 
     processed = models.BooleanField(
@@ -334,7 +335,7 @@ class Replay(models.Model):
 
         if num_player_ratings > 0:
             return total_player_ratings / num_player_ratings
-        return False
+        return 0
 
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
