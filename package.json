@@ -1,5 +1,5 @@
 {
-  "name": "rocket league replays",
+  "name": "rocket-league-replays",
   "main": "gulpfile.js",
   "devDependencies": {
     "autoprefixer": "^6.1.1",
