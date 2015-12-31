@@ -180,6 +180,7 @@ def steam_stats(uid):
     elif max_stat == 'saves':
         data['preferred_role'] = 'Goalkeeper'
 
+    """
     # Number of times the player's score was higher than everyone else on their
     # team put together.
     data['carries'] = 0
@@ -244,6 +245,7 @@ def steam_stats(uid):
     ).extra(select={
         'goal_diff': 'abs("team_0_score" - "team_1_score")'
     }).order_by('-goal_diff')
+    """
 
     for replay in replays:
         # Which team was the player on? Split screen players will break a .get()

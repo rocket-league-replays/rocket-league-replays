@@ -154,8 +154,9 @@ class SteamView(TemplateView):
 
                         seconds_ago = (now() - last_date).seconds
 
-                        # 3600 seconds = 1 hour
-                        if seconds_ago < 3600:
+                        # 3600  seconds = 1 hour
+                        # 21600 seconds = 6 hours
+                        if seconds_ago < 21600:
                             context['steam_info'] = cache.extra_data['player']
 
             except SteamCache.DoesNotExist:
