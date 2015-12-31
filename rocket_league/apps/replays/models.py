@@ -159,6 +159,11 @@ class Replay(models.Model):
         default=False,
     )
 
+    average_rating = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+    )
+
     processed = models.BooleanField(
         default=False,
     )
