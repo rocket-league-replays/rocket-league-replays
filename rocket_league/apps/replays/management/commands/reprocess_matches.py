@@ -16,6 +16,8 @@ class Command(BaseCommand):
         else:
             replays = Replay.objects.all()
 
+        replays = replays.order_by('pk')
+
         for replay in replays:
             if replay.replay_id and replay.file:
                 print 'Processing', replay.pk, '-', replay.replay_id
