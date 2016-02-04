@@ -1,0 +1,50 @@
+{
+  "root": {
+    "src": "./rocket_league/assets",
+    "dest": "./rocket_league/static/build"
+  },
+
+  "tasks": {
+    "browserSync": {
+      "notify": false,
+      "open": false,
+      "proxy": {
+        "target": "0.0.0.0:8000"
+      }
+    },
+
+    "js": {
+      "src": "js",
+      "dest": "js",
+      "extractSharedJs": true,
+      "entries": {
+        "app": ["./app.js"]
+      },
+      "extensions": ["js"]
+    },
+
+    "css": {
+      "src": "scss",
+      "dest": "css",
+      "extensions": ["scss"]
+    },
+
+    "stylelint": {
+      "src": "css",
+      "dest": "css",
+      "extensions": ["css"]
+    },
+
+    "images": {
+      "src": "img",
+      "dest": "img",
+      "extensions": ["jpg", "png", "svg", "gif"]
+    },
+
+    "fonts": {
+      "src": "fonts",
+      "dest": "fonts",
+      "extensions": ["woff2", "woff", "eot", "ttf", "svg"]
+    }
+  }
+}

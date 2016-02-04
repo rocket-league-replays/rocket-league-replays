@@ -1,0 +1,26 @@
+{
+  "extends": "standard",
+  "parser": "babel-eslint",
+  "ecmaFeatures": {
+    "modules": true,
+  },
+  "env": {
+    "jquery": true,
+    "browser": true,
+    "es6": true
+  },
+  "globals": {
+    "duels": true,
+    "doubles": true,
+    "solo_standard": true,
+    "standard": true,
+    "CanvasJS": true
+  },
+  "rules": {
+    "arrow-parens": [2, "always"],
+    "no-var": [2],
+    "object-shorthand": [2, "always"],
+    "prefer-const": [1],
+    "prefer-template": [2]
+  }
+}
