@@ -25,7 +25,7 @@ Jinja2==2.8
 MarkupSafe==0.23
 oauthlib==1.0.0
 onespacemedia-cms==1.9.8.1
-onespacemedia-server-management==0.3.4
+onespacemedia-server-management==0.4.1
 opbeat==3.0.2
 paramiko==1.15.2
 Pillow==2.9.0
