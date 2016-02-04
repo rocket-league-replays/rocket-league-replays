@@ -108,7 +108,7 @@ def get_league_data(steam_ids):
 
     all_steam_ids = list(steam_ids)
 
-    for steam_ids in chunks(all_steam_ids, 100):
+    for steam_ids in chunks(all_steam_ids, 10):
         data = {
             'Proc[]': [
                 'GetPlayerSkillAndRankPointsSteam'
