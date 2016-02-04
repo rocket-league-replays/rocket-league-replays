@@ -20,11 +20,27 @@
         <table width="100%">
             <tbody>
                 <tr>
+                  <td colspan="2" class="text-center">
+                    <a href="{{ replay.file.url }}" target="_blank">Download this replay</a>
+                  </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <strong>What do I do once the file has downloaded?</strong>
+                        <p>Put the file into your replays folder (found at <code>Documents/My Games/Rocket League/TAGame/Demos</code>), then load up the game and go to the replay listing. The game should appear for viewing.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <table width="100%">
+            <tbody>
+                <tr>
                     <td>
                         Replay ID:
                     </td>
                     <td>
-                        <a href="{{ replay.file.url }}" target="_blank">{{ replay.replay_id }}</a>
+                        {{ replay.replay_id }}
                     </td>
                 </tr>
 
