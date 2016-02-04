@@ -1,5 +1,6 @@
 from django import template
 from django.conf import settings
+from django.core.cache import cache
 
 from ..apps.users.models import LeagueRating
 
@@ -12,6 +13,8 @@ register = template.Library()
 
 API_BASE = 'https://psyonix-rl.appspot.com'
 API_VERSION = '105'
+CACHE_KEY = 'API_SESSION_ID'
+CACHE_TIMEOUT = 60 * 60 * 4  # 14,400 seconds = 4 hours
 
 
 def api_login():
@@ -31,24 +34,25 @@ def api_login():
         'AuthCode': '1400000007975B47F1DEFD678CA3E50201001001F581785618000000010000000200000048FA925600000000B698010001000000BE0000003E000000040000008CA3E5020100100116DC03003352A75664C0FEA900000000457E7856C52D94560100E4780000020000FA05000000B22E0600000000006CFF6B550F2F82520844764F624C679B4FC142A0736366E063CD4031788A853D9DB99551F3EF9C71F3B91AC7F8257C63BB4AF2250F8C4EEFD9583F121EBA6ADE224E52594128BB9FC714F167C82FE785921348B1907FB719DF2A6BB2D48482B489F190633FCC135D4C60987AC8F25E613859D8C3308D6BF48E4175F28C46D3CF',
     }
 
-    r = requests.post(API_BASE + '/auth/'.format(API_VERSION), headers=HEADERS, data=login_data)
+    # Can we get a SessionID from the cache?
+    HEADERS['SessionID'] = cache.get(CACHE_KEY)
 
-    if r.text.strip() == 'SCRIPT ERROR PlatformAuthError:':
-        # Wait a few seconds and try again.
-        print 'Hit PlatformAuthError, trying again in 5 seconds.'
-        time.sleep(5)
-        return api_login()
+    if not HEADERS['SessionID']:
+        r = requests.post(API_BASE + '/auth/'.format(API_VERSION), headers=HEADERS, data=login_data)
 
-    elif r.text != '1':
-        raise Exception("Unable to login.")
+        if r.text.strip() == 'SCRIPT ERROR PlatformAuthError:':
+            # Wait a few seconds and try again.
+            print 'Hit PlatformAuthError, trying again in 5 seconds.'
+            time.sleep(5)
+            return api_login()
 
-    HEADERS['SessionID'] = r.headers['sessionid']
+        elif r.text != '1':
+            raise Exception("Unable to login.")
+
+        HEADERS['SessionID'] = r.headers['sessionid']
+        cache.set(CACHE_KEY, HEADERS['SessionID'], CACHE_TIMEOUT)
 
     return HEADERS
-
-
-
-
 
 
 def get_league_data(steam_ids):
