@@ -21,8 +21,6 @@
 
         {% block feeds %}{% endblock %}
 
-        <link href='http://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
-
         {% compress css %}
             <link rel="stylesheet" href="/static/build/css/normalize.css"/>
             <link rel="stylesheet" href="/static/build/css/screen.css"/>
@@ -37,7 +35,7 @@
 
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 
-        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="shortcut icon" href="/static/build/img/icons/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" sizes="57x57" href="/static/build/img/icons/apple-touch-icon-57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="/static/build/img/icons/apple-touch-icon-60x60.png">
         <link rel="apple-touch-icon" sizes="72x72" href="/static/build/img/icons/apple-touch-icon-72x72.png">
@@ -297,5 +295,7 @@
             $('[data-user="{{ user.pk }}"]').addClass('is-current-user');
         {% endif %}
         </script>
+
+        <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
     </body>
 </html>
