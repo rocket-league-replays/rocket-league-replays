@@ -4,22 +4,10 @@
     <thead>
         <tr>
             <th>#</th>
-
-            <th class="orderable" data-order-key="average_rating">
-                Average Rating
-                {% if not disable_ordering %}
-                    {% if filter.form.order.value == '-average_rating' or not filter.form.order.value %}
-                        <em class="icon-down-dir"></em>
-                    {% elif filter.form.order.value == 'average_rating' %}
-                        <em class="icon-up-dir"></em>
-                    {% else %}
-                        <em class="icon-sort"></em>
-                    {% endif %}
-                {% endif %}
-            </th>
+            <th>Season</th>
             <th>Score</th>
-            <th>Map</th>
             <th>Type</th>
+            <th>Map</th>
             <th class="orderable" data-order-key="timestamp">
                 Date
                 {% if not disable_ordering %}
@@ -32,12 +20,12 @@
                     {% endif %}
                 {% endif %}
             </th>
-            <th class="orderable" data-order-key="excitement_factor">
-                Excitement Factor
+            <th class="orderable" data-order-key="average_rating">
+                Average Rating
                 {% if not disable_ordering %}
-                    {% if filter.form.order.value == '-excitement_factor' or not filter.form.order.value %}
+                    {% if filter.form.order.value == '-average_rating' or not filter.form.order.value %}
                         <em class="icon-down-dir"></em>
-                    {% elif filter.form.order.value == 'excitement_factor' %}
+                    {% elif filter.form.order.value == 'average_rating' %}
                         <em class="icon-up-dir"></em>
                     {% else %}
                         <em class="icon-sort"></em>
