@@ -41,7 +41,9 @@ def get_default_season():
 
         return season.pk
 
-    return Season.objects.all()[0].pk
+    return Season.objects.filter(
+        start_date__lte=now(),
+    )[0].pk
 
 
 class Map(models.Model):
