@@ -65,10 +65,12 @@
                     <td>{{ replay.map }}</td>
                 </tr>
 
+                {% if replay.server_name %}
                 <tr>
                     <td>Server name:</td>
                     <td>{{ replay.server_name }}</td>
                 </tr>
+                {% endif %}
 
                 <tr>
                     <td>Game size:</td>
