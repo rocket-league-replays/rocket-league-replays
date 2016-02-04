@@ -16,6 +16,34 @@ import struct
 import time
 
 
+class Season(models.Model):
+
+    title = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+
+    start_date = models.DateField()
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-start_date']
+
+
+def get_default_season():
+    if Season.objects.count() == 0:
+        season = Season.objects.create(
+            title='Season 1',
+            start_date='2015-07-07'  # Game release date
+        )
+
+        return season.pk
+
+    return Season.objects.all()[0].pk
+
+
 class Map(models.Model):
 
     title = models.CharField(
@@ -48,6 +76,11 @@ class Replay(models.Model):
         blank=True,
         null=True,
         db_index=True,
+    )
+
+    season = models.ForeignKey(
+        Season,
+        default=get_default_season,
     )
 
     title = models.CharField(
