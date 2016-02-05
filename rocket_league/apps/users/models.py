@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
@@ -5,14 +8,12 @@ from django.db import models
 from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
-
 from rest_framework.authtoken.models import Token
-import requests
-from social.backends.steam import USER_INFO
 from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
+from social.backends.steam import USER_INFO
 
-from datetime import timedelta
+from ..replays.models import Season, get_default_season
 
 
 class Profile(models.Model):
@@ -131,6 +132,11 @@ class LeagueRating(models.Model):
         blank=True,
         null=True,
         db_index=True,
+    )
+
+    season = models.ForeignKey(
+        Season,
+        default=get_default_season,
     )
 
     duels = models.PositiveIntegerField()

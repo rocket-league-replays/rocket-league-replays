@@ -7,8 +7,6 @@ from django.utils.timezone import now
 
 from replay_parser import ReplayParser
 
-from ..users.models import LeagueRating
-
 import chardet
 from datetime import datetime
 import re
@@ -330,6 +328,7 @@ class Replay(models.Model):
         return swing_rating
 
     def calculate_average_rating(self):
+        from ..users.models import LeagueRating
 
         players = self.player_set.filter(
             platform='OnlinePlatform_Steam',
