@@ -78,10 +78,12 @@
                 </tr>
                 {% endif %}
 
+                {% if stats.preferred_role %}
                 <tr>
                     <td>Preferred role:</td>
                     <td>{{ stats.preferred_role }}</td>
                 </tr>
+                {% endif %}
 
                 {% comment %}
                 <tr>
@@ -100,30 +102,40 @@
                 </tr>
                 {% endcomment %}
 
+                {% if stats.highest_score %}
                 <tr>
                     <td>Highest score in a game:</td>
                     <td>{{ stats.highest_score }}</td>
                 </tr>
+                {% endif %}
 
+                {% if stats.most_goals %}
                 <tr>
                     <td>Most goals in a game:</td>
                     <td>{{ stats.most_goals }}</td>
                 </tr>
+                {% endif %}
 
+                {% if stats.most_shots %}
                 <tr>
                     <td>Most shots in a game:</td>
                     <td>{{ stats.most_shots }}</td>
                 </tr>
+                {% endif %}
 
+                {% if stats.most_assists %}
                 <tr>
                     <td>Most assists in a game:</td>
                     <td>{{ stats.most_assists }}</td>
                 </tr>
+                {% endif %}
 
+                {% if stats.most_saves %}
                 <tr>
                     <td>Most saves in a game:</td>
                     <td>{{ stats.most_saves }}</td>
                 </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
