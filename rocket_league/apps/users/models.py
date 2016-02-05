@@ -27,6 +27,7 @@ class Profile(models.Model):
 
         ratings = LeagueRating.objects.filter(
             steamid=steam_id,
+            season_id=get_default_season(),
         )[:1]
 
         if ratings:
@@ -44,6 +45,7 @@ class Profile(models.Model):
         yesterdays_rating = LeagueRating.objects.filter(
             steamid=steam_id,
             timestamp__startswith=now().date() - timedelta(days=1),
+            season_id=get_default_season(),
         ).aggregate(
             Max('duels'),
             Max('doubles'),
@@ -54,6 +56,7 @@ class Profile(models.Model):
         todays_ratings = LeagueRating.objects.filter(
             steamid=steam_id,
             timestamp__startswith=now().date(),
+            season_id=get_default_season(),
         ).aggregate(
             Max('duels'),
             Max('doubles'),
