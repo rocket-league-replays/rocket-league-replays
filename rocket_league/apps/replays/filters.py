@@ -1,11 +1,7 @@
+import django_filters
 from django.contrib.auth.models import User
-from django.db import models
-from django.db.models import F, Sum, ExpressionWrapper
-
 
 from .models import Replay, ReplayPack
-
-import django_filters
 
 
 class ReplayFilter(django_filters.FilterSet):
@@ -44,18 +40,6 @@ class ReplayFilter(django_filters.FilterSet):
         model = Replay
         fields = ['map', 'team_sizes', 'season']
         strict = False
-        # order_by = ['-average_rating', '-excitement_factor']
-
-        # order_by = [
-        #     ('-average_rating', 'Average rating'),
-        #     ('average_rating', 'Average rating'),
-        #     ('-excitement_factor', 'Excitement factor'),
-        #     ('excitement_factor', 'Excitement factor'),
-        #     ('-timestamp', 'Date'),
-        #     ('timestamp', 'Date'),
-        #     ('-num_frames', 'Length'),
-        #     ('num_frames', 'Length'),
-        # ]
 
 
 class ReplayPackFilter(django_filters.FilterSet):

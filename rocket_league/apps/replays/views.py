@@ -43,7 +43,7 @@ class ReplayListView(FilterView):
             )
         else:
             qs = qs.filter(
-                season_id=self.request.GET['season']
+                season_id=self.request.GET['season'] or get_default_season()
             )
 
         if 'order' in self.request.GET:
@@ -53,6 +53,20 @@ class ReplayListView(FilterView):
             qs = qs.order_by('-timestamp', '-average_rating')
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ReplayListView, self).get_context_data(**kwargs)
+
+        context['filter'].form.fields['season'].choices = [
+            choice for choice in
+            context['filter'].form.fields['season'].choices
+            if choice[0]
+        ]
+
+        context['filter'].form.initial = {
+            'season': get_default_season()
+        }
+        return context
 
 
 class ReplayDetailView(DetailView):
