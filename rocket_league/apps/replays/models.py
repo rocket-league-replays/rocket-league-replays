@@ -1,19 +1,46 @@
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError
-from django.db import models
-from django.utils.safestring import mark_safe
-from django.utils.timezone import now
-
-from replay_parser import ReplayParser
-
-from ..users.models import LeagueRating
-
-import chardet
-from datetime import datetime
 import re
 import struct
 import time
+from datetime import datetime
+
+import chardet
+from django.conf import settings
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.utils.safestring import mark_safe
+from django.utils.timezone import now
+from replay_parser import ReplayParser
+
+
+class Season(models.Model):
+
+    title = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+
+    start_date = models.DateField()
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-start_date']
+
+
+def get_default_season():
+    if Season.objects.count() == 0:
+        season = Season.objects.create(
+            title='Season 1',
+            start_date='2015-07-07'  # Game release date
+        )
+
+        return season.pk
+
+    return Season.objects.filter(
+        start_date__lte=now(),
+    )[0].pk
 
 
 class Map(models.Model):
@@ -48,6 +75,11 @@ class Replay(models.Model):
         blank=True,
         null=True,
         db_index=True,
+    )
+
+    season = models.ForeignKey(
+        Season,
+        default=get_default_season,
     )
 
     title = models.CharField(
@@ -295,6 +327,7 @@ class Replay(models.Model):
         return swing_rating
 
     def calculate_average_rating(self):
+        from ..users.models import LeagueRating
 
         players = self.player_set.filter(
             platform='OnlinePlatform_Steam',
@@ -434,11 +467,22 @@ class Replay(models.Model):
                     )
 
             for index, goal in enumerate(data['Goals']):
-                player, created = Player.objects.get_or_create(
-                    replay=self,
-                    player_name=goal['PlayerName'].decode(chardet.detect(goal['PlayerName'])['encoding']),
-                    team=goal['PlayerTeam'],
-                )
+                encoding = chardet.detect(goal['PlayerName'])
+                if not encoding['encoding']:
+                    encoding['encoding'] = 'latin-1'
+
+                try:
+                    player, created = Player.objects.get_or_create(
+                        replay=self,
+                        player_name=goal['PlayerName'].decode(encoding['encoding']),
+                        team=goal['PlayerTeam'],
+                    )
+                except MultipleObjectsReturned:
+                    player = Player.objects.filter(
+                        replay=self,
+                        player_name=goal['PlayerName'].decode(encoding['encoding']),
+                        team=goal['PlayerTeam'],
+                    )[0]
 
                 Goal.objects.get_or_create(
                     replay=self,
@@ -461,9 +505,12 @@ class Replay(models.Model):
             self.player_name = data['PlayerName']
             self.player_team = data.get('PrimaryPlayerTeam', 0)
 
-            map_obj, created = Map.objects.get_or_create(
-                slug=data['MapName'].lower(),
-            )
+            if data.get('MapName'):
+                map_obj, created = Map.objects.get_or_create(
+                    slug=data['MapName'].lower(),
+                )
+            else:
+                map_obj = None
 
             self.map = map_obj
             self.timestamp = datetime.fromtimestamp(
@@ -484,7 +531,7 @@ class Replay(models.Model):
             self.keyframe_delay = data['KeyframeDelay']
             self.max_channels = data['MaxChannels']
             self.max_replay_size_mb = data['MaxReplaySizeMB']
-            self.num_frames = data['NumFrames']
+            self.num_frames = data.get('NumFrames', 0)
             self.record_fps = data['RecordFPS']
 
             self.excitement_factor = self.calculate_excitement_factor()

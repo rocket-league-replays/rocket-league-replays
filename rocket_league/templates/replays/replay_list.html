@@ -13,16 +13,16 @@
         <form action="" method="get">
             {% for field in filter.form %}
                 {% if field.name != 'order' %}
-                    <div class="medium-3 columns">
+                    <div class="medium-2 columns">
                         {{ field.label }}
                         {{ field }}
                     </div>
                 {% endif %}
             {% endfor %}
 
-            <div class="medium-12 columns">
+            <div class="medium-2 columns">
                 <label>&nbsp;</label>
-                <input type="submit" class="button tiny">
+                <input type="submit" style="margin-top: 4px;" class="button tiny expand">
             </div>
         </form>
     </div>

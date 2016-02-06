@@ -1,8 +1,10 @@
 {% load ratings %}
 
+{% get_ratings steam_id as ratings %}
+
+{% if ratings %}
 <div id="chartContainer" style="height: 350px; width: 100%;"></div>
 
-{% get_ratings steam_id as ratings %}
 <script>
 var duels = [
     {% for rating in ratings reversed %}
@@ -25,3 +27,4 @@ standard = [
     {% endfor %}
 ];
 </script>
+{% endif %}

@@ -9,7 +9,7 @@ from django.views.generic.detail import SingleObjectMixin
 
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay, ReplayPack
+from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
 from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer, ReplayListSerializer, ReplayCreateSerializer
 from ...utils.forms import AjaxableResponseMixin
 
@@ -34,18 +34,39 @@ class ReplayListView(FilterView):
         qs = qs.exclude(
             Q(processed=False) |
             Q(replay_id='')
-        ).extra(
-            select={
-                'null_position': 'CASE WHEN replays_replay.average_rating IS NULL THEN 0 ELSE 1 END'
-             }
         )
+
+        if 'season' not in self.request.GET:
+            # Default to the current season.
+            qs = qs.filter(
+                season_id=get_default_season()
+            )
+        else:
+            qs = qs.filter(
+                season_id=self.request.GET['season'] or get_default_season()
+            )
 
         if 'order' in self.request.GET:
             qs = qs.order_by(*self.request.GET.getlist('order'))
         else:
-            qs = qs.order_by('-null_position', '-average_rating', '-excitement_factor')
+            # TODO: Make a rating which combines these.
+            qs = qs.order_by('-timestamp', '-average_rating')
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ReplayListView, self).get_context_data(**kwargs)
+
+        context['filter'].form.fields['season'].choices = [
+            choice for choice in
+            context['filter'].form.fields['season'].choices
+            if choice[0]
+        ]
+
+        context['filter'].form.initial = {
+            'season': get_default_season()
+        }
+        return context
 
 
 class ReplayDetailView(DetailView):
