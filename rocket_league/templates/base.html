@@ -194,9 +194,9 @@
                     </div>
                     <div class="medium-6 columns right text-right ">
                         {% if user.is_authenticated %}
-                            <a href="{% url 'users:profile' username=user.username %}">Profile</a>
-
-                            <a href="{% url 'users:profile' %}">Dashboard</a>
+                            <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
+                            <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
+                            <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
 
                             {% if 'steam' in backends.not_associated %}
                                 <a href="{% url 'social:begin' backend='steam' %}">
@@ -217,7 +217,20 @@
                 </div>
             </header>
 
-            <div class="alert-box info"><strong>Want to upload your replays automatically?</strong> Try our new <a href="{% url 'users:desktop_application' %}">desktop application</a>!</div>
+            <div class="alert-box info">
+                <strong>Want to upload your replays automatically?</strong>
+                Use this <a href="https://github.com/TcT2k/RLReplayManager/releases" target="_blank">desktop application</a>!
+
+                {% if user.is_authenticated %}
+                  <span class="api-key-intro">
+                    Once downloaded,
+                    <a href="#" onclick="$('.api-key').removeClass('hide'); $('.api-key-intro').addClass('hide'); return false;">click here</a> to get your API Key.
+                  </span>
+                  <span class="hide api-key">Your API key is <code style="padding: 0; line-height: 1;">{{ user.token }}</code></span>
+                {% else %}
+                  You will need to log in to use it.
+                {% endif %}
+              </div>
 
             <main>
                 {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}

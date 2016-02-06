@@ -29,22 +29,6 @@ class UserMixin(LoginRequiredMixin, DetailView):
         return self.request.user
 
 
-class UserReplaysView(UserMixin):
-    template_name = 'users/user_replays.html'
-
-
-class UserReplayPacksView(UserMixin):
-    template_name = 'users/user_replay_packs.html'
-
-
-class UserDesktopApplicationView(UserMixin):
-    template_name = 'users/user_desktop_application.html'
-
-
-class UserRankTrackerView(UserMixin):
-    template_name = 'users/user_rank_tracker.html'
-
-
 class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = 'users/user_settings.html'
     model = User
