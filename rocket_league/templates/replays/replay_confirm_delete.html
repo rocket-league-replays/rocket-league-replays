@@ -16,7 +16,7 @@
             <p>
                 <input class="button tiny alert" type="submit" value="Delete replay">
 
-                <span style="margin-left: 10px">or <a href="{% url 'users:profile' %}#replay-tab">go back</a></span>
+                <span style="margin-left: 10px">or <a href="{{ object.get_absolute_url }}">go back</a></span>
             </p>
         </form>
     </div>
