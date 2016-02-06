@@ -36,7 +36,7 @@
     </thead>
     <tbody>
         {% for replay in object_list %}
-            {% include "replays/includes/replay_row.html" with disable_highlight=disable_highlight|default:False %}
+            {% include "replays/includes/replay_row.html" %}
         {% empty %}
         <tr>
             <td colspan="8">There are currently no replays to display. Try adjusting the search options above.</td>

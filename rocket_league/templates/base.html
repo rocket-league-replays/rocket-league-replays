@@ -293,13 +293,6 @@
 
         {% block additional_js %}{% endblock %}
         {% endcompress %}
-
-        <script>
-        {% if user.is_authenticated %}
-            $('[data-user="{{ user.pk }}"]').addClass('is-current-user');
-        {% endif %}
-        </script>
-
         <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
     </body>
 </html>
