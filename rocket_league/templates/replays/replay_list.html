@@ -12,7 +12,7 @@
     <div class="small-12 columns panel">
         <form action="" method="get">
             {% for field in filter.form %}
-                {% if field.name != 'order' %}
+                {% if field.name != 'order' and field.name != 'user' %}
                     <div class="medium-2 columns">
                         {{ field.label }}
                         {{ field }}

@@ -38,7 +38,7 @@ class ReplayFilter(django_filters.FilterSet):
 
     class Meta:
         model = Replay
-        fields = ['map', 'team_sizes', 'season']
+        fields = ['user', 'map', 'team_sizes', 'season']
         strict = False
 
 
