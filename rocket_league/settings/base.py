@@ -315,7 +315,7 @@ SILENCED_SYSTEM_CHECKS = [
 
 AUTHENTICATION_BACKENDS = (
     'social.backends.steam.SteamOpenId',
-    'django.contrib.auth.backends.ModelBackend'
+    # 'django.contrib.auth.backends.ModelBackend'
 )
 
 LOGIN_URL = reverse_lazy('auth:auth_login')

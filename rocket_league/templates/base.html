@@ -194,20 +194,24 @@
                     </div>
                     <div class="medium-6 columns right text-right ">
                         {% if user.is_authenticated %}
+                            <a href="{% url 'users:profile' username=user.username %}">Profile</a>
 
-                        {% if 'steam' in backends.not_associated %}
-                            <a href="{% url 'social:begin' backend='steam' %}">Connect to Steam</a>
-                        {% endif %}
+                            <a href="{% url 'users:profile' %}">Dashboard</a>
 
-                        <a href="{% url 'users:profile' username=user.username %}">Profile</a>
-
-                        <a href="{% url 'users:profile' %}">Dashboard</a>
-
-                        <a href="{% url 'auth:auth_logout' %}">Logout</a>
+                            {% if 'steam' in backends.not_associated %}
+                                <a href="{% url 'social:begin' backend='steam' %}">
+                                  <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                                </a>
+                            {% else %}
+                                <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
+                                  {% csrf_token %}
+                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Logout</a>
+                                </form>
+                            {% endif %}
                         {% else %}
-                        <a href="{% url 'register' %}">Register</a>
-
-                        <a href="{% url 'auth:auth_login' %}">Log in</a>
+                        <a href="{% url 'social:begin' backend='steam' %}">
+                          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                        </a>
                         {% endif %}
                     </div>
                 </div>

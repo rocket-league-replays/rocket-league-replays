@@ -9,6 +9,10 @@
 
 <div class="row">
     <div class="medium-6 columns">
+        <a href="{% url 'social:begin' backend='steam' %}">
+          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_large_noborder.png">
+        </a>
+
         <form action="" method="post">
             {% csrf_token %}
 
