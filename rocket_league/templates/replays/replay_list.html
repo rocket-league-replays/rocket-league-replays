@@ -22,7 +22,7 @@
 
             <div class="medium-2 columns">
                 <label>&nbsp;</label>
-                <input type="submit" style="margin-top: 4px;" class="button tiny expand">
+                <input type="submit" style="margin-top: 4px;" value="Search" class="button tiny expand">
             </div>
         </form>
     </div>
@@ -30,7 +30,7 @@
 
 <div class="row">
     <div class="medium-12 columns text-center">
-        <p>{{ page_obj.paginator.count }} replays found.</p>
+        <p>{{ page_obj.paginator.count }} replay{{ page_obj.paginator.count|pluralize }} found.</p>
     </div>
     <div class="medium-12 columns">
         {% include "replays/includes/replay_table.html" %}
