@@ -49,7 +49,7 @@ class ReplayPackFilter(django_filters.FilterSet):
     )
 
     user = django_filters.filters.ModelChoiceFilter(
-        queryset=User.objects.exclude(replay__isnull=True)
+        queryset=User.objects.exclude(replaypack__isnull=True)
     )
 
     class Meta:
