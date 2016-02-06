@@ -108,9 +108,6 @@ class ReplayUpdateView(LoginRequiredMixin, UpdateView):
 
         return super(ReplayUpdateView, self).form_valid(form)
 
-    def get_success_url(self):
-        return self.request.path
-
 
 class ReplayDeleteView(DeleteView):
     model = Replay
