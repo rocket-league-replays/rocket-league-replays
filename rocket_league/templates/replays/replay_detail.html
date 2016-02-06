@@ -15,7 +15,26 @@
 
 <div class="row">
     <div class="medium-6 columns">
-        <h3>Game information</h3>
+        {% if replay.user == user %}
+        <table width="100%">
+            <tbody>
+                <tr>
+                  <td class="text-center">
+                    <a href="{% url 'replay:update' pk=replay.pk %}">
+                        {% if replay.title %}
+                            Rename this replay
+                        {% else %}
+                            Give this replay a name
+                        {% endif %}
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <a href="{% url 'replay:delete' pk=replay.pk %}" class="alert">Delete this replay</a>
+                  </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
 
         <table width="100%">
             <tbody>
@@ -33,6 +52,7 @@
                 </tr>
             </tbody>
         </table>
+
         <table width="100%">
             <tbody>
                 <tr>
