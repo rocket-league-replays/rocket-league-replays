@@ -208,7 +208,7 @@
                                   <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
                                 </form>
 
-                                <a href="{% url 'auth:auth_logout' %}">Logout</a>
+                                <a href="{% url 'auth_logout' %}">Logout</a>
                             {% endif %}
                         {% else %}
                         <a href="{% url 'social:begin' backend='steam' %}">
@@ -224,8 +224,6 @@
             </main>
 
             {% block footer %}
-            {# {% upload_form %} #}
-
             <footer class="row">
                 <div class="medium-12 columns text-center hide-below-banner-width">
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>

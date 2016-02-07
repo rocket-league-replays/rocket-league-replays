@@ -1,21 +1,18 @@
 """URL config for rocket_league project."""
 
-from django.conf import settings
-from django.conf.urls import patterns, url, include
-from django.contrib import admin
-from django.views import generic
-from django.conf.urls.static import static
-
+from cms.forms import CMSPasswordChangeForm
 from cms.sitemaps import registered_sitemaps
 from cms.views import TextTemplateView
-from cms.forms import CMSPasswordChangeForm
-
-from .apps.replays.views import GoalViewSet, ReplayViewSet, PlayerViewSet, MapViewSet
-from .apps.users.forms import RegistrationForm
-from .apps.users.views import RegistrationView
-
+from django.conf import settings
+from django.conf.urls import include, patterns, url
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.auth import views as auth_views
+from django.views import generic
 from rest_framework import routers
 
+from .apps.replays.views import (GoalViewSet, MapViewSet, PlayerViewSet,
+                                 ReplayViewSet)
 
 admin.autodiscover()
 
@@ -55,10 +52,8 @@ urlpatterns = patterns(
     url(r'^api/', include(router.urls)),
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
-    url(r'^register/$', RegistrationView.as_view(form_class=RegistrationForm), name='register'),
-
     url(r'^logout/$', 'django.contrib.auth.views.logout_then_login', name='auth_logout'),
-    url(r'', include('registration.auth_urls', namespace='auth')),
+
     url(r'', include('rocket_league.apps.site.urls', namespace='site')),
     url(r'', include('rocket_league.apps.users.urls', namespace='users')),
 
