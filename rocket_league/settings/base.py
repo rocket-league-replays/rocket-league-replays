@@ -315,11 +315,11 @@ SILENCED_SYSTEM_CHECKS = [
 
 AUTHENTICATION_BACKENDS = (
     'social.backends.steam.SteamOpenId',
-    # 'django.contrib.auth.backends.ModelBackend'
+    'django.contrib.auth.backends.ModelBackend'
 )
 
 LOGIN_URL = reverse_lazy('auth:auth_login')
-LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
+LOGIN_REDIRECT_URL = '/'
 AUTH_PROFILE_MODULE = 'rocket_league.apps.users.models.Profile'
 
 SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'
