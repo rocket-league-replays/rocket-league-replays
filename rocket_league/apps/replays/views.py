@@ -165,7 +165,7 @@ class ReplayPackDetailView(DetailView):
 
 class ReplayPackListView(FilterView):
     model = ReplayPack
-    paginate_by = 20
+    paginate_by = 10
     template_name_suffix = '_list'
     filterset_class = ReplayPackFilter
 
