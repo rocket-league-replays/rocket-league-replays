@@ -688,29 +688,30 @@ class ReplayPack(models.Model):
     )
 
     def maps(self):
-        maps = set([
-            str(replay.map) for replay in self.replays.all()
-        ])
+        maps = Map.objects.filter(
+            id__in=set(self.replays.values_list('map_id', flat=True))
+        ).values_list('title', flat=True)
 
         return ', '.join(maps)
 
     def goals(self):
-        return sum([
-            replay.team_0_score + replay.team_1_score
-            for replay in self.replays.all()
-        ])
+        if not self.replays.count():
+            return 0
+        return self.replays.aggregate(
+            num_goals=models.Sum(models.F('team_0_score') + models.F('team_1_score'))
+        )['num_goals']
 
     def players(self):
-        players = set([
-            player.player_name
-            for replay in self.replays.all()
-            for player in replay.player_set.all()
-        ])
-
-        return players
+        return set(Player.objects.filter(
+            replay_id__in=self.replays.values_list('id', flat=True),
+        ).values_list('player_name', flat=True))
 
     def total_duration(self):
-        calculation = sum([replay.num_frames for replay in self.replays.all()]) / 30
+        calculation = 0
+
+        if self.replays.count():
+            calculation = self.replays.aggregate(models.Sum('num_frames'))['num_frames__sum'] / 30
+
         minutes, seconds = divmod(calculation, 60)
         hours, minutes = divmod(minutes, 60)
 
