@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache pagination %}
+{% load cache humanize pagination %}
 
 {% block content_primary %}
 <div class="row">
@@ -31,7 +31,7 @@
 
 <div class="row">
     <div class="medium-12 columns text-center">
-        <p>{{ page_obj.paginator.count }} replay pack{{ page_obj.paginator.count|pluralize }} found.</p>
+        <p>{{ page_obj.paginator.count|intcomma }} replay pack{{ page_obj.paginator.count|pluralize }} found.</p>
     </div>
     <div class="medium-12 columns">
         <table width="100%" class="expand">

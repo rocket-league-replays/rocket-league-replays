@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block content_primary %}
 <div class="row">
@@ -30,7 +31,7 @@
 
 <div class="row">
     <div class="medium-12 columns text-center">
-        <p>{{ page_obj.paginator.count }} replay{{ page_obj.paginator.count|pluralize }} found.</p>
+        <p>{{ page_obj.paginator.count|intcomma }} replay{{ page_obj.paginator.count|pluralize }} found.</p>
     </div>
     <div class="medium-12 columns">
         {% include "replays/includes/replay_table.html" %}
