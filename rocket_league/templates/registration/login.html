@@ -3,40 +3,49 @@
 {% block content_primary %}
 <div class="row">
     <div class="small-12 columns">
-        <h3>Log in to your account</h3>
+        <h3>Log in</h3>
     </div>
 </div>
 
 <div class="row">
     <div class="medium-6 columns">
-        <a href="{% url 'social:begin' backend='steam' %}">
+        <p>We recommend signing in through Steam, as it's the quickest way to get going.</p>
+        <a href="{% url 'social:begin' backend='steam' %}" class="text-centered">
           <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_large_noborder.png">
         </a>
+
+        <hr>
 
         <form action="" method="post">
             {% csrf_token %}
 
-            {{ form.username.label_tag }}
-            {{ form.username }}
+            <p>If you have a legacy account you can still log in here too, you can connect your Steam account once logged in to allow for faster logins in future.</p>
 
-            {% for error in form.username.errors %}
-                <span class="field-error">{{ error }}</span>
-            {% endfor %}
+            <div class="row">
+                <div class="medium-6 columns">
+                    {{ form.username.label_tag }}
+                    {{ form.username }}
 
-            {{ form.password.label_tag }}
-            {{ form.password }}
+                    {% for error in form.username.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
 
-            {% for error in form.password.errors %}
-                <span class="field-error">{{ error }}</span>
-            {% endfor %}
+                <div class="medium-6 columns">
+                    {{ form.password.label_tag }}
+                    {{ form.password }}
+
+                    {% for error in form.password.errors %}
+                        <span class="field-error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+            </div>
 
             <input type="submit" class="button small" value="Log in">
         </form>
     </div>
 
     <div class="medium-6 columns">
-        <p>Don't have an account yet? <a href="{% url 'register' %}">Register today for free</a>. It doesn't take much, all we need is a username and password - not even an email address!</p>
-
         <h5>Benefits</h5>
 
         <ul>
