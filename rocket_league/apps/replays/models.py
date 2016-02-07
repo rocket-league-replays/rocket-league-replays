@@ -140,12 +140,14 @@ class Replay(models.Model):
         default=0,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     team_1_score = models.IntegerField(
         default=0,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     match_type = models.CharField(
