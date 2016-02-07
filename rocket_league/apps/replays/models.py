@@ -596,6 +596,12 @@ class Player(models.Model):
         default=False,
     )
 
+    heatmap = models.FileField(
+        upload_to='uploads/heatmap_files',
+        blank=True,
+        null=True,
+    )
+
     user_entered = models.BooleanField(
         default=False,
     )
