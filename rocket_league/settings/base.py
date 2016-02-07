@@ -318,7 +318,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
-LOGIN_URL = reverse_lazy('auth:auth_login')
+LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/'
 AUTH_PROFILE_MODULE = 'rocket_league.apps.users.models.Profile'
 
