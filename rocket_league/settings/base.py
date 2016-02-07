@@ -10,8 +10,6 @@ for the site, database, media and email sections below.
 """
 from __future__ import unicode_literals
 
-from django.core.urlresolvers import reverse_lazy
-
 import os
 import platform
 import sys
@@ -49,9 +47,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "rocket_league",
         "USER": "rocket_league",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": ""
+        "PASSWORD": os.getenv('DATABASE_PASSWORD', ''),
+        "HOST": os.getenv('DATABASE_HOST', ''),
+        "PORT": "5432"
     }
 }
 
