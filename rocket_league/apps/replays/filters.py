@@ -49,7 +49,10 @@ class ReplayPackFilter(django_filters.FilterSet):
     )
 
     user = django_filters.filters.ModelChoiceFilter(
-        queryset=User.objects.exclude(replaypack__isnull=True)
+        queryset=User.objects.exclude(replaypack__isnull=True).extra(select={
+            'lower_name': 'LOWER(username)'
+        }).order_by('lower_name')
+
     )
 
     class Meta:
