@@ -205,8 +205,10 @@
                             {% else %}
                                 <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
                                   {% csrf_token %}
-                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Logout</a>
+                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
                                 </form>
+
+                                <a href="{% url 'auth:auth_logout' %}">Logout</a>
                             {% endif %}
                         {% else %}
                         <a href="{% url 'social:begin' backend='steam' %}">
