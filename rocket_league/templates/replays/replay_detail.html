@@ -14,6 +14,96 @@
 {% endif %}
 
 <div class="row">
+
+    <div class="medium-6 columns">
+    {% if replay.show_leaderboard %}
+        {% scoreboard 0 %}
+        {% scoreboard 1 %}
+    {% else %}
+        <h3>Teams</h3>
+
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th><span class="primary">Blue Team</span></th>
+                    <th><span class="secondary">Orange Team</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orange, blue in replay.player_pairs %}
+                <tr>
+                    <td>
+                        {% if orange %}{{ orange }}{% endif %}
+                    </td>
+                    <td>
+                        {% if blue %}{{ blue }}{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if replay.player_set.count != replay.team_sizes|add:replay.team_sizes %}
+        <p>
+            It looks like there might be some players missing from this list.
+            {% if replay.user == user %}
+                If you know their names, you can <a href="{% url 'replay:update' pk=replay.pk %}">add them here</a>.
+            {% else %}
+                <a href="/faqs/">Click here</a> to find out why.</p>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    </div>
+    <div class="medium-6 columns">
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Time</th>
+                    <th colspan="2">Goal scorer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for goal in object.goal_set.all %}
+                <tr>
+                    <td>{{ goal.number }}</td>
+                    <td>{{ goal.goal_time }}</td>
+                    <td>
+                        {% if goal.player.team == 0 %}
+                            <span class="primary">{{ goal.player.player_name }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if goal.player.team == 1 %}
+                            <span class="secondary">{{ goal.player.player_name }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+
+                <tfoot>
+                    <td>Total:</td>
+                    <td>{{ replay.match_length }}</td>
+                    <td>{{ replay.team_0_score }}</td>
+                    <td>{{ replay.team_1_score }}</td>
+                </tfoot>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="flex-row">
+{% for player in replay.player_set.all %}
+    {% if player.heatmap %}
+        <div class="flex-3">
+            <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+            <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+        </div>
+    {% endif %}
+{% endfor %}
+</div>
+
+<div class="row">
     <div class="medium-6 columns">
         {% if replay.user == user %}
         <table width="100%">
@@ -52,7 +142,9 @@
                 </tr>
             </tbody>
         </table>
+    </div>
 
+    <div class="medium-6 columns">
         <table width="100%">
             <tbody>
                 <tr>
@@ -111,87 +203,6 @@
                     <td>Match length:</td>
                     <td>{{ replay.match_length }}</td>
                 </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="medium-6 columns">
-    {% if replay.show_leaderboard %}
-        {% scoreboard 0 %}
-        {% scoreboard 1 %}
-    {% else %}
-        <h3>Teams</h3>
-
-        <table width="100%">
-            <thead>
-                <tr>
-                    <th><span class="primary">Blue Team</span></th>
-                    <th><span class="secondary">Orange Team</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orange, blue in replay.player_pairs %}
-                <tr>
-                    <td>
-                        {% if orange %}{{ orange }}{% endif %}
-                    </td>
-                    <td>
-                        {% if blue %}{{ blue }}{% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% if replay.player_set.count != replay.team_sizes|add:replay.team_sizes %}
-        <p>
-            It looks like there might be some players missing from this list.
-            {% if replay.user == user %}
-                If you know their names, you can <a href="{% url 'replay:update' pk=replay.pk %}">add them here</a>.
-            {% else %}
-                <a href="/faqs/">Click here</a> to find out why.</p>
-            {% endif %}
-        {% endif %}
-    {% endif %}
-    </div>
-</div>
-
-<div class="row">
-    <div class="medium-12 columns">
-        <h3>Goals</h3>
-
-        <table width="100%">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Time</th>
-                    <th colspan="2">Goal scorer</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for goal in object.goal_set.all %}
-                <tr>
-                    <td>{{ goal.number }}</td>
-                    <td>{{ goal.goal_time }}</td>
-                    <td>
-                        {% if goal.player.team == 0 %}
-                            <span class="primary">{{ goal.player.player_name }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if goal.player.team == 1 %}
-                            <span class="secondary">{{ goal.player.player_name }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-
-                <tfoot>
-                    <td>Total:</td>
-                    <td>{{ replay.match_length }}</td>
-                    <td>{{ replay.team_0_score }}</td>
-                    <td>{{ replay.team_1_score }}</td>
-                </tfoot>
             </tbody>
         </table>
     </div>
