@@ -1,6 +1,12 @@
-{% extends "users/base.html" %}
+{% extends "base.html" %}
 
-{% block content %}
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>Change password</h3>
+    </div>
+</div>
+
 <form action="" method="post">
     {% csrf_token %}
 
@@ -8,16 +14,8 @@
         <div class="alert-box success">{{ message }}</div>
     {% endfor %}
 
-    <div class="row double-input {% if form.username.errors or form.old_password.errors %}errored{% endif %}">
-        <div class="medium-6 columns">
-            {{ form.username.label_tag }}
-            {{ form.username }}
-
-            {% for error in form.username.errors %}
-                <span class="field-error">{{ error }}</span>
-            {% endfor %}
-        </div>
-        <div class="medium-6 columns">
+    <div class="row {% if form.username.errors or form.old_password.errors %}errored{% endif %}">
+        <div class="medium-3 columns">
             {{ form.old_password.label_tag }}
             {{ form.old_password }}
 
@@ -30,7 +28,7 @@
     <br>
 
     <div class="row double-input {% if form.new_password1.errors or form.new_password2.errors %}errored{% endif %}">
-        <div class="medium-6 columns">
+        <div class="medium-3 columns">
             {{ form.new_password1.label_tag }}
             {{ form.new_password1 }}
 
@@ -38,7 +36,7 @@
                 <span class="field-error">{{ error }}</span>
             {% endfor %}
         </div>
-        <div class="medium-6 columns">
+        <div class="medium-3 columns end">
             {{ form.new_password2.label_tag }}
             {{ form.new_password2 }}
 
@@ -52,7 +50,7 @@
         <span class="field-error">{{ error }}</span>
     {% endfor %}
 
-    <input type="submit" class="button small" value="Update settings">
+    <input type="submit" class="button small" value="Change password">
 </form>
 
 {% endblock %}
