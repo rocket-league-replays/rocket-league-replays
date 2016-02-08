@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache pagination %}
+{% load cache humanize pagination %}
 
 {% block content_primary %}
 <div class="row">
@@ -22,7 +22,7 @@
 
             <div class="medium-3 columns left">
                 <label>&nbsp;</label>
-                <input type="submit" class="button tiny" style="margin-top: 4px;">
+                <input type="submit" class="button tiny" value="Search" style="margin-top: 4px;">
             </div>
         </form>
     </div>
@@ -31,7 +31,7 @@
 
 <div class="row">
     <div class="medium-12 columns text-center">
-        <p>{{ page_obj.paginator.count }} replay packs found.</p>
+        <p>{{ page_obj.paginator.count|intcomma }} replay pack{{ page_obj.paginator.count|pluralize }} found.</p>
     </div>
     <div class="medium-12 columns">
         <table width="100%" class="expand">
@@ -47,13 +47,14 @@
             </thead>
             <tbody>
                 {% for replaypack in object_list %}
+                    {# Speeds shown are the effect on a 20 item render. #}
                     {% cache 3600 'replaypack_list_item' replaypack.pk %}
                         <tr data-href="{{ replaypack.get_absolute_url }}">
                             <td><a href="{{ replaypack.get_absolute_url }}">{{ replaypack }}</a></td>
-                            <td>{{ replaypack.replays.count }}</td>
-                            <td>{{ replaypack.goals }}</td>
-                            <td>{{ replaypack.players|length }}</td>
-                            <td>{{ replaypack.total_duration }}</td>
+                            <td>{{ replaypack.replays.count }}</td> {# 150ms #}
+                            <td>{{ replaypack.goals }}</td> {# 430ms #}
+                            <td>{{ replaypack.players|length }}</td> {# 300ms #}
+                            <td>{{ replaypack.total_duration }}</td> {# 300ms #}
                             <td>{{ replaypack.last_updated|date:"jS F, h:iA" }}</td>
                         </tr>
                     {% endcache %}

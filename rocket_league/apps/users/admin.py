@@ -13,7 +13,12 @@ admin.site.register(LeagueRating, LeagueRatingAdmin)
 
 
 class UserAdmin(UserAdmin):
-    list_display = ['username', 'token', 'is_staff']
+
+    def has_steam(self, obj):
+        return bool(obj.social_auth.filter(provider='steam').count())
+    has_steam.boolean = True
+
+    list_display = ['username', 'token', 'has_steam', 'is_staff']
 
 # Re-register UserAdmin
 admin.site.unregister(User)

@@ -26,7 +26,6 @@ def file_lock(lock_file):
 
 
 class Command(BaseCommand):
-    help = "My shiny new management command."
 
     def handle(self, *args, **options):
         # Get all Steam IDs from Player objects, as well as from UserSocialAuth

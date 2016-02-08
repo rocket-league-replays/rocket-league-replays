@@ -69,3 +69,27 @@ hr {
     width: calc(100% - -#{$column-gutter});
     margin: 20px #{-$column-gutter / 2};
 }
+
+.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -#{$column-gutter / 2};
+    margin-right: -#{$column-gutter / 2};
+
+    .flex-3, .flex-6 {
+        margin-left: #{$column-gutter / 2};
+        margin-right: #{$column-gutter / 2};
+    }
+
+    // 25%
+    .flex-3 {
+        width: calc(25% - #{$column-gutter});
+        flex-basis: calc(25% - #{$column-gutter});
+    }
+
+    // 50%
+    .flex-6 {
+        width: calc(50% - #{$column-gutter});
+        flex-basis: calc(50% - #{$column-gutter});
+    }
+}

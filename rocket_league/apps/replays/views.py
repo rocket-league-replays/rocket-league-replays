@@ -1,25 +1,27 @@
+import re
+import StringIO
+from zipfile import ZipFile
+
+from braces.views import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.views.generic import DeleteView, DetailView, CreateView, UpdateView, View
+from django.views.generic import (CreateView, DeleteView, DetailView,
+                                  UpdateView, View)
 from django.views.generic.detail import SingleObjectMixin
-
-from .filters import ReplayFilter, ReplayPackFilter
-from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay, ReplayPack
-from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer, ReplayListSerializer, ReplayCreateSerializer
-from ...utils.forms import AjaxableResponseMixin
-
-from braces.views import LoginRequiredMixin
 from django_filters.views import FilterView
 from rest_framework import mixins, viewsets
 
-from zipfile import ZipFile
-import re
-import StringIO
+from ...utils.forms import AjaxableResponseMixin
+from .filters import ReplayFilter, ReplayPackFilter
+from .forms import ReplayPackForm, ReplayUpdateForm
+from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
+from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
+                          ReplayCreateSerializer, ReplayListSerializer,
+                          ReplaySerializer)
 
 
 class ReplayListView(FilterView):
@@ -34,18 +36,39 @@ class ReplayListView(FilterView):
         qs = qs.exclude(
             Q(processed=False) |
             Q(replay_id='')
-        ).extra(
-            select={
-                'null_position': 'CASE WHEN replays_replay.average_rating IS NULL THEN 0 ELSE 1 END'
-             }
         )
+
+        if 'season' not in self.request.GET:
+            # Default to the current season.
+            qs = qs.filter(
+                season_id=get_default_season()
+            )
+        else:
+            qs = qs.filter(
+                season_id=self.request.GET['season'] or get_default_season()
+            )
 
         if 'order' in self.request.GET:
             qs = qs.order_by(*self.request.GET.getlist('order'))
         else:
-            qs = qs.order_by('-null_position', '-average_rating', '-excitement_factor')
+            # TODO: Make a rating which combines these.
+            qs = qs.order_by('-timestamp', '-average_rating')
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ReplayListView, self).get_context_data(**kwargs)
+
+        context['filter'].form.fields['season'].choices = [
+            choice for choice in
+            context['filter'].form.fields['season'].choices
+            if choice[0]
+        ]
+
+        context['filter'].form.initial = {
+            'season': get_default_season()
+        }
+        return context
 
 
 class ReplayDetailView(DetailView):
@@ -55,6 +78,16 @@ class ReplayDetailView(DetailView):
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     fields = ['file']
+
+    def form_invalid(self, form):
+        import re
+        results = re.search(r'\/replays\/(\d+)\/', form.errors['__all__'][0])
+
+        form.errors['errorText'] = form.errors['__all__'][0]
+        form.errors['replayID'] = results.group(1)
+        del form.errors['__all__']
+
+        return super(ReplayCreateView, self).form_invalid(form)
 
     def form_valid(self, form):
         if self.request.user.is_authenticated():
@@ -87,9 +120,6 @@ class ReplayUpdateView(LoginRequiredMixin, UpdateView):
 
         return super(ReplayUpdateView, self).form_valid(form)
 
-    def get_success_url(self):
-        return self.request.path
-
 
 class ReplayDeleteView(DeleteView):
     model = Replay
@@ -109,6 +139,16 @@ class ReplayPackCreateView(LoginRequiredMixin, CreateView):
     model = ReplayPack
     form_class = ReplayPackForm
     template_name_suffix = '_create'
+
+    def get_initial(self):
+        initial = super(ReplayPackCreateView, self).get_initial()
+
+        try:
+            initial['replays'] = [int(val) for val in self.request.GET.getlist('replay_id')]
+        except:
+            pass
+
+        return initial
 
     def form_valid(self, form):
         form.instance.user = self.request.user
@@ -147,7 +187,7 @@ class ReplayPackDetailView(DetailView):
 
 class ReplayPackListView(FilterView):
     model = ReplayPack
-    paginate_by = 20
+    paginate_by = 10
     template_name_suffix = '_list'
     filterset_class = ReplayPackFilter
 

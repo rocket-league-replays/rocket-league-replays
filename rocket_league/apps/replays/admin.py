@@ -1,7 +1,7 @@
 from django.core.management import call_command
 from django.contrib import admin
 
-from .models import Replay, Player, Goal, Map, ReplayPack
+from .models import Replay, Player, Goal, Map, ReplayPack, Season
 
 
 def reprocess_matches(modeladmin, request, queryset):
@@ -42,3 +42,5 @@ class ReplayPackAdmin(admin.ModelAdmin):
     filter_horizontal = ['replays']
 
 admin.site.register(ReplayPack, ReplayPackAdmin)
+
+admin.site.register(Season)

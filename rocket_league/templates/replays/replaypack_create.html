@@ -4,7 +4,11 @@
 {% block content_primary %}
 <div class="row">
     <div class="small-12 columns">
-        <h3>Create replay pack</h3>
+        {% if replaypack %}
+            <h3>Manage replay pack</h3>
+        {% else %}
+            <h3>Create replay pack</h3>
+        {% endif %}
     </div>
 </div>
 

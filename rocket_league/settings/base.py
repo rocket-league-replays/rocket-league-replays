@@ -10,8 +10,6 @@ for the site, database, media and email sections below.
 """
 from __future__ import unicode_literals
 
-from django.core.urlresolvers import reverse_lazy
-
 import os
 import platform
 import sys
@@ -48,10 +46,10 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "rocket_league",
-        "USER": "rocket_league",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": ""
+        "USER": os.getenv('DATABASE_USER', 'rocket_league'),
+        "PASSWORD": os.getenv('DATABASE_PASSWORD', ''),
+        "HOST": os.getenv('DATABASE_HOST', ''),
+        "PORT": "5432"
     }
 }
 
@@ -318,8 +316,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend'
 )
 
-LOGIN_URL = reverse_lazy('auth:auth_login')
-LOGIN_REDIRECT_URL = reverse_lazy('users:profile')
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/'
 AUTH_PROFILE_MODULE = 'rocket_league.apps.users.models.Profile'
 
 SOCIAL_AUTH_STEAM_API_KEY = '10BF492A376EE8C8FA27592BA00696D7'

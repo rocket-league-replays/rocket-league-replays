@@ -1,6 +1,7 @@
 from django import template
 from django.conf import settings
 
+from ...replays.models import get_default_season
 from ..models import Profile, LeagueRating
 
 
@@ -32,6 +33,7 @@ def league_data(context):
 def latest_ratings(context):
     ratings = LeagueRating.objects.filter(
         steamid=context['steam_id'],
+        season_id=get_default_season(),
     )[:1]
 
     if ratings:
@@ -47,4 +49,5 @@ def latest_ratings(context):
 def get_ratings(uid):
     return LeagueRating.objects.filter(
         steamid=uid,
-    )
+        season_id=get_default_season(),
+    )[:50]

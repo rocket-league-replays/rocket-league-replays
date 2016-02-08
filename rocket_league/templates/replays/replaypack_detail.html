@@ -7,7 +7,7 @@
 {% if replaypack.title %}
 <div class="row">
     <div class="medium-12 columns">
-        <h2>Replay Pack: {{ replaypack.title }}</h2>
+        <h2>{{ replaypack.title }}</h2>
         <hr>
     </div>
 </div>
@@ -15,7 +15,22 @@
 
 <div class="row">
     <div class="medium-6 columns">
-        <h3>Information</h3>
+        {% if replaypack.user == user %}
+        <table width="100%">
+            <tbody>
+                <tr>
+                  <td class="text-center">
+                    <a href="{% url 'replaypack:update' pk=replaypack.pk %}">
+                        Manage replay pack
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <a href="{% url 'replaypack:delete' pk=replaypack.pk %}" class="alert">Delete this replay pack</a>
+                  </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
 
         <table width="100%">
             <tbody>
@@ -88,8 +103,6 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <p>Someone missing from this list? <a href="/faqs/">Click here</a> to find out why.</p>
     </div>
 </div>
 <div class="row">

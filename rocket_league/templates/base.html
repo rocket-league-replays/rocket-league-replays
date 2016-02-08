@@ -24,13 +24,14 @@
         {% compress css %}
             <link rel="stylesheet" href="/static/build/css/normalize.css"/>
             <link rel="stylesheet" href="/static/build/css/screen.css"/>
-            <link rel="stylesheet" href="/static/build/css/dropzone.css"/>
 
             <style>
             span[title] {
                 cursor: help;
             }
             </style>
+
+            {% block additional_css %}{% endblock %}
         {% endcompress %}
 
         <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
@@ -57,7 +58,7 @@
 
     <body class="{% block body_class %}{% endblock %}">
 
-        {% if settings.GOOGLE_ANALYTICS %}
+        {% if settings.GOOGLE_ANALYTICS and not settings.DEBUG %}
         <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -194,34 +195,36 @@
                     </div>
                     <div class="medium-6 columns right text-right ">
                         {% if user.is_authenticated %}
+                            <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
+                            <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
+                            <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
 
-                        {% if 'steam' in backends.not_associated %}
-                            <a href="{% url 'social:begin' backend='steam' %}">Connect to Steam</a>
-                        {% endif %}
+                            {% if 'steam' in backends.not_associated %}
+                                <a href="{% url 'social:begin' backend='steam' %}">
+                                  <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                                </a>
+                            {% else %}
+                                <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
+                                  {% csrf_token %}
+                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
+                                </form>
 
-                        <a href="{% url 'users:profile' username=user.username %}">Profile</a>
-
-                        <a href="{% url 'users:profile' %}">Dashboard</a>
-
-                        <a href="{% url 'auth:auth_logout' %}">Logout</a>
+                                <a href="{% url 'auth_logout' %}">Logout</a>
+                            {% endif %}
                         {% else %}
-                        <a href="{% url 'register' %}">Register</a>
-
-                        <a href="{% url 'auth:auth_login' %}">Log in</a>
+                        <a href="{% url 'social:begin' backend='steam' %}">
+                          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                        </a>
                         {% endif %}
                     </div>
                 </div>
             </header>
-
-            <div class="alert-box info"><strong>Want to upload your replays automatically?</strong> Try our new <a href="{% url 'users:desktop_application' %}">desktop application</a>!</div>
 
             <main>
                 {% block content_primary %}{{pages.current.content.content_primary|html}}{% endblock %}
             </main>
 
             {% block footer %}
-            {# {% upload_form %} #}
-
             <footer class="row">
                 <div class="medium-12 columns text-center hide-below-banner-width">
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
@@ -243,10 +246,7 @@
             {% endblock %}
         </div>
 
-        <div class="dropzone-previews"></div>
-
         {% compress js %}
-        <script src="/static/js/vendor/dropzone.js"></script>
         <script src="/static/js/vendor/jquery.cookie.js"></script>
 
         <script src="/static/js/vendor/fastclick.js"></script>
@@ -260,42 +260,10 @@
 
         <script>
             $(document).foundation();
-
-            upload_dropzone = new Dropzone(
-                document.body, {
-                    url: "{% url 'replay:upload' %}",
-                    headers: {
-                        'X-CSRFToken': $.cookie('csrftoken')
-                    },
-                    createImageThumbnails: false,
-                    clickable: false,
-                    previewsContainer: '.dropzone-previews',
-                    error: function(file, response) {
-                            $('.dz-error-message', file.previewElement).html(response);
-                    },
-                    success: function(file, response, xhr) {
-                            $('.dz-error-message', file.previewElement).html("Your replay has been successfully uploaded, you can view it <a href=\"" + response + "\" target=\"_blank\">here</a>.");
-                    },
-                    drop: function() {
-                        $('body').addClass('dz-have-files')
-                        $('main').on('click', function() {
-                            $('body').removeClass('dz-have-files');
-                            upload_dropzone.removeAllFiles();
-                        });
-                    }
-                }
-            );
         </script>
 
         {% block additional_js %}{% endblock %}
         {% endcompress %}
-
-        <script>
-        {% if user.is_authenticated %}
-            $('[data-user="{{ user.pk }}"]').addClass('is-current-user');
-        {% endif %}
-        </script>
-
         <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Open+Sans:400,600' rel='stylesheet' type='text/css'>
     </body>
 </html>

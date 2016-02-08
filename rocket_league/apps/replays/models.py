@@ -1,19 +1,46 @@
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError
-from django.db import models
-from django.utils.safestring import mark_safe
-from django.utils.timezone import now
-
-from replay_parser import ReplayParser
-
-from ..users.models import LeagueRating
-
-import chardet
-from datetime import datetime
 import re
 import struct
 import time
+from datetime import datetime
+
+import chardet
+from django.conf import settings
+from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.utils.safestring import mark_safe
+from django.utils.timezone import now
+from replay_parser import ReplayParser
+
+
+class Season(models.Model):
+
+    title = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+
+    start_date = models.DateField()
+
+    def __unicode__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-start_date']
+
+
+def get_default_season():
+    if Season.objects.count() == 0:
+        season = Season.objects.create(
+            title='Season 1',
+            start_date='2015-07-07'  # Game release date
+        )
+
+        return season.pk
+
+    return Season.objects.filter(
+        start_date__lte=now(),
+    )[0].pk
 
 
 class Map(models.Model):
@@ -48,6 +75,11 @@ class Replay(models.Model):
         blank=True,
         null=True,
         db_index=True,
+    )
+
+    season = models.ForeignKey(
+        Season,
+        default=get_default_season,
     )
 
     title = models.CharField(
@@ -108,12 +140,14 @@ class Replay(models.Model):
         default=0,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     team_1_score = models.IntegerField(
         default=0,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     match_type = models.CharField(
@@ -295,6 +329,7 @@ class Replay(models.Model):
         return swing_rating
 
     def calculate_average_rating(self):
+        from ..users.models import LeagueRating
 
         players = self.player_set.filter(
             platform='OnlinePlatform_Steam',
@@ -372,7 +407,7 @@ class Replay(models.Model):
                 )
 
                 if replay.count() > 0:
-                    raise ValidationError(mark_safe("This replay has already been uploaded, <a href='{}'>you can view it here</a>.".format(
+                    raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
                         replay[0].get_absolute_url()
                     )))
             except struct.error:
@@ -434,11 +469,22 @@ class Replay(models.Model):
                     )
 
             for index, goal in enumerate(data['Goals']):
-                player, created = Player.objects.get_or_create(
-                    replay=self,
-                    player_name=goal['PlayerName'].decode(chardet.detect(goal['PlayerName'])['encoding']),
-                    team=goal['PlayerTeam'],
-                )
+                encoding = chardet.detect(goal['PlayerName'])
+                if not encoding['encoding']:
+                    encoding['encoding'] = 'latin-1'
+
+                try:
+                    player, created = Player.objects.get_or_create(
+                        replay=self,
+                        player_name=goal['PlayerName'].decode(encoding['encoding']),
+                        team=goal['PlayerTeam'],
+                    )
+                except MultipleObjectsReturned:
+                    player = Player.objects.filter(
+                        replay=self,
+                        player_name=goal['PlayerName'].decode(encoding['encoding']),
+                        team=goal['PlayerTeam'],
+                    )[0]
 
                 Goal.objects.get_or_create(
                     replay=self,
@@ -461,9 +507,12 @@ class Replay(models.Model):
             self.player_name = data['PlayerName']
             self.player_team = data.get('PrimaryPlayerTeam', 0)
 
-            map_obj, created = Map.objects.get_or_create(
-                slug=data['MapName'].lower(),
-            )
+            if data.get('MapName'):
+                map_obj, created = Map.objects.get_or_create(
+                    slug=data['MapName'].lower(),
+                )
+            else:
+                map_obj = None
 
             self.map = map_obj
             self.timestamp = datetime.fromtimestamp(
@@ -484,7 +533,7 @@ class Replay(models.Model):
             self.keyframe_delay = data['KeyframeDelay']
             self.max_channels = data['MaxChannels']
             self.max_replay_size_mb = data['MaxReplaySizeMB']
-            self.num_frames = data['NumFrames']
+            self.num_frames = data.get('NumFrames', 0)
             self.record_fps = data['RecordFPS']
 
             self.excitement_factor = self.calculate_excitement_factor()
@@ -547,6 +596,12 @@ class Player(models.Model):
 
     bot = models.BooleanField(
         default=False,
+    )
+
+    heatmap = models.FileField(
+        upload_to='uploads/heatmap_files',
+        blank=True,
+        null=True,
     )
 
     user_entered = models.BooleanField(
@@ -635,29 +690,30 @@ class ReplayPack(models.Model):
     )
 
     def maps(self):
-        maps = set([
-            str(replay.map) for replay in self.replays.all()
-        ])
+        maps = Map.objects.filter(
+            id__in=set(self.replays.values_list('map_id', flat=True))
+        ).values_list('title', flat=True)
 
         return ', '.join(maps)
 
     def goals(self):
-        return sum([
-            replay.team_0_score + replay.team_1_score
-            for replay in self.replays.all()
-        ])
+        if not self.replays.count():
+            return 0
+        return self.replays.aggregate(
+            num_goals=models.Sum(models.F('team_0_score') + models.F('team_1_score'))
+        )['num_goals']
 
     def players(self):
-        players = set([
-            player.player_name
-            for replay in self.replays.all()
-            for player in replay.player_set.all()
-        ])
-
-        return players
+        return set(Player.objects.filter(
+            replay_id__in=self.replays.values_list('id', flat=True),
+        ).values_list('player_name', flat=True))
 
     def total_duration(self):
-        calculation = sum([replay.num_frames for replay in self.replays.all()]) / 30
+        calculation = 0
+
+        if self.replays.count():
+            calculation = self.replays.aggregate(models.Sum('num_frames'))['num_frames__sum'] / 30
+
         minutes, seconds = divmod(calculation, 60)
         hours, minutes = divmod(minutes, 60)
 

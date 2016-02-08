@@ -1,8 +1,8 @@
 from django import template
-from django.db.models import Count, F, Q, Sum, Max
+from django.db.models import Count, F, Sum, Max
 from django.utils.safestring import mark_safe
 
-from ..models import Replay, Goal, Player
+from ..models import Replay, Goal, Player, get_default_season
 
 register = template.Library()
 
@@ -15,8 +15,8 @@ def get_replay_by_pk(pk):
         return None
 
 
-@register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
-def scoreboard(context, team):
+@register.assignment_tag(takes_context=True)
+def team_players(context, team):
     return {
         'players': context['replay'].player_set.filter(
             team=team,
@@ -27,12 +27,19 @@ def scoreboard(context, team):
 
 
 @register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
+def scoreboard(context, team):
+    return team_players(context, team)
+
+
+@register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
 def custom_scoreboard(context, steam_info):
     data_dicts = []
+    season_id = get_default_season()
 
     for size in xrange(1, 5):
         player_data = Player.objects.filter(
             replay__team_sizes=size,
+            replay__season_id=season_id,
             platform='OnlinePlatform_Steam',
             online_id=steam_info['steamid'],
         ).aggregate(
@@ -73,12 +80,14 @@ def custom_scoreboard(context, steam_info):
 @register.assignment_tag
 def steam_stats(uid):
     data = {}
+    season_id = get_default_season()
 
     # Winning goals scored.
     data['winning_goals'] = Goal.objects.filter(
         player__platform='OnlinePlatform_Steam',
         player__online_id=uid,
         replay__show_leaderboard=True,
+        replay__season_id=season_id,
         number=F('replay__team_0_score') + F('replay__team_1_score')
     ).count()
 
@@ -87,6 +96,7 @@ def steam_stats(uid):
         player__platform='OnlinePlatform_Steam',
         player__online_id=uid,
         replay__show_leaderboard=True,
+        replay__season_id=season_id,
         frame__gte=F('replay__num_frames') - (60 * F('replay__record_fps'))
     ).count()
 
@@ -99,6 +109,7 @@ def steam_stats(uid):
     # Find replays which went into overtime.
     replays = Replay.objects.filter(
         show_leaderboard=True,
+        season_id=season_id,
         goal__frame__gte=(60 * 5 * F('record_fps')),
     )
 
@@ -106,6 +117,7 @@ def steam_stats(uid):
     replays = Replay.objects.annotate(
         num_goals=F('team_0_score') + F('team_1_score'),
     ).filter(
+        season_id=season_id,
         num_frames__gt=60 * 5 * F('record_fps'),
         show_leaderboard=True,
         player__platform='OnlinePlatform_Steam',
@@ -148,6 +160,7 @@ def steam_stats(uid):
     data['preferred_match_size'] = None
 
     sizes = Replay.objects.filter(
+        season_id=season_id,
         show_leaderboard=True,
         player__platform='OnlinePlatform_Steam',
         player__online_id=uid,
@@ -163,6 +176,7 @@ def steam_stats(uid):
 
     role_query = Player.objects.filter(
         replay__show_leaderboard=True,
+        replay__season_id=season_id,
         platform='OnlinePlatform_Steam',
         online_id=uid,
     ).aggregate(
@@ -171,14 +185,17 @@ def steam_stats(uid):
         saves=Sum('saves'),
     )
 
-    max_stat = max(role_query, key=lambda k: role_query[k])
+    if not any([v[1] for v in role_query.items()]):
+        data['preferred_role'] = None
+    else:
+        max_stat = max(role_query, key=lambda k: role_query[k])
 
-    if max_stat == 'goals':
-        data['preferred_role'] = 'Goalscorer'
-    elif max_stat == 'assists':
-        data['preferred_role'] = 'Assister'
-    elif max_stat == 'saves':
-        data['preferred_role'] = 'Goalkeeper'
+        if max_stat == 'goals':
+            data['preferred_role'] = 'Goalscorer'
+        elif max_stat == 'assists':
+            data['preferred_role'] = 'Assister'
+        elif max_stat == 'saves':
+            data['preferred_role'] = 'Goalkeeper'
 
     """
     # Number of times the player's score was higher than everyone else on their
@@ -268,6 +285,7 @@ def steam_stats(uid):
             break
 
     data.update(Player.objects.filter(
+        replay__season_id=season_id,
         platform='OnlinePlatform_Steam',
         online_id=uid,
     ).aggregate(

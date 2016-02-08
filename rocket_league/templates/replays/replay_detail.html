@@ -14,68 +14,6 @@
 {% endif %}
 
 <div class="row">
-    <div class="medium-6 columns">
-        <h3>Game information</h3>
-
-        <table width="100%">
-            <tbody>
-                <tr>
-                    <td>
-                        Replay ID:
-                    </td>
-                    <td>
-                        <a href="{{ replay.file.url }}" target="_blank">{{ replay.replay_id }}</a>
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Timestamp:</td>
-                    <td>{{ replay.timestamp }}</td>
-                </tr>
-
-                <tr>
-                    <td>Uploader:</td>
-                    <td>
-                        {% if replay.user %}
-                            <a href="{{ replay.user.profile.get_absolute_url }}">{{ replay.user }}</a>
-                        {% else %}
-                            {{ replay.player_name }}
-                        {% endif %}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Map name:</td>
-                    <td>{{ replay.map }}</td>
-                </tr>
-
-                <tr>
-                    <td>Server name:</td>
-                    <td>{{ replay.server_name }}</td>
-                </tr>
-
-                <tr>
-                    <td>Game size:</td>
-                    <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                </tr>
-
-                <tr>
-                    <td>Match type:</td>
-                    <td>{{ replay.match_type }}</td>
-                </tr>
-
-                <tr>
-                    <td>Match length:</td>
-                    <td>{{ replay.match_length }}</td>
-                </tr>
-
-
-                <tr>
-                    <td colspan="2">Did this match feel laggy? <a href="{{ replay.lag_report_url }}" target="_blank">Report it here</a>.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 
     <div class="medium-6 columns">
     {% if replay.show_leaderboard %}
@@ -116,12 +54,7 @@
         {% endif %}
     {% endif %}
     </div>
-</div>
-
-<div class="row">
-    <div class="medium-12 columns">
-        <h3>Goals</h3>
-
+    <div class="medium-6 columns">
         <table width="100%">
             <thead>
                 <tr>
@@ -154,6 +87,141 @@
                     <td>{{ replay.team_0_score }}</td>
                     <td>{{ replay.team_1_score }}</td>
                 </tfoot>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="flex-row">
+    {% team_players 0 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            {% if player.heatmap %}
+                <div class="flex-6">
+                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+
+    {% team_players 1 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            {% if player.heatmap %}
+                <div class="flex-6">
+                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="medium-6 columns">
+        {% if replay.user == user %}
+        <table width="100%">
+            <tbody>
+                <tr>
+                  <td class="text-center">
+                    <a href="{% url 'replay:update' pk=replay.pk %}">
+                        {% if replay.title %}
+                            Rename this replay
+                        {% else %}
+                            Give this replay a name
+                        {% endif %}
+                    </a>
+                  </td>
+                  <td class="text-center">
+                    <a href="{% url 'replay:delete' pk=replay.pk %}" class="alert">Delete this replay</a>
+                  </td>
+                </tr>
+            </tbody>
+        </table>
+        {% endif %}
+
+        <table width="100%">
+            <tbody>
+                <tr>
+                  <td colspan="2" class="text-center">
+                    <a href="{{ replay.file.url }}" target="_blank">Download this replay</a>
+                  </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <strong>What do I do once the file has downloaded?</strong>
+                        <p>Put the file into your replays folder (found at <code>Documents/My Games/Rocket League/TAGame/Demos</code>), then load up the game and go to the replay listing. The game should appear for viewing.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="medium-6 columns">
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <td>
+                        Replay ID:
+                    </td>
+                    <td>
+                        {{ replay.replay_id }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Season:</td>
+                    <td>{{ replay.season }}</td>
+                </tr>
+
+                <tr>
+                    <td>Timestamp:</td>
+                    <td>{{ replay.timestamp }}</td>
+                </tr>
+
+                <tr>
+                    <td>Uploader:</td>
+                    <td>
+                        {% if replay.user %}
+                            <a href="{{ replay.user.profile.get_absolute_url }}">{{ replay.user }}</a>
+                        {% else %}
+                            {{ replay.player_name }}
+                        {% endif %}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Map name:</td>
+                    <td>{{ replay.map }}</td>
+                </tr>
+
+                {% if replay.server_name %}
+                <tr>
+                    <td>Server name:</td>
+                    <td>{{ replay.server_name }}</td>
+                </tr>
+                {% endif %}
+
+                <tr>
+                    <td>Game size:</td>
+                    <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                </tr>
+
+                <tr>
+                    <td>Match type:</td>
+                    <td>{{ replay.match_type }}</td>
+                </tr>
+
+                <tr>
+                    <td>Match length:</td>
+                    <td>{{ replay.match_length }}</td>
+                </tr>
             </tbody>
         </table>
     </div>

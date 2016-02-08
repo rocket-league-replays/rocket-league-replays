@@ -14,35 +14,10 @@ from .models import SteamCache
 from ..replays.models import Replay
 
 from braces.views import LoginRequiredMixin
-from registration import signals
-from registration.views import RegistrationView as BaseRegistrationView
 import requests
 from social.backends.steam import USER_INFO
 from social.apps.django_app.default.models import UserSocialAuth
 import xml.etree.ElementTree as ET
-
-
-class UserMixin(LoginRequiredMixin, DetailView):
-    model = User
-
-    def get_object(self):
-        return self.request.user
-
-
-class UserReplaysView(UserMixin):
-    template_name = 'users/user_replays.html'
-
-
-class UserReplayPacksView(UserMixin):
-    template_name = 'users/user_replay_packs.html'
-
-
-class UserDesktopApplicationView(UserMixin):
-    template_name = 'users/user_desktop_application.html'
-
-
-class UserRankTrackerView(UserMixin):
-    template_name = 'users/user_rank_tracker.html'
 
 
 class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -72,30 +47,6 @@ class PublicProfileView(DetailView):
             return redirect('users:steam', steam_id=self.object.profile.steam_info()['steamid'])
 
         return response
-
-
-class RegistrationView(BaseRegistrationView):
-    """
-    A registration backend which implements the simplest possible
-    workflow: a user supplies a username, email address and password
-    (the bare minimum for a useful account), and is immediately signed
-    up and logged in).
-    """
-    def register(self, **cleaned_data):
-        username, password = (cleaned_data['username'], cleaned_data['password1'])
-        User.objects.create_user(username, '', password)
-
-        new_user = authenticate(username=username, password=password)
-        login(self.request, new_user)
-        signals.user_registered.send(
-            sender=self.__class__,
-            user=new_user,
-            request=self.request
-        )
-        return new_user
-
-    def get_success_url(self, user):
-        return settings.LOGIN_REDIRECT_URL
 
 
 class SteamView(TemplateView):

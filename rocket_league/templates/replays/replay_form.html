@@ -1,26 +1,32 @@
 {% extends "base.html" %}
 
 {% block content_primary %}
+<div class="alert-box info">
+    <strong>Want to upload your replays automatically?</strong>
+    Use this <a href="https://github.com/TcT2k/RLReplayManager/releases" target="_blank">desktop application</a>!
+
+    {% if user.is_authenticated %}
+      <span class="api-key-intro">
+        Once downloaded,
+        <a href="#" onclick="$('.api-key').removeClass('hide'); $('.api-key-intro').addClass('hide'); return false;">click here</a> to get your API Key.
+      </span>
+      <span class="hide api-key">Your API key is <code style="padding: 0; line-height: 1;">{{ user.token }}</code></span>
+    {% else %}
+      You will need to log in to use it.
+    {% endif %}
+</div>
+
 <div class="row">
     <div class="medium-12 columns">
-        <h3>Upload replay</h3>
-        <p>Uploading your replay to {{ settings.SITE_NAME }} is easy, simply click on the file uploader below and select your file. You can usually find your replay files in the following location on your computer: <code>Documents/My Games/Rocket League/TAGame/Demos</code></p>
+        <h3>Upload replays</h3>
+        <p>Uploading your replays to {{ settings.SITE_NAME }} is easy, simply click on the button below and select your files.</p>
+        <p>You can usually find your replay files in the following location on your computer: <code>Documents/My Games/Rocket League/TAGame/Demos</code></p>
 
         <hr>
 
-        <form action="" method="post" enctype="multipart/form-data">
+        <form action="" method="post" enctype="multipart/form-data" class="replay-file-upload-form">
             {% csrf_token %}
-
-            {% for error in form.non_field_errors %}
-            <div class="alert-box alert">
-                {{ error }}
-            </div>
-            {% endfor %}
-
-            <label for="{{ form.file.id_for_label }}">
-                Select a file:
-                {{ form.file }}
-            </label>
+            {{ form }}
 
             <p>It might take a couple of seconds to process the file, please don't click upload more than once!</p>
 
@@ -28,6 +34,91 @@
                 <input class="button tiny" type="submit" value="Upload">
             </p>
         </form>
+
+        {% if user.is_authenticated %}
+            <p class="replay-pack-cta hide"><a data-href="{% url 'replaypack:create' %}" href="#">Create a replay pack from these replays.</a></p>
+        {% endif %}
     </div>
 </div>
 {% endblock content_primary %}
+
+{% block additional_js %}
+<script src="/static/js/vendor/jquery.uploadifive.js"></script>
+
+<script type="text/javascript">
+$(function() {
+    var replay_ids = [];
+
+    $('.replay-file-upload-form').uploadifive({
+        'buttonClass': 'button medium expand',
+        'height': '52px',
+        'width': '100%',
+        'itemTemplate' : '<div class="uploadifive-queue-item"><span class="filename"></span> <span class="fileinfo"></span></div>',
+        'formData': {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'
+        },
+        'fileObjName': 'file',
+        'uploadScript': '{% url 'replay:upload' %}',
+        'onError': function(errorType, file) {
+            data = JSON.parse(file.xhr.responseText)
+            file.queueItem.addClass('error').find('.fileinfo').html(' - ' + data.errorText);
+            replay_ids.push(data.replayID);
+            $('.replay-pack-cta.hide').removeClass('hide');
+        },
+        'onUploadComplete': function(file, data) {
+            data = JSON.parse(data)
+            file.queueItem.find('.fileinfo').html(' - This file has been uploaded, <a href="' + data + '" target="_blank">you can view it here</a>.');
+            replay_ids.push(data.match(/^\/replays\/(\d+)\/$/)[1]);
+            $('.replay-pack-cta.hide').removeClass('hide');
+        }
+    });
+
+    $('.replay-pack-cta a').on('click', function() {
+        $(this).attr('href', $(this).data('href') + '?replay_id=' + replay_ids.join('&replay_id='))
+        return true;
+    })
+});
+</script>
+{% endblock %}
+
+{% block additional_css %}
+<style>
+/*
+UploadiFive
+Copyright (c) 2012 Reactive Apps, Ronnie Garcia
+*/
+.uploadifive-button > input[type="file"] {
+    height: inherit;
+    width: inherit;
+    top: 0 !important;
+    right: 0 !important;
+}
+
+.uploadifive-queue-item {
+    background-color: #F5F5F5;
+    font-size: 12px;
+    margin-top: 3px;
+    padding: 15px;
+}
+.uploadifive-queue-item .close {
+    background: url('/static/img/uploadifive-cancel.png') 0 0 no-repeat;
+    display: block;
+    float: right;
+    height: 16px;
+    text-indent: -9999px;
+    width: 16px;
+}
+.uploadifive-queue-item .progress {
+    border: 1px solid #D0D0D0;
+    height: 3px;
+    margin-top: 5px;
+    width: 100%;
+}
+.uploadifive-queue-item .progress-bar {
+    background-color: #0072BC;
+    height: 3px;
+    width: 0;
+}
+</style>
+{% endblock %}

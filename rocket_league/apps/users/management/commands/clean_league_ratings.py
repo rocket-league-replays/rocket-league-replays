@@ -29,7 +29,7 @@ class Command(BaseCommand):
             # Get the LeagueRating objects for this user.
             ratings = LeagueRating.objects.filter(
                 steamid=steam_id,
-            )
+            )[:10]
             print 'Working on', steam_id
 
             duels = None

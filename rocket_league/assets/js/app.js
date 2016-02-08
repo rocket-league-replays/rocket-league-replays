@@ -1,8 +1,8 @@
 if ($('#chartContainer').length === 1 && (
-    typeof duels && duels.length > 0 !== 'undefined' ||
-    typeof doubles && doubles.length > 0 !== 'undefined' ||
-    typeof solo_standard && solo_standard.length > 0 !== 'undefined' ||
-    typeof standard && standard.length > 0 !== 'undefined'
+    typeof duels !== 'undefined' && duels.length > 0 ||
+    typeof doubles !== 'undefined' && doubles.length > 0 ||
+    typeof solo_standard !== 'undefined' && solo_standard.length > 0 ||
+    typeof standard !== 'undefined' && standard.length > 0
   )) {
   const chart = new CanvasJS.Chart('chartContainer',
     {

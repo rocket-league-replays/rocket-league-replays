@@ -9,7 +9,9 @@ class AjaxableResponseMixin(object):
     def form_invalid(self, form):
         response = super(AjaxableResponseMixin, self).form_invalid(form)
         if self.request.is_ajax():
-            return JsonResponse(form.errors['__all__'][0], status=400, safe=False)
+            if '__all__' in form.errors:
+                return JsonResponse(form.errors['__all__'][0], status=400, safe=False)
+            return JsonResponse(form.errors, status=400, safe=False)
         else:
             return response
 
