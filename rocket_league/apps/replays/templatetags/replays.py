@@ -15,8 +15,8 @@ def get_replay_by_pk(pk):
         return None
 
 
-@register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
-def scoreboard(context, team):
+@register.assignment_tag(takes_context=True)
+def team_players(context, team):
     return {
         'players': context['replay'].player_set.filter(
             team=team,
@@ -24,6 +24,11 @@ def scoreboard(context, team):
         'team': team,
         'team_str': 'Blue' if team == 0 else 'Orange'
     }
+
+
+@register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
+def scoreboard(context, team):
+    return team_players(context, team)
 
 
 @register.inclusion_tag('replays/includes/scoreboard.html', takes_context=True)
