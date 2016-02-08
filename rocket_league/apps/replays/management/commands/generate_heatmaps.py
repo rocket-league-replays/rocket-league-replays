@@ -42,9 +42,6 @@ class Command(BaseCommand):
             for replay in replays:
                 print 'Replay', replay.pk
                 command = [
-                    'cpulimit',
-                    '-l',
-                    '90',
                     '/var/www/rocket-league-replays-heatmaps/.venv/bin/python',
                     '/var/www/rocket-league-replays-heatmaps/main.py',
                     replay.file.path
