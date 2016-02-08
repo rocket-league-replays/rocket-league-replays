@@ -37,6 +37,7 @@ class Command(BaseCommand):
 
             replays = Replay.objects.filter(
                 id__in=players,
+                processed=True,
             ).distinct()[:10]
 
             for replay in replays:
@@ -64,6 +65,9 @@ class Command(BaseCommand):
                     except Exception as e:
                         print 'Unable to get data.', e
                         data = []
+                except subprocess.CalledProcessError:
+                    # The parser crashed, not a lot we can do about this.. Just move on.
+                    data = []
 
                 for player in data:
                     player_objs = replay.player_set.filter(
