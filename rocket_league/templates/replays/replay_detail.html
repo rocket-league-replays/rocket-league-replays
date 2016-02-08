@@ -93,14 +93,33 @@
 </div>
 
 <div class="flex-row">
-{% for player in replay.player_set.all %}
-    {% if player.heatmap %}
-        <div class="flex-3">
-            <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
-            <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+    {% team_players 0 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            {% if player.heatmap %}
+                <div class="flex-6">
+                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                </div>
+            {% endif %}
+        {% endfor %}
         </div>
-    {% endif %}
-{% endfor %}
+    </div>
+
+    {% team_players 1 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            {% if player.heatmap %}
+                <div class="flex-6">
+                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                </div>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
 </div>
 
 <div class="row">

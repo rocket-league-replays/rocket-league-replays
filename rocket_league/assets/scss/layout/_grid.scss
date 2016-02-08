@@ -73,10 +73,23 @@ hr {
 .flex-row {
     display: flex;
     flex-wrap: wrap;
+    margin-left: -#{$column-gutter / 2};
+    margin-right: -#{$column-gutter / 2};
+
+    .flex-3, .flex-6 {
+        margin-left: #{$column-gutter / 2};
+        margin-right: #{$column-gutter / 2};
+    }
 
     // 25%
     .flex-3 {
-        padding: 0 $column-gutter / 2;
-        flex-basis: 25%;
+        width: calc(25% - #{$column-gutter});
+        flex-basis: calc(25% - #{$column-gutter});
+    }
+
+    // 50%
+    .flex-6 {
+        width: calc(50% - #{$column-gutter});
+        flex-basis: calc(50% - #{$column-gutter});
     }
 }
