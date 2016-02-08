@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from django.core.files import File
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 
 from ...models import Player, Replay
 
@@ -32,7 +33,7 @@ class Command(BaseCommand):
 
         with file_lock('/tmp/generate_heatmaps.lock'):
             players = Player.objects.filter(
-                heatmap__isnull=True,
+                Q(heatmap__isnull=True) | Q(heatmap=''),
             ).values_list('replay_id', flat=True)
 
             replays = Replay.objects.filter(
