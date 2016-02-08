@@ -407,7 +407,7 @@ class Replay(models.Model):
                 )
 
                 if replay.count() > 0:
-                    raise ValidationError(mark_safe("This replay has already been uploaded, <a href='{}'>you can view it here</a>.".format(
+                    raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
                         replay[0].get_absolute_url()
                     )))
             except struct.error:

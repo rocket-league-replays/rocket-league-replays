@@ -1,25 +1,27 @@
+import re
+import StringIO
+from zipfile import ZipFile
+
+from braces.views import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.views.generic import DeleteView, DetailView, CreateView, UpdateView, View
+from django.views.generic import (CreateView, DeleteView, DetailView,
+                                  UpdateView, View)
 from django.views.generic.detail import SingleObjectMixin
-
-from .filters import ReplayFilter, ReplayPackFilter
-from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
-from .serializers import GoalSerializer, MapSerializer, PlayerSerializer, ReplaySerializer, ReplayListSerializer, ReplayCreateSerializer
-from ...utils.forms import AjaxableResponseMixin
-
-from braces.views import LoginRequiredMixin
 from django_filters.views import FilterView
 from rest_framework import mixins, viewsets
 
-from zipfile import ZipFile
-import re
-import StringIO
+from ...utils.forms import AjaxableResponseMixin
+from .filters import ReplayFilter, ReplayPackFilter
+from .forms import ReplayPackForm, ReplayUpdateForm
+from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
+from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
+                          ReplayCreateSerializer, ReplayListSerializer,
+                          ReplaySerializer)
 
 
 class ReplayListView(FilterView):
@@ -76,6 +78,16 @@ class ReplayDetailView(DetailView):
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     fields = ['file']
+
+    def form_invalid(self, form):
+        import re
+        results = re.search(r'\/replays\/(\d+)\/', form.errors['__all__'][0])
+
+        form.errors['errorText'] = form.errors['__all__'][0]
+        form.errors['replayID'] = results.group(1)
+        del form.errors['__all__']
+
+        return super(ReplayCreateView, self).form_invalid(form)
 
     def form_valid(self, form):
         if self.request.user.is_authenticated():
