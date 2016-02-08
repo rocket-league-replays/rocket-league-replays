@@ -247,10 +247,7 @@
             {% endblock %}
         </div>
 
-        <div class="dropzone-previews"></div>
-
         {% compress js %}
-        <script src="/static/js/vendor/dropzone.js"></script>
         <script src="/static/js/vendor/jquery.cookie.js"></script>
 
         <script src="/static/js/vendor/fastclick.js"></script>
@@ -264,31 +261,6 @@
 
         <script>
             $(document).foundation();
-
-            upload_dropzone = new Dropzone(
-                document.body, {
-                    url: "{% url 'replay:upload' %}",
-                    headers: {
-                        'X-CSRFToken': $.cookie('csrftoken')
-                    },
-                    createImageThumbnails: false,
-                    clickable: false,
-                    previewsContainer: '.dropzone-previews',
-                    error: function(file, response) {
-                            $('.dz-error-message', file.previewElement).html(response);
-                    },
-                    success: function(file, response, xhr) {
-                            $('.dz-error-message', file.previewElement).html("Your replay has been successfully uploaded, you can view it <a href=\"" + response + "\" target=\"_blank\">here</a>.");
-                    },
-                    drop: function() {
-                        $('body').addClass('dz-have-files')
-                        $('main').on('click', function() {
-                            $('body').removeClass('dz-have-files');
-                            upload_dropzone.removeAllFiles();
-                        });
-                    }
-                }
-            );
         </script>
 
         {% block additional_js %}{% endblock %}
