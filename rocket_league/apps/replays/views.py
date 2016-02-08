@@ -140,6 +140,16 @@ class ReplayPackCreateView(LoginRequiredMixin, CreateView):
     form_class = ReplayPackForm
     template_name_suffix = '_create'
 
+    def get_initial(self):
+        initial = super(ReplayPackCreateView, self).get_initial()
+
+        try:
+            initial['replays'] = [int(val) for val in self.request.GET.getlist('replay_id')]
+        except:
+            pass
+
+        return initial
+
     def form_valid(self, form):
         form.instance.user = self.request.user
         return super(ReplayPackCreateView, self).form_valid(form)
