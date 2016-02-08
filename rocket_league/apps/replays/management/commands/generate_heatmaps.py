@@ -80,3 +80,5 @@ class Command(BaseCommand):
                             File(tmp_file)
                         )
                         player_obj.save()
+
+                    os.remove(data[player])
