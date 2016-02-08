@@ -1,5 +1,6 @@
 from django.core.management import call_command
 from django.contrib import admin
+from django.db.models import Q
 
 from .models import Replay, Player, Goal, Map, ReplayPack, Season
 
@@ -21,7 +22,14 @@ class GoalInlineAdmin(admin.StackedInline):
 
 
 class ReplayAdmin(admin.ModelAdmin):
-    list_display = ['replay_id', 'user', 'map', 'server_name', 'timestamp', 'processed']
+
+    def has_heatmaps(self, obj):
+        return obj.player_set.filter(
+            Q(heatmap__isnull=True) | Q(heatmap=''),
+        ).count() == 0
+    has_heatmaps.boolean = True
+
+    list_display = ['replay_id', 'user', 'map', 'server_name', 'timestamp', 'has_heatmaps', 'processed']
     inlines = [PlayerInlineAdmin, GoalInlineAdmin]
     actions = [reprocess_matches]
 
