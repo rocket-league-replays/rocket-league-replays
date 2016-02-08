@@ -51,6 +51,7 @@ urlpatterns = patterns(
     url(r'^api/', include(router.urls)),
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
+    url(r'^login/$', 'django.contrib.auth.views.login', name='auth_login'),
     url(r'^logout/$', 'django.contrib.auth.views.logout_then_login', name='auth_logout'),
 
     url(r'', include('rocket_league.apps.site.urls', namespace='site')),
