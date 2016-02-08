@@ -37,7 +37,7 @@ class Command(BaseCommand):
 
             replays = Replay.objects.filter(
                 id__in=players,
-            ).distinct()
+            ).distinct()[:10]
 
             for replay in replays:
                 print 'Replay', replay.pk
@@ -80,3 +80,5 @@ class Command(BaseCommand):
                             File(tmp_file)
                         )
                         player_obj.save()
+
+                    os.remove(data[player])
