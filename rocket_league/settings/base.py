@@ -46,7 +46,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "rocket_league",
-        "USER": "rocket_league",
+        "USER": os.getenv('DATABASE_USER', 'rocket_league'),
         "PASSWORD": os.getenv('DATABASE_PASSWORD', ''),
         "HOST": os.getenv('DATABASE_HOST', ''),
         "PORT": "5432"
