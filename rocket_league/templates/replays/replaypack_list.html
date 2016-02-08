@@ -5,7 +5,7 @@
 <div class="row">
     <div class="small-12 columns">
         <h3>All replay packs</h3>
-        <p>Below you can find all replays which have been created by members of {{ settings.SITE_NAME }}. Want to create your own? {% if user.is_authenticated %}<a href="{% url 'replaypack:create' %}">Click here</a>.{% else %}<a href="{% url 'register' %}">Register now</a> (it's free, and you don't even need an email address!){% endif %}</p>
+        <p>Below you can find all replays which have been created by members of {{ settings.SITE_NAME }}. Want to create your own? {% if user.is_authenticated %}<a href="{% url 'replaypack:create' %}">Click here</a>.{% else %}<a href="{% url 'social:begin' backend='steam' %}">Log in (via Steam)</a>{% endif %}</p>
     </div>
 </div>
 
