@@ -2,8 +2,6 @@
 {% load cache replays %}
 
 {% block content_primary %}
-{% cache 3600 'replay_detail' replay.pk %}
-
 {% if replay.title %}
 <div class="row">
     <div class="medium-12 columns">
@@ -226,7 +224,6 @@
         </table>
     </div>
 </div>
-{% endcache %}
 
 <div class="row">
   <div class="medium-12 columns">

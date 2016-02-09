@@ -83,9 +83,10 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         import re
         results = re.search(r'\/replays\/(\d+)\/', form.errors['__all__'][0])
 
-        form.errors['errorText'] = form.errors['__all__'][0]
-        form.errors['replayID'] = results.group(1)
-        del form.errors['__all__']
+        if results:
+            form.errors['errorText'] = form.errors['__all__'][0]
+            form.errors['replayID'] = results.group(1)
+            del form.errors['__all__']
 
         return super(ReplayCreateView, self).form_invalid(form)
 

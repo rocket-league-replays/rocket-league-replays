@@ -2,8 +2,6 @@
 {% load cache %}
 
 {% block content_primary %}
-{% cache 3600 'replaypack_detail' replaypack.pk %}
-
 {% if replaypack.title %}
 <div class="row">
     <div class="medium-12 columns">
@@ -144,5 +142,4 @@
         </table>
     </div>
 </div>
-{% endcache %}
 {% endblock content_primary %}
