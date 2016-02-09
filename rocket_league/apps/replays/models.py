@@ -454,9 +454,13 @@ class Replay(models.Model):
                         'Assists': 0
                     }
                     """
+                    encoding = chardet.detect(player['Name'])
+                    if not encoding['encoding'] or encoding['encoding'] != 'ascii':
+                        encoding['encoding'] = 'latin-1'
+
                     Player.objects.get_or_create(
                         replay=self,
-                        player_name=player['Name'].decode(chardet.detect(player['Name'])['encoding']),
+                        player_name=player['Name'].decode(encoding['encoding']),
                         platform=player['Platform'].get('OnlinePlatform', ''),
                         saves=player['Saves'],
                         score=player['Score'],
@@ -470,7 +474,7 @@ class Replay(models.Model):
 
             for index, goal in enumerate(data['Goals']):
                 encoding = chardet.detect(goal['PlayerName'])
-                if not encoding['encoding']:
+                if not encoding['encoding'] or encoding['encoding'] != 'ascii':
                     encoding['encoding'] = 'latin-1'
 
                 try:
