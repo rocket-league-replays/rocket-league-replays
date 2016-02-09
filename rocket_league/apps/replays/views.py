@@ -126,7 +126,9 @@ class ReplayDeleteView(DeleteView):
     model = Replay
 
     def get_success_url(self):
-        return reverse('users:profile')
+        return reverse('users:profile', kwargs={
+            'username': self.request.user.username,
+        })
 
     def dispatch(self, request, *args, **kwargs):
         if request.user != self.get_object().user:
@@ -204,9 +206,9 @@ class ReplayPackDeleteView(DeleteView):
     model = ReplayPack
 
     def get_success_url(self):
-        return '{}#replay-packs-tab'.format(
-            reverse('users:profile')
-        )
+        return reverse('users:profile', kwargs={
+            'username': self.request.user.username,
+        })
 
     def dispatch(self, request, *args, **kwargs):
         if request.user != self.get_object().user:

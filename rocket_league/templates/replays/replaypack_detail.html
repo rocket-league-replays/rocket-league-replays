@@ -143,3 +143,14 @@
     </div>
 </div>
 {% endblock content_primary %}
+
+{% block additional_js %}
+<script>
+$(function() {
+    $('tr[data-href]').on('click', function(e) {
+        window.location = $('a[href]:first-of-type', this).attr('href');
+        return false;
+    });
+})
+</script>
+{% endblock %}
