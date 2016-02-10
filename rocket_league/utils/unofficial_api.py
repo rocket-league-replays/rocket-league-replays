@@ -57,6 +57,7 @@ def api_login():
 
 def get_league_data(steam_ids):
     """
+    Season 1:
     Playlist=0&Mu=20.6591&Sigma=4.11915&RankPoints=100
     Playlist=10&Mu=27.0242&Sigma=2.96727&RankPoints=292
     Playlist=11&Mu=37.0857&Sigma=2.5&RankPoints=618
@@ -64,12 +65,21 @@ def get_league_data(steam_ids):
     Playlist=13&Mu=33.5018&Sigma=2.5&RankPoints=468
     """
 
+    """
+    Season 2:
+    Playlist=0&Mu=20.6134&Sigma=3.2206&Tier=
+    Playlist=10&Mu=24.9755&Sigma=2.5&Tier=
+    Playlist=11&Mu=29.3782&Sigma=2.5&Tier=
+    Playlist=12&Mu=34.4383&Sigma=2.5&Tier=
+    Playlist=13&Mu=34.5306&Sigma=2.5&Tier=
+    """
+
     all_steam_ids = list(steam_ids)
 
     for steam_ids in chunks(all_steam_ids, 10):
         data = {
             'Proc[]': [
-                'GetPlayerSkillAndRankPointsSteam'
+                'GetPlayerSkillSteam'
             ] * len(steam_ids),
         }
 
@@ -92,7 +102,7 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d+)&.+RankPoints=(\d+)', response)
+            matches = re.findall(r'Playlist=(\d+).*Tier=(\d{0,2})\r\n', response)
 
             if not matches:
                 print 'no matches'
