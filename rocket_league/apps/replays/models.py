@@ -20,7 +20,7 @@ class Season(models.Model):
         unique=True,
     )
 
-    start_date = models.DateField()
+    start_date = models.DateTimeField()
 
     def __unicode__(self):
         return self.title
