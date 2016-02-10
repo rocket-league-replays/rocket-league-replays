@@ -1,6 +1,6 @@
 {% load humanize %}
 
-<h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }} team</h3>
+<h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }}{% if team == 0 or team == 1 %} team{% endif %}</h3>
 <table width="100%">
     <tr>
         {% if players.0.player_name %}
