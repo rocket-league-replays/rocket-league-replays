@@ -95,6 +95,7 @@ def get_league_data(steam_ids):
 
         if r.text.strip() == 'SCRIPT ERROR SessionNotActive:':
             print 'Hit SessionNotActive'
+            cache.delete(CACHE_KEY)
             continue
 
         # Split the response into individual chunks.
@@ -102,7 +103,7 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d+).*Tier=(\d{0,2})\r\n', response)
+            matches = re.findall(r'Playlist=(\d+).*Tier=(\d{1,2})\r\n', response)
 
             if not matches:
                 print 'no matches'
