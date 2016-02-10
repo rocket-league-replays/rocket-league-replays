@@ -527,6 +527,14 @@ class Replay(models.Model):
                     )
                 )
             )
+
+            get_season = Season.objects.filter(
+                start_date__lte=self.timestamp,
+            )
+
+            if get_season:
+                self.season = get_season[0]
+
             self.team_sizes = data['TeamSize']
             self.team_0_score = data.get('Team0Score', 0)
             self.team_1_score = data.get('Team1Score', 0)
