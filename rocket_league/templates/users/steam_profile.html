@@ -37,7 +37,7 @@
     </div>
 </div>
 
-{% cache 21600 player_stats steam_info.steamid %}
+{% cache 1800 player_stats steam_info.steamid %}
 {% steam_stats steam_info.steamid as stats %}
 
 <div class="row">
@@ -141,7 +141,7 @@
     </div>
 {% endcache %}
 
-    {% cache 21600 player_ratings_and_graph steam_info.steamid %}
+    {% cache 1800 player_ratings_and_graph steam_info.steamid %}
     <div class="medium-7 columns">
         {# Scoreboard + totals #}
         {% custom_scoreboard steam_info %}
