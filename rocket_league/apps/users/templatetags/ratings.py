@@ -51,3 +51,10 @@ def get_ratings(uid):
         steamid=uid,
         season_id=get_default_season(),
     )[:50]
+
+
+@register.simple_tag
+def league_name(tier):
+    if tier in settings.TIERS:
+        return settings.TIERS[tier]
+    return tier

@@ -338,6 +338,22 @@ PLAYLISTS = {
     'RankedStandard': 13,
 }
 
+TIERS = {
+    0: 'Unranked',
+    1: 'Prospect I',
+    2: 'Prospect II',
+    3: 'Prospect III',
+    4: 'Prospect Elite',
+    5: 'Challenger I',
+    6: 'Challenger II',
+    7: 'Challenger III',
+    8: 'Challenger Elite',
+    9: 'Rising Star',
+    10: 'All-Star',
+    11: 'Superstar',
+    12: 'Champion',
+}
+
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
     # our real migration files, so point to a nonexistent one, which will make
