@@ -61,8 +61,7 @@ EMAIL_USE_TLS = True
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        'LOCATION': '127.0.0.1',
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
 
