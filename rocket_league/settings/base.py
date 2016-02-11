@@ -261,7 +261,7 @@ CACHE_MIDDLEWARE_KEY_PREFIX = "rocket_league"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': '46.101.15.41:11211',
     }
 }
 
