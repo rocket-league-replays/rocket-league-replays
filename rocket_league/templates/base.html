@@ -109,7 +109,7 @@
                             {% if data %}
                                 {% if data.10 %}
                                 <span title="This is your rating for ranked duels.">
-                                    Duels: {{ data.10 }}
+                                    Duels: {% league_name data.10 %}
 
                                     {% if 10 in user.profile.rating_diff and user.profile.rating_diff.10 != 0 %}
                                         {% if user.profile.rating_diff.10 < 0 %}
@@ -121,16 +121,15 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.10 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.11 or data.12 or data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.11 %}
                                 <span title="This is your rating for ranked doubles.">
-                                    Doubles: {{ data.11 }}
+                                    Doubles: {% league_name data.11 %}
 
                                     {% if 11 in user.profile.rating_diff and user.profile.rating_diff.11 != 0 %}
                                         {% if user.profile.rating_diff.11 < 0 %}
@@ -142,16 +141,15 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.11 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.12 or data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.12 %}
                                 <span title="This is your rating for ranked solo standard.">
-                                    Solo Standard: {{ data.12 }}
+                                    Solo Standard: {% league_name data.12 %}
 
                                     {% if 12 in user.profile.rating_diff and user.profile.rating_diff.12 != 0 %}
                                         {% if user.profile.rating_diff.12 < 0 %}
@@ -163,16 +161,15 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.12 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.13 %}
                                 <span title="This is your rating for ranked standard.">
-                                    Standard: {{ data.13 }}
+                                    Standard: {% league_name data.13 %}
 
                                     {% if 13 in user.profile.rating_diff and user.profile.rating_diff.13 != 0 %}
                                         {% if user.profile.rating_diff.13 < 0 %}
