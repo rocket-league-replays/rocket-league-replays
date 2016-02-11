@@ -107,8 +107,16 @@ def get_league_data(steam_ids):
 
             if not matches:
                 print 'no matches'
+                continue
 
             matches = dict(matches)
+
+            # Don't bother storing the data if there's no non-zero values.
+            zero_check = [matches[key] for key in matches if matches[key] != '0']
+
+            if not zero_check:
+                print 'all zero'
+                continue
 
             # Store this, cache it, do something with it.
             LeagueRating.objects.create(
