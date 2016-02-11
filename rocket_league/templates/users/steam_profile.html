@@ -143,11 +143,11 @@
 
     {% cache 1800 player_ratings_and_graph steam_info.steamid %}
     <div class="medium-7 columns">
-        {# Scoreboard + totals #}
-        {% custom_scoreboard steam_info %}
-
         {# Rating graph #}
         {% include "users/includes/latest_ratings.html" with steam_id=steam_info.steamid %}
+
+        {# Scoreboard + totals #}
+        {% custom_scoreboard steam_info %}
     </div>
     {% endcache %}
 </div>
