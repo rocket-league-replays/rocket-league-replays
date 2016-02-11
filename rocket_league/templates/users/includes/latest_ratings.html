@@ -3,50 +3,58 @@
 {% latest_ratings as ratings %}
 <div class="row text-center">
     <div class="medium-3 columns">
-        Solo
-
         <h4>
             {% if ratings.10 %}
-                {% league_name ratings.10 %}
+                {% if ratings.10|league_image %}
+                    <img src="/static/img/tiers/{{ ratings.10 }}.png" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}" width="66" height="66">
+                {% endif %}
             {% else %}
-                {% league_name 0 %}
+                <img src="/static/img/tiers/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}" width="66" height="66">
             {% endif %}
+
+            <p>Solo Duel</p>
         </h4>
     </div>
 
     <div class="medium-3 columns">
-        Doubles
-
         <h4>
             {% if ratings.11 %}
-                {% league_name ratings.11 %}
+                {% if ratings.11|league_image %}
+                    <img src="/static/img/tiers/{{ ratings.11 }}.png" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}" width="66" height="66">
+                {% endif %}
             {% else %}
-                {% league_name 0 %}
+                <img src="/static/img/tiers/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}" width="66" height="66">
             {% endif %}
         </h4>
+
+        <p>Doubles</p>
     </div>
 
     <div class="medium-3 columns">
-        Solo Standard
-
         <h4>
             {% if ratings.12 %}
-                {% league_name ratings.12 %}
+                {% if ratings.12|league_image %}
+                    <img src="/static/img/tiers/{{ ratings.12 }}.png" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}" width="66" height="66">
+                {% endif %}
             {% else %}
-                {% league_name 0 %}
+                <img src="/static/img/tiers/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}" width="66" height="66">
             {% endif %}
         </h4>
+
+        <p>Solo Standard</p>
     </div>
 
     <div class="medium-3 columns">
-        Standard
-
         <h4>
             {% if ratings.13 %}
-                {% league_name ratings.13 %}
+                {% if ratings.13|league_image %}
+                    <img src="/static/img/tiers/{{ ratings.13 }}.png" alt="{% league_name ratings.13 %}" title="{% league_name ratings.13 %}" width="66" height="66">
+                {% endif %}
             {% else %}
-                {% league_name 0 %}
+                <img src="/static/img/tiers/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}" width="66" height="66">
             {% endif %}
         </h4>
+
+        <p>Standard</p>
     </div>
 </div>

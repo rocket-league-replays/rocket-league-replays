@@ -58,3 +58,8 @@ def league_name(tier):
     if tier in settings.TIERS:
         return settings.TIERS[tier]
     return tier
+
+
+@register.filter
+def league_image(tier):
+    return tier in settings.TIERS
