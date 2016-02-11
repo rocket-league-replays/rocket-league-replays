@@ -261,7 +261,7 @@ CACHE_MIDDLEWARE_KEY_PREFIX = "rocket_league"
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.memcached.MemcachedCache",
-        'LOCATION': '127.0.0.1:11211',
+        'LOCATION': '46.101.15.41:11211',
     }
 }
 
@@ -336,6 +336,22 @@ PLAYLISTS = {
     'RankedDoubles': 11,
     'RankedSoloStandard': 12,
     'RankedStandard': 13,
+}
+
+TIERS = {
+    0: 'Unranked',
+    1: 'Prospect I',
+    2: 'Prospect II',
+    3: 'Prospect III',
+    4: 'Prospect Elite',
+    5: 'Challenger I',
+    6: 'Challenger II',
+    7: 'Challenger III',
+    8: 'Challenger Elite',
+    9: 'Rising Star',
+    10: 'All-Star',
+    11: 'Superstar',
+    12: 'Champion',
 }
 
 if 'test' in sys.argv:

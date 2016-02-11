@@ -109,7 +109,13 @@
                             {% if data %}
                                 {% if data.10 %}
                                 <span title="This is your rating for ranked duels.">
-                                    Duels: {{ data.10 }}
+                                    Duels:
+
+                                    {% if data.10|league_image %}
+                                        <img src="/static/img/tiers/{{ data.10 }}.png" alt="{% league_name data.10 %}" title="{% league_name data.10 %}" style="width: 17px; height: 17px; margin: -3px 2px 0 3px">
+                                    {% endif %}
+
+                                    {% league_name data.10 %}
 
                                     {% if 10 in user.profile.rating_diff and user.profile.rating_diff.10 != 0 %}
                                         {% if user.profile.rating_diff.10 < 0 %}
@@ -121,16 +127,21 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.10 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.11 or data.12 or data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.11 %}
                                 <span title="This is your rating for ranked doubles.">
-                                    Doubles: {{ data.11 }}
+                                    Doubles:
+
+                                    {% if data.11|league_image %}
+                                        <img src="/static/img/tiers/{{ data.11 }}.png" alt="{% league_name data.11 %}" title="{% league_name data.11 %}" style="width: 17px; height: 17px; margin: -3px 2px 0 3px">
+                                    {% endif %}
+
+                                    {% league_name data.11 %}
 
                                     {% if 11 in user.profile.rating_diff and user.profile.rating_diff.11 != 0 %}
                                         {% if user.profile.rating_diff.11 < 0 %}
@@ -142,16 +153,21 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.11 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.12 or data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.12 %}
                                 <span title="This is your rating for ranked solo standard.">
-                                    Solo Standard: {{ data.12 }}
+                                    Solo Standard:
+
+                                    {% if data.12|league_image %}
+                                        <img src="/static/img/tiers/{{ data.12 }}.png" alt="{% league_name data.12 %}" title="{% league_name data.12 %}" style="width: 17px; height: 17px; margin: -3px 2px 0 3px">
+                                    {% endif %}
+
+                                    {% league_name data.12 %}
 
                                     {% if 12 in user.profile.rating_diff and user.profile.rating_diff.12 != 0 %}
                                         {% if user.profile.rating_diff.12 < 0 %}
@@ -163,16 +179,21 @@
                                                 <em class="icon-up-dir"></em>
                                                 {{ user.profile.rating_diff.12 }}
                                         {% endif %}
-
-
                                         </span>
                                     {% endif %}
-                                </span> /
+                                </span>
+                                {% if data.13 %}/{% endif %}
                                 {% endif %}
 
                                 {% if data.13 %}
                                 <span title="This is your rating for ranked standard.">
-                                    Standard: {{ data.13 }}
+                                    Standard:
+
+                                    {% if data.13|league_image %}
+                                        <img src="/static/img/tiers/{{ data.13 }}.png" alt="{% league_name data.13 %}" title="{% league_name data.13 %}" style="width: 17px; height: 17px; margin: -3px 2px 0 3px">
+                                    {% endif %}
+
+                                    {% league_name data.13 %}
 
                                     {% if 13 in user.profile.rating_diff and user.profile.rating_diff.13 != 0 %}
                                         {% if user.profile.rating_diff.13 < 0 %}

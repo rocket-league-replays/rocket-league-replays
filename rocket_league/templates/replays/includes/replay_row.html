@@ -1,4 +1,4 @@
-{% load cache %}
+{% load cache ratings %}
 
 {% cache 3600 'replay_list_item' replay.pk %}
     <tr data-href="{{ replay.get_absolute_url }}">
@@ -8,6 +8,6 @@
         <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
         <td>{{ replay.map }}</td>
         <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-        <td>{{ replay.average_rating }}</td>
+        <td>{% league_name replay.average_rating %}</td>
     </tr>
 {% endcache %}

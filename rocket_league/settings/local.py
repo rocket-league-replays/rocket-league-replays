@@ -59,4 +59,11 @@ EMAIL_HOST_PASSWORD = '5033a6d5bca3f0'
 EMAIL_PORT = '2525'
 EMAIL_USE_TLS = True
 
+CACHES = {
+    "default": {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
+
+
 INSTALLED_APPS = INSTALLED_APPS + ['debug_toolbar']

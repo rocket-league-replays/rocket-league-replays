@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 
 from ...models import LeagueRating
 from ....replays.models import Player
@@ -22,7 +21,10 @@ class Command(BaseCommand):
 
         # Delete any rows which contain a 0.
         LeagueRating.objects.filter(
-            Q(duels=0) | Q(doubles=0) | Q(solo_standard=0) | Q(standard=0)
+            duels=0,
+            doubles=0,
+            solo_standard=0,
+            standard=0,
         ).delete()
 
         for steam_id in steam_ids:
