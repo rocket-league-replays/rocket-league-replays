@@ -52,7 +52,10 @@ class ReplayListView(FilterView):
             qs = qs.order_by(*self.request.GET.getlist('order'))
         else:
             # TODO: Make a rating which combines these.
-            qs = qs.order_by('-timestamp', '-average_rating')
+            qs = qs.extra(select={
+                'timestamp__date': 'DATE(timestamp)'
+            })
+            qs = qs.order_by('-timestamp__date', '-average_rating')
 
         return qs
 
