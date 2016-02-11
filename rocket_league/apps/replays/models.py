@@ -342,10 +342,15 @@ class Replay(models.Model):
         num_player_ratings = 0
         total_player_ratings = 0
 
+        get_season = Season.objects.filter(
+            start_date__lte=self.timestamp,
+        )
+
         for player in players:
             # Get the latest rating for this player.
             ratings = LeagueRating.objects.filter(
                 steamid=player.online_id,
+                season_id=get_season[0].pk if get_season else get_default_season()
             ).exclude(
                 duels=0,
                 doubles=0,
@@ -358,14 +363,19 @@ class Replay(models.Model):
             else:
                 continue
 
-            if team_sizes == 1:  # Duels
+            if team_sizes == 1 and rating.duels > 0:  # Duels
                 total_player_ratings += rating.duels
                 num_player_ratings += 1
-            elif team_sizes == 2:  # Doubles
+            elif team_sizes == 2 and rating.doubles > 0:  # Doubles
                 total_player_ratings += rating.doubles
                 num_player_ratings += 1
-            elif team_sizes == 3:  # Standard or Solo Standard (can't tell which)
-                total_player_ratings += (rating.solo_standard + rating.standard) / 2
+            elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
+                if rating.solo_standard > 0 and rating.standard <= 0:
+                    total_player_ratings += rating.standard / 2
+                elif rating.solo_standard <= 0 and rating.standard > 0:
+                    total_player_ratings += rating.solo_standard / 2
+                else:
+                    total_player_ratings += (rating.solo_standard + rating.standard) / 2
                 num_player_ratings += 1
 
         if num_player_ratings > 0:
