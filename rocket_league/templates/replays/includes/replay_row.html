@@ -8,6 +8,11 @@
         <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
         <td>{{ replay.map }}</td>
         <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
-        <td>{% league_name replay.average_rating %}</td>
+        <td>
+            {% if replay.average_rating|league_image %}
+                <img src="/static/img/tiers/{{ replay.average_rating }}.png" alt="{% league_name replay.average_rating %}" title="{% league_name replay.average_rating %}" style="width: 17px; height: 17px; margin: -3px 5px 0 0">
+            {% endif %}
+            {% league_name replay.average_rating %}
+        </td>
     </tr>
 {% endcache %}
