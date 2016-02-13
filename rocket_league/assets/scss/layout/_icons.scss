@@ -1,0 +1,11 @@
+img[src^="/static/img/tiers/icons/"] {
+  width: 19px;
+  height: 19px;
+  margin: -3px 5px 0 0;
+
+  .secondary-navigation & {
+    width: 21px;
+    height: 21px;
+    margin: -3px 2px 0 3px;
+  }
+}

@@ -1,4 +1,4 @@
-{% load humanize %}
+{% load humanize ratings %}
 
 {% if team == 0 or team == 1 %}
     <h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }} team</h3>
@@ -24,6 +24,22 @@
         <td>
             {% if player.platform == 'OnlinePlatform_Steam' %}
             <a href="{% url 'users:steam' player.online_id %}">
+
+            {# Try to get the latest rating for this player in this size. #}
+            {% with steam_id=player.online_id %}
+                {% latest_ratings as ratings %}
+
+                {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
+                    <img src="/static/img/tiers/icons/{{ ratings.10 }}.png" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
+                    <img src="/static/img/tiers/icons/{{ ratings.11 }}.png" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
+                    <img src="/static/img/tiers/icons/{{ ratings.12 }}.png" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                {% else %}
+                    <img src="/static/img/tiers/icons/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                {% endif %}
+            {% endwith %}
+
             {% endif %}
 
             {{ player.player_name }}
@@ -33,22 +49,6 @@
             {% endif %}
         </td>
         {% endif %}
-
-        {% comment %}
-        <td>
-            {% if player.platform == 'OnlinePlatform_Steam' %}
-                PC
-            {% elif player.platform == 'OnlinePlatform_Unknown' %}
-                {% if player.bot %}
-                    Bot
-                {% else %}
-                    Unknown
-                {% endif %}
-            {% else %}
-                {{ player.platform }}
-            {% endif %}
-        </td>
-        {% endcomment %}
         <td>{{ player.score|intcomma }}</td>
         <td>{{ player.goals|intcomma }}</td>
         <td>{{ player.assists|intcomma }}</td>

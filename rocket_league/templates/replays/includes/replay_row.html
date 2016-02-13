@@ -10,7 +10,7 @@
         <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
         <td>
             {% if replay.average_rating|league_image %}
-                <img src="/static/img/tiers/{{ replay.average_rating }}.png" alt="{% league_name replay.average_rating %}" title="{% league_name replay.average_rating %}" style="width: 17px; height: 17px; margin: -3px 5px 0 0">
+                <img src="/static/img/tiers/icons/{{ replay.average_rating }}.png" alt="{% league_name replay.average_rating %}" title="{% league_name replay.average_rating %}">
             {% endif %}
             {% league_name replay.average_rating %}
         </td>
