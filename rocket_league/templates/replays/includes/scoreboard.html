@@ -49,22 +49,6 @@
             {% endif %}
         </td>
         {% endif %}
-
-        {% comment %}
-        <td>
-            {% if player.platform == 'OnlinePlatform_Steam' %}
-                PC
-            {% elif player.platform == 'OnlinePlatform_Unknown' %}
-                {% if player.bot %}
-                    Bot
-                {% else %}
-                    Unknown
-                {% endif %}
-            {% else %}
-                {{ player.platform }}
-            {% endif %}
-        </td>
-        {% endcomment %}
         <td>{{ player.score|intcomma }}</td>
         <td>{{ player.goals|intcomma }}</td>
         <td>{{ player.assists|intcomma }}</td>
