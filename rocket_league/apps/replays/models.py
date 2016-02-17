@@ -371,9 +371,9 @@ class Replay(models.Model):
                 num_player_ratings += 1
             elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
                 if rating.solo_standard > 0 and rating.standard <= 0:
-                    total_player_ratings += rating.standard / 2
-                elif rating.solo_standard <= 0 and rating.standard > 0:
-                    total_player_ratings += rating.solo_standard / 2
+                    total_player_ratings += rating.solo_standard
+                elif rating.standard > 0 and rating.solo_standard <= 0:
+                    total_player_ratings += rating.standard
                 else:
                     total_player_ratings += (rating.solo_standard + rating.standard) / 2
                 num_player_ratings += 1
