@@ -10,6 +10,13 @@ def reprocess_matches(modeladmin, request, queryset):
 reprocess_matches.short_description = "Reprocess all matches"
 
 
+def recalculate_average_rating(modeladmin, request, queryset):
+    print queryset
+    for obj in queryset:
+        obj.average_rating = obj.calculate_average_rating()
+        obj.save()
+
+
 class PlayerInlineAdmin(admin.StackedInline):
     model = Player
     extra = 0
@@ -29,9 +36,11 @@ class ReplayAdmin(admin.ModelAdmin):
         ).count() == 0
     has_heatmaps.boolean = True
 
-    list_display = ['replay_id', 'user', 'map', 'server_name', 'timestamp', 'has_heatmaps', 'processed']
+    list_display = ['replay_id', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed']
+    list_filter = ['user', 'season', 'team_sizes', 'average_rating']
+    search_fields = ['replay_id']
     inlines = [PlayerInlineAdmin, GoalInlineAdmin]
-    actions = [reprocess_matches]
+    actions = [reprocess_matches, recalculate_average_rating]
 
 admin.site.register(Replay, ReplayAdmin)
 
