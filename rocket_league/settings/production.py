@@ -107,5 +107,4 @@ STATIC_URL = COMPRESS_URL
 COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
 
 MEDIA_ROOT = '/'
-STATIC_ROOT = '/'
 COMPRESS_ROOT = STATIC_ROOT
