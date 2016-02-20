@@ -96,5 +96,5 @@ AWS_S3_MAX_AGE_SECONDS_STATIC = 60 * 60 * 24 * 365  # 1 year.
 COMPRESS_URL = "https://rocketleaguereplays-static.s3-eu-west-1.amazonaws.com/"
 COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
 
-MEDIA_ROOT = 'media'
-STATIC_ROOT = 'static'
+MEDIA_ROOT = ''
+STATIC_ROOT = ''
