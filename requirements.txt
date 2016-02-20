@@ -13,3 +13,4 @@ django-braces==1.8.1
 django-filter==0.10.0
 django-rest-swagger==0.3.3
 django-s3-storage==0.9.8
+django>=1.8,<1.9
