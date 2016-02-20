@@ -97,6 +97,12 @@ COMPRESS_URL = "https://{}.s3-{}.amazonaws.com/".format(
     AWS_S3_BUCKET_NAME_STATIC,
     AWS_REGION,
 )
+
+MEDIA_URL = "https://{}.s3-{}.amazonaws.com/".format(
+    AWS_S3_BUCKET_NAME,
+    AWS_REGION,
+)
+
 STATIC_URL = COMPRESS_URL
 COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
 
