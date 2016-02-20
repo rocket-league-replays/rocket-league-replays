@@ -46,7 +46,7 @@ class Command(BaseCommand):
                 command = [
                     '/var/www/rocket-league-replays-heatmaps/.venv/bin/python',
                     '/var/www/rocket-league-replays-heatmaps/main.py',
-                    replay.file.path
+                    replay.file.url
                 ]
 
                 try:
