@@ -36,3 +36,8 @@ def display_names(steam_info):
     if ',' in ''.join(names):
         return '; '.join(names)
     return ', '.join(names)
+
+
+@register.filter
+def string(val):
+    return str(val)

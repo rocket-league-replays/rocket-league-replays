@@ -1,4 +1,4 @@
-{% load ratings %}
+{% load ratings site static %}
 
 {% latest_ratings as ratings %}
 <div class="row text-center">
@@ -6,10 +6,14 @@
         <h4>
             {% if ratings.10 %}
                 {% if ratings.10|league_image %}
-                    <img src="/static/img/tiers/orig/{{ ratings.10 }}.png" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                    {% with ratings.10|string as rating_string %}
+                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% endif %}
             {% else %}
-                <img src="/static/img/tiers/orig/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
 
             <p>Solo Duel</p>
@@ -20,10 +24,14 @@
         <h4>
             {% if ratings.11 %}
                 {% if ratings.11|league_image %}
-                    <img src="/static/img/tiers/orig/{{ ratings.11 }}.png" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                    {% with ratings.11|string as rating_string %}
+                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% endif %}
             {% else %}
-                <img src="/static/img/tiers/orig/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
         </h4>
 
@@ -34,10 +42,14 @@
         <h4>
             {% if ratings.12 %}
                 {% if ratings.12|league_image %}
-                    <img src="/static/img/tiers/orig/{{ ratings.12 }}.png" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                    {% with ratings.12|string as rating_string %}
+                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% endif %}
             {% else %}
-                <img src="/static/img/tiers/orig/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
         </h4>
 
@@ -48,10 +60,14 @@
         <h4>
             {% if ratings.13 %}
                 {% if ratings.13|league_image %}
-                    <img src="/static/img/tiers/orig/{{ ratings.13 }}.png" alt="{% league_name ratings.13 %}" title="{% league_name ratings.13 %}">
+                    {% with ratings.13|string as rating_string %}
+                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.13 %}" title="{% league_name ratings.13 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% endif %}
             {% else %}
-                <img src="/static/img/tiers/orig/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
         </h4>
 
