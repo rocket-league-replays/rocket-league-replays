@@ -94,4 +94,4 @@ AWS_S3_BUCKET_AUTH_STATIC = False
 AWS_S3_MAX_AGE_SECONDS_STATIC = 60 * 60 * 24 * 365  # 1 year.
 
 COMPRESS_URL = "https://rocketleaguereplays-media.s3-eu-west-1.amazonaws.com/"
-COMPRESS_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
