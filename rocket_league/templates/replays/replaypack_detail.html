@@ -34,7 +34,11 @@
             <tbody>
                 <tr>
                     <th colspan="2" class="text-center">
-                        <a href="{% url 'replaypack:download' pk=replaypack.pk %}">Download replay pack</a>
+                        {% if replaypack.file %}
+                            <a href="{{ replaypack.file.url }}">Download replay pack</a>
+                        {% else %}
+                            <a href="{% url 'replaypack:download' pk=replaypack.pk %}">Download replay pack</a>
+                        {% endif %}
                     </th>
                 </tr>
                 <tr>
