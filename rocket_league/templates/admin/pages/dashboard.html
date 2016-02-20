@@ -1,6 +1,5 @@
 {% extends "admin/index.html" %}
-
-{% load compress %}
+{% load compress static %}
 
 {% block extrahead %}
     {{block.super}}
@@ -59,7 +58,7 @@
         </script>
 
         {% compress js %}
-        <script src="/static/js/admin/analytics.js"></script>
+        <script src="{% static 'js/admin/analytics.js' %}"></script>
         {% endcompress %}
 
     {% endif %}

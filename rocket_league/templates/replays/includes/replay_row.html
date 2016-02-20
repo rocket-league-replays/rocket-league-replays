@@ -1,4 +1,4 @@
-{% load cache ratings %}
+{% load cache ratings site static %}
 
 {% cache 3600 'replay_list_item' replay.pk %}
     <tr data-href="{{ replay.get_absolute_url }}">
@@ -10,7 +10,11 @@
         <td>{{ replay.timestamp|date:"jS F, h:iA" }}</td>
         <td>
             {% if replay.average_rating|league_image %}
-                <img src="/static/img/tiers/icons/{{ replay.average_rating }}.png" alt="{% league_name replay.average_rating %}" title="{% league_name replay.average_rating %}">
+                {% with replay.average_rating|string as rating_string %}
+                    {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                        <img src="{% static url %}" alt="{% league_name replay.average_rating %}" title="{% league_name replay.average_rating %}">
+                    {% endwith %}
+                {% endwith %}
             {% endif %}
             {% league_name replay.average_rating %}
         </td>

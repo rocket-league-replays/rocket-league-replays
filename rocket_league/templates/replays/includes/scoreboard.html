@@ -1,4 +1,4 @@
-{% load humanize ratings %}
+{% load humanize ratings static site %}
 
 {% if team == 0 or team == 1 %}
     <h3 class="{% if team == 0 %}primary{% elif team == 1 %}secondary{% endif %}">{{ team_str }} team</h3>
@@ -30,13 +30,25 @@
                 {% latest_ratings as ratings %}
 
                 {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
-                    <img src="/static/img/tiers/icons/{{ ratings.10 }}.png" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                    {% with ratings.10|string as rating_string %}
+                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
-                    <img src="/static/img/tiers/icons/{{ ratings.11 }}.png" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                    {% with ratings.11|string as rating_string %}
+                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
-                    <img src="/static/img/tiers/icons/{{ ratings.12 }}.png" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                    {% with ratings.12|string as rating_string %}
+                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                        {% endwith %}
+                    {% endwith %}
                 {% else %}
-                    <img src="/static/img/tiers/icons/0.png" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                    <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
                 {% endif %}
             {% endwith %}
 
