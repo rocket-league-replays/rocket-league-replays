@@ -55,3 +55,40 @@ LOGGING = {
         },
     },
 }
+
+# S3 settings.
+DEFAULT_FILE_STORAGE = "django_s3_storage.storage.S3Storage"
+STATICFILES_STORAGE = "django_s3_storage.storage.StaticS3Storage"
+
+# The region to connect to when storing files.
+AWS_REGION = "eu-west-1"
+
+# The AWS access key used to access the storage buckets.
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
+
+# The AWS secret access key used to access the storage buckets.
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+
+# The S3 bucket used to store uploaded files.
+AWS_S3_BUCKET_NAME = "rocketleaguereplays-media"
+
+# The S3 calling format to use to connect to the bucket.
+AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
+
+# Whether to enable querystring authentication for uploaded files.
+AWS_S3_BUCKET_AUTH = False
+
+# The expire time used to access uploaded files.
+AWS_S3_MAX_AGE_SECONDS = 60 * 60 * 24 * 365  # 1 year.
+
+# The S3 bucket used to store static files.
+AWS_S3_BUCKET_NAME_STATIC = "rocketleaguereplays-static"
+
+# The S3 calling format to use to connect to the static bucket.
+AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.OrdinaryCallingFormat"
+
+# Whether to enable querystring authentication for static files.
+AWS_S3_BUCKET_AUTH_STATIC = False
+
+# The expire time used to access static files.
+AWS_S3_MAX_AGE_SECONDS_STATIC = 60 * 60 * 24 * 365  # 1 year.
