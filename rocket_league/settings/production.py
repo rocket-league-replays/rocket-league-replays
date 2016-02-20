@@ -93,15 +93,14 @@ AWS_S3_BUCKET_AUTH_STATIC = False
 # The expire time used to access static files.
 AWS_S3_MAX_AGE_SECONDS_STATIC = 60 * 60 * 24 * 365  # 1 year.
 
-COMPRESS_URL = "https://{}.s3-{}.amazonaws.com".format(
+COMPRESS_URL = "https://{}.s3-{}.amazonaws.com/".format(
     AWS_S3_BUCKET_NAME_STATIC,
     AWS_REGION,
 )
+STATIC_URL = COMPRESS_URL
 
 COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
 
 MEDIA_ROOT = '/'
 STATIC_ROOT = '/'
 COMPRESS_ROOT = STATIC_ROOT
-
-STATIC_URL = COMPRESS_URL + STATIC_ROOT
