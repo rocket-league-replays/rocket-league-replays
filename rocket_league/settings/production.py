@@ -73,7 +73,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
 AWS_S3_BUCKET_NAME = "rocketleaguereplays-media"
 
 # The S3 calling format to use to connect to the bucket.
-AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
+AWS_S3_CALLING_FORMAT = "boto.s3.connection.SubdomainCallingFormat"
 
 # Whether to enable querystring authentication for uploaded files.
 AWS_S3_BUCKET_AUTH = False
@@ -85,7 +85,7 @@ AWS_S3_MAX_AGE_SECONDS = 60 * 60 * 24 * 365  # 1 year.
 AWS_S3_BUCKET_NAME_STATIC = "rocketleaguereplays-static"
 
 # The S3 calling format to use to connect to the static bucket.
-AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.OrdinaryCallingFormat"
+AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.SubdomainCallingFormat"
 
 # Whether to enable querystring authentication for static files.
 AWS_S3_BUCKET_AUTH_STATIC = False
@@ -97,9 +97,13 @@ COMPRESS_URL = "https://{}.s3-{}.amazonaws.com/".format(
     AWS_S3_BUCKET_NAME_STATIC,
     AWS_REGION,
 )
-STATIC_URL = COMPRESS_URL
-MEDIA_URL = COMPRESS_URL
 
+MEDIA_URL = "https://{}.s3-{}.amazonaws.com/".format(
+    AWS_S3_BUCKET_NAME,
+    AWS_REGION,
+)
+
+STATIC_URL = COMPRESS_URL
 COMPRESS_STORAGE = 'django_s3_storage.storage.StaticS3Storage'
 
 MEDIA_ROOT = '/'
