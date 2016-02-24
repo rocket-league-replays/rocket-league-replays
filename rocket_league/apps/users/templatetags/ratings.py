@@ -39,9 +39,13 @@ def latest_ratings(context):
     if ratings:
         return {
             settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
+            '{}_division'.format(settings.PLAYLISTS['RankedDuels']): ratings[0].duels_division,
             settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
+            '{}_division'.format(settings.PLAYLISTS['RankedDoubles']): ratings[0].doubles_division,
             settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
+            '{}_division'.format(settings.PLAYLISTS['RankedSoloStandard']): ratings[0].solo_standard_division,
             settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
+            '{}_division'.format(settings.PLAYLISTS['RankedStandard']): ratings[0].standard_division,
         }
 
 
@@ -58,6 +62,13 @@ def league_name(tier):
     if tier in settings.TIERS:
         return settings.TIERS[tier]
     return tier
+
+
+@register.simple_tag
+def division_name(division):
+    if division in settings.DIVISIONS:
+        return settings.DIVISIONS[division]
+    return division
 
 
 @register.filter

@@ -3,6 +3,8 @@
 {% latest_ratings as ratings %}
 <div class="row text-center">
     <div class="medium-3 columns">
+        <strong>Solo Duel</strong>
+
         <h4>
             {% if ratings.10 %}
                 {% if ratings.10|league_image %}
@@ -16,11 +18,15 @@
                 <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
 
-            <p>Solo Duel</p>
+            {% if ratings.10_division != '-1' %}
+                <p>{% division_name ratings.10_division %}</p>
+            {% endif %}
         </h4>
     </div>
 
     <div class="medium-3 columns">
+        <strong>Doubles</strong>
+
         <h4>
             {% if ratings.11 %}
                 {% if ratings.11|league_image %}
@@ -35,10 +41,14 @@
             {% endif %}
         </h4>
 
-        <p>Doubles</p>
+        {% if ratings.11_division != '-1' %}
+            <p>{% division_name ratings.11_division %}</p>
+        {% endif %}
     </div>
 
     <div class="medium-3 columns">
+        <strong>Solo Standard</strong>
+
         <h4>
             {% if ratings.12 %}
                 {% if ratings.12|league_image %}
@@ -53,10 +63,14 @@
             {% endif %}
         </h4>
 
-        <p>Solo Standard</p>
+        {% if ratings.12_division != '-1' %}
+            <p>{% division_name ratings.12_division %}</p>
+        {% endif %}
     </div>
 
     <div class="medium-3 columns">
+        <strong>Standard</strong>
+
         <h4>
             {% if ratings.13 %}
                 {% if ratings.13|league_image %}
@@ -71,6 +85,8 @@
             {% endif %}
         </h4>
 
-        <p>Standard</p>
+        {% if ratings.13_division != '-1' %}
+            <p>{% division_name ratings.13_division %}</p>
+        {% endif %}
     </div>
 </div>
