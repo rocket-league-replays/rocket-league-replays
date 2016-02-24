@@ -349,9 +349,20 @@ TIERS = {
     7: 'Challenger III',
     8: 'Challenger Elite',
     9: 'Rising Star',
-    10: 'All-Star',
-    11: 'Superstar',
-    12: 'Champion',
+    10: 'Shooting Star',
+    11: 'All-Star',
+    12: 'Superstar',
+    13: 'Champion',
+    14: 'Super Champion',
+    15: 'Grand Champion'  # These players have a skill rating
+}
+
+DIVISIONS = {
+    0: 'Division I',  # Lowest
+    1: 'Division II',
+    2: 'Division III',
+    3: 'Division IV',
+    4: 'Division V',  # Highest
 }
 
 if 'test' in sys.argv:
