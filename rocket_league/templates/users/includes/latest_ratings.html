@@ -18,7 +18,7 @@
                 <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
             {% endif %}
 
-            {% if ratings.10_division != '-1' %}
+            {% if ratings.10_division != -1 %}
                 <p>{% division_name ratings.10_division %}</p>
             {% endif %}
         </h4>
@@ -41,7 +41,7 @@
             {% endif %}
         </h4>
 
-        {% if ratings.11_division != '-1' %}
+        {% if ratings.11_division != -1 %}
             <p>{% division_name ratings.11_division %}</p>
         {% endif %}
     </div>
@@ -63,7 +63,7 @@
             {% endif %}
         </h4>
 
-        {% if ratings.12_division != '-1' %}
+        {% if ratings.12_division != -1 %}
             <p>{% division_name ratings.12_division %}</p>
         {% endif %}
     </div>
@@ -85,7 +85,7 @@
             {% endif %}
         </h4>
 
-        {% if ratings.13_division != '-1' %}
+        {% if ratings.13_division != -1 %}
             <p>{% division_name ratings.13_division %}</p>
         {% endif %}
     </div>
