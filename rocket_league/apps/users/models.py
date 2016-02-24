@@ -33,9 +33,13 @@ class Profile(models.Model):
         if ratings:
             return {
                 settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
+                '{}_division'.format(settings.PLAYLISTS['RankedDuels']): ratings[0].duels_division,
                 settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
+                '{}_division'.format(settings.PLAYLISTS['RankedDoubles']): ratings[0].doubles_division,
                 settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
+                '{}_division'.format(settings.PLAYLISTS['RankedSoloStandard']): ratings[0].solo_standard_division,
                 settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
+                '{}_division'.format(settings.PLAYLISTS['RankedStandard']): ratings[0].standard_division,
             }
 
     def rating_diff(self):
