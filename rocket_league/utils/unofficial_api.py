@@ -74,6 +74,15 @@ def get_league_data(steam_ids):
     Playlist=13&Mu=34.5306&Sigma=2.5&Tier=
     """
 
+    """
+    Season 2, Patch 1.13:
+    Playlist=0&Mu=25.6939&Sigma=2.5&Tier=&Division=&MatchesPlayed=&MMR=
+    Playlist=10&Mu=31.8213&Sigma=4.88486&Tier=5&Division=0&MatchesPlayed=11&MMR=17.1667
+    Playlist=11&Mu=25.0579&Sigma=2.5&Tier=5&Division=0&MatchesPlayed=31&MMR=17.5579
+    Playlist=12&Mu=29.5139&Sigma=3.75288&Tier=0&Division=0&MatchesPlayed=7&MMR=18.2552
+    Playlist=13&Mu=27.0215&Sigma=2.5&Tier=5&Division=0&MatchesPlayed=27&MMR=19.5215
+    """
+
     all_steam_ids = list(steam_ids)
 
     for steam_ids in chunks(all_steam_ids, 10):
@@ -103,28 +112,78 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d+).*Tier=(\d{1,2})\r\n', response)
+            matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d?)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)\r\n', response)
 
             if not matches:
                 print 'no matches'
                 continue
 
-            matches = dict(matches)
+            has_tiers = False
+            matches_dict = {}
 
-            # Don't bother storing the data if there's no non-zero values.
-            zero_check = [matches[key] for key in matches if matches[key] != '0']
+            for match in matches:
+                playlist, mu, sigma, tier, division, matches_played, mmr = match
 
-            if not zero_check:
-                print 'all zero'
+                if tier != '' and tier != '0':
+                    has_tiers = True
+
+                    matches_dict[playlist] = {
+                        'mu': mu,
+                        'sigma': sigma,
+                        'tier': tier,
+                        'division': division,
+                        'matches_played': matches_played,
+                        'mmr': mmr,
+                    }
+
+            if not has_tiers:
+                print 'No tiers'
                 continue
 
-            # Store this, cache it, do something with it.
+            object_data = {}
+
+            if str(settings.PLAYLISTS['RankedDuels']) in matches_dict:
+                object_data['duels'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['tier']
+                object_data['duels_division'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['division']
+                object_data['duels_division'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['division']
+                object_data['duels_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['matches_played']
+                object_data['duels_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['mmr']
+            else:
+                object_data['duels'] = 0
+
+            if str(settings.PLAYLISTS['RankedDoubles']) in matches_dict:
+                object_data['doubles'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['tier']
+                object_data['doubles_division'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['division']
+                object_data['doubles_division'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['division']
+                object_data['doubles_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['matches_played']
+                object_data['doubles_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['mmr']
+            else:
+                object_data['doubles'] = 0
+
+            if str(settings.PLAYLISTS['RankedSoloStandard']) in matches_dict:
+                object_data['solo_standard'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['tier']
+                object_data['solo_standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['division']
+                object_data['solo_standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['division']
+                object_data['solo_standard_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['matches_played']
+                object_data['solo_standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['mmr']
+            else:
+                object_data['solo_standard'] = 0
+
+            if str(settings.PLAYLISTS['RankedStandard']) in matches_dict:
+                object_data['standard'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['tier']
+                object_data['standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['division']
+                object_data['standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['division']
+                object_data['standard_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['matches_played']
+                object_data['standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['mmr']
+            else:
+                object_data['standard'] = 0
+
+            print object_data
+
+            # Store this rating.
             LeagueRating.objects.create(
                 steamid=steam_ids[index],
-                duels=matches.get(str(settings.PLAYLISTS['RankedDuels']), 0),
-                doubles=matches.get(str(settings.PLAYLISTS['RankedDoubles']), 0),
-                solo_standard=matches.get(str(settings.PLAYLISTS['RankedSoloStandard']), 0),
-                standard=matches.get(str(settings.PLAYLISTS['RankedStandard']), 0),
+                **object_data
             )
 
 
