@@ -9,3 +9,7 @@ img[src*="img/tiers/icons/"] {
     margin: -3px 2px 0 3px;
   }
 }
+
+img[src$="orig/15.png"] {
+    padding: 12.5px 0;
+}
