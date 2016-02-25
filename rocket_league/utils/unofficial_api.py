@@ -112,7 +112,7 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d?)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)\r\n', response)
+            matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d*)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)', response)
 
             if not matches:
                 print 'no matches'
