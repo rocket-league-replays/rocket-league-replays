@@ -112,7 +112,7 @@ def get_league_data(steam_ids):
 
         for index, response in enumerate(response_chunks):
             print 'Getting rating data for', steam_ids[index]
-            matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d?)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)\r\n', response)
+            matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d*)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)', response)
 
             if not matches:
                 print 'no matches'
@@ -145,36 +145,40 @@ def get_league_data(steam_ids):
             if str(settings.PLAYLISTS['RankedDuels']) in matches_dict:
                 object_data['duels'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['tier']
                 object_data['duels_division'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['division']
-                object_data['duels_division'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['division']
                 object_data['duels_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['matches_played']
-                object_data['duels_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['mmr']
+
+                if matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['mmr'] != '':
+                    object_data['duels_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDuels'])]['mmr']
             else:
                 object_data['duels'] = 0
 
             if str(settings.PLAYLISTS['RankedDoubles']) in matches_dict:
                 object_data['doubles'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['tier']
                 object_data['doubles_division'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['division']
-                object_data['doubles_division'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['division']
                 object_data['doubles_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['matches_played']
-                object_data['doubles_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['mmr']
+
+                if matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['mmr'] != '':
+                    object_data['doubles_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedDoubles'])]['mmr']
             else:
                 object_data['doubles'] = 0
 
             if str(settings.PLAYLISTS['RankedSoloStandard']) in matches_dict:
                 object_data['solo_standard'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['tier']
                 object_data['solo_standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['division']
-                object_data['solo_standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['division']
                 object_data['solo_standard_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['matches_played']
-                object_data['solo_standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['mmr']
+
+                if matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['mmr'] != '':
+                    object_data['solo_standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedSoloStandard'])]['mmr']
             else:
                 object_data['solo_standard'] = 0
 
             if str(settings.PLAYLISTS['RankedStandard']) in matches_dict:
                 object_data['standard'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['tier']
                 object_data['standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['division']
-                object_data['standard_division'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['division']
                 object_data['standard_matches_played'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['matches_played']
-                object_data['standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['mmr']
+
+                if matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['mmr'] != '':
+                    object_data['standard_mmr'] = matches_dict[str(settings.PLAYLISTS['RankedStandard'])]['mmr']
             else:
                 object_data['standard'] = 0
 

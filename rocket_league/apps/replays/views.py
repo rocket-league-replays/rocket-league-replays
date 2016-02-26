@@ -220,40 +220,6 @@ class ReplayPackDeleteView(DeleteView):
         return super(ReplayPackDeleteView, self).dispatch(request, *args, **kwargs)
 
 
-class ReplayPackDownloadView(SingleObjectMixin, View):
-    model = ReplayPack
-
-    def get(self, request, *args, **kwargs):
-        obj = self.get_object()
-        zip_filename = '{}.zip'.format(str(obj))
-
-        if obj.file:
-            response = HttpResponse(obj.file.read(), content_type="application/x-zip-compressed")
-            response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
-            return response
-
-        zip_string = StringIO.StringIO()
-
-        with ZipFile(zip_string, 'w') as f:
-            for replay in obj.replays.all():
-                filename = '{}.replay'.format(replay.replay_id)
-                f.write(replay.file.path, filename)
-
-            # Create a README file.
-            readme = render_to_string('replays/readme.html', {
-                'replaypack': obj,
-            })
-
-            f.writestr('README.txt', str(readme))
-        f.close()
-
-        obj.file.save(zip_filename, ContentFile(zip_string.getvalue()))
-
-        response = HttpResponse(zip_string.getvalue(), content_type="application/x-zip-compressed")
-        response['Content-Disposition'] = 'attachment; filename={}'.format(zip_filename)
-        return response
-
-
 # API ViewSets
 class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     """
