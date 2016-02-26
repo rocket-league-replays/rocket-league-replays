@@ -39,10 +39,23 @@ class Command(BaseCommand):
             replays = Replay.objects.filter(
                 id__in=players,
                 processed=True,
+            ).exclude(
+                crashed_heatmap_parser=True,
             ).distinct()[:10]
 
             for replay in replays:
                 print 'Replay', replay.pk
+
+                # Does this replay have any players with heatmap files? If so,
+                # the process probably crashed. So don't bother generating it
+                # again.
+
+                if replay.player_set.exclude(heatmap='').count() > 0:
+                    print 'Skipping, previously crashed.'
+                    replay.crashed_heatmap_parser = True
+                    replay.save()
+                    continue
+
                 command = [
                     '/var/www/rocket-league-replays-heatmaps/.venv/bin/python',
                     '/var/www/rocket-league-replays-heatmaps/main.py',
@@ -66,9 +79,10 @@ class Command(BaseCommand):
                     except Exception as e:
                         print 'Unable to get data.', e
                         data = []
-                except subprocess.CalledProcessError:
+                except subprocess.CalledProcessError as e:
                     # The parser crashed, not a lot we can do about this.. Just move on.
                     data = []
+                    print e
 
                 for player in data:
                     player_objs = replay.player_set.filter(
@@ -79,6 +93,10 @@ class Command(BaseCommand):
 
                     for player_obj in player_objs:
                         tmp_file.seek(0)
+
+                        # Don't re-save a heatmap, we'll just be filling up S3.
+                        if player_obj.heatmap:
+                            continue
 
                         player_obj.heatmap.save(
                             data[player].replace('/tmp/', ''),
