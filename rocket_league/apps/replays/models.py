@@ -201,6 +201,10 @@ class Replay(models.Model):
         default=0,
     )
 
+    crashed_heatmap_parser = models.BooleanField(
+        default=False,
+    )
+
     processed = models.BooleanField(
         default=False,
     )

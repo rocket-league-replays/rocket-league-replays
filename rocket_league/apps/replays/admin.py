@@ -36,8 +36,8 @@ class ReplayAdmin(admin.ModelAdmin):
         ).count() == 0
     has_heatmaps.boolean = True
 
-    list_display = ['replay_id', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed']
-    list_filter = ['user', 'season', 'team_sizes', 'average_rating']
+    list_display = ['replay_id', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
+    list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'crashed_heatmap_parser']
     search_fields = ['replay_id']
     inlines = [PlayerInlineAdmin, GoalInlineAdmin]
     actions = [reprocess_matches, recalculate_average_rating]
