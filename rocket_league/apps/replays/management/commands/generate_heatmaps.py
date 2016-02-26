@@ -14,8 +14,6 @@ from ...models import Player, Replay
 @contextmanager
 def file_lock(lock_file):
     if os.path.exists(lock_file):
-        print 'Only one script can run at once. '\
-              'Script is locked with %s' % lock_file
         sys.exit(-1)
     else:
         open(lock_file, 'w').write("1")
@@ -44,14 +42,11 @@ class Command(BaseCommand):
             ).distinct()[:10]
 
             for replay in replays:
-                print 'Replay', replay.pk
-
                 # Does this replay have any players with heatmap files? If so,
                 # the process probably crashed. So don't bother generating it
                 # again.
 
                 if replay.player_set.exclude(heatmap='').count() > 0:
-                    print 'Skipping, previously crashed.'
                     replay.crashed_heatmap_parser = True
                     replay.save()
                     continue
@@ -77,12 +72,12 @@ class Command(BaseCommand):
                         process = subprocess.check_output(command)
                         data = json.loads(process)
                     except Exception as e:
-                        print 'Unable to get data.', e
+                        print 'Unable to get data for replay {}.'.format(replay.pk), e
                         data = []
                 except subprocess.CalledProcessError as e:
                     # The parser crashed, not a lot we can do about this.. Just move on.
                     data = []
-                    print e
+                    print 'CalledProcessError from replay {}'.format(replay.pk), e
 
                 for player in data:
                     player_objs = replay.player_set.filter(
