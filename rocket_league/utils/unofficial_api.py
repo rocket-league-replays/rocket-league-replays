@@ -42,7 +42,7 @@ def api_login():
 
         if r.text.strip() == 'SCRIPT ERROR PlatformAuthError:':
             # Wait a few seconds and try again.
-            print 'Hit PlatformAuthError, trying again in 5 seconds.'
+            print('Hit PlatformAuthError, trying again in 5 seconds.')
             time.sleep(5)
             return api_login()
 
@@ -103,7 +103,7 @@ def get_league_data(steam_ids):
         )
 
         if r.text.strip() == 'SCRIPT ERROR SessionNotActive:':
-            print 'Hit SessionNotActive'
+            print('Hit SessionNotActive')
             cache.delete(CACHE_KEY)
             continue
 
@@ -111,11 +111,11 @@ def get_league_data(steam_ids):
         response_chunks = r.text.strip().split('\r\n\r\n')
 
         for index, response in enumerate(response_chunks):
-            print 'Getting rating data for', steam_ids[index]
+            print('Getting rating data for', steam_ids[index])
             matches = re.findall(r'Playlist=(\d{1,2})&Mu=([0-9\.]+)&Sigma=([0-9\.]+)&Tier=(\d*)&Division=(\d?)&MatchesPlayed=(\d*)&MMR=([0-9\.]*)', response)
 
             if not matches:
-                print 'no matches'
+                print('no matches')
                 continue
 
             has_tiers = False
@@ -137,7 +137,7 @@ def get_league_data(steam_ids):
                     }
 
             if not has_tiers:
-                print 'No tiers'
+                print('No tiers')
                 continue
 
             object_data = {}
@@ -182,7 +182,7 @@ def get_league_data(steam_ids):
             else:
                 object_data['standard'] = 0
 
-            print object_data
+            print(object_data)
 
             # Store this rating.
             LeagueRating.objects.create(

@@ -11,7 +11,6 @@ reprocess_matches.short_description = "Reprocess all matches"
 
 
 def recalculate_average_rating(modeladmin, request, queryset):
-    print queryset
     for obj in queryset:
         obj.average_rating = obj.calculate_average_rating()
         obj.save()

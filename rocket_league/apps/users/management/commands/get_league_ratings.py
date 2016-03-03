@@ -14,8 +14,7 @@ import sys
 @contextmanager
 def file_lock(lock_file):
     if os.path.exists(lock_file):
-        print 'Only one script can run at once. '\
-              'Script is locked with %s' % lock_file
+        print('Only one script can run at once. Script is locked with %s' % lock_file)
         sys.exit(-1)
     else:
         open(lock_file, 'w').write("1")

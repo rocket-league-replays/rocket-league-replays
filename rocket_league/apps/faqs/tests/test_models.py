@@ -32,10 +32,8 @@ class ApplicationTestCase(TestCase):
             url_title='what-colour-sky'
         )
 
-        print self.faq_page.page.get_absolute_url()
-
     def test_faq_get_absolute_url(self):
         self.assertEqual(self.faq.get_absolute_url(), '/what-colour-sky/')
 
     def test_faq_unicode(self):
-        self.assertEqual(self.faq.__unicode__(), 'What colour is the sky?')
+        self.assertEqual(self.faq.__str__(), 'What colour is the sky?')

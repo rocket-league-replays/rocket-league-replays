@@ -1,17 +1,10 @@
 import re
-import StringIO
-from zipfile import ZipFile
 
 from braces.views import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.core.files.base import ContentFile
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from django.views.generic import (CreateView, DeleteView, DetailView,
-                                  UpdateView, View)
-from django.views.generic.detail import SingleObjectMixin
+from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
 from django_filters.views import FilterView
 from rest_framework import mixins, viewsets
 
@@ -222,6 +215,7 @@ class ReplayPackDeleteView(DeleteView):
 
 # API ViewSets
 class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+
     """
     Returns a list of all processed replays in the system. To filter to replays \
     owned by the currently logged in user, simply append ?owned to the URL.
@@ -283,6 +277,7 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):
+
     """
     Returns a list of all maps in the system.
     """
@@ -292,6 +287,7 @@ class MapViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
+
     """
     Returns a list of all players in all games. These values are not unique.
     """
@@ -301,6 +297,7 @@ class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class GoalViewSet(viewsets.ReadOnlyModelViewSet):
+
     """
     Returns a list of all goals in all games.
     """

@@ -20,10 +20,10 @@ class Command(BaseCommand):
 
         for replay in replays:
             if replay.replay_id and replay.file:
-                print 'Processing', replay.pk, '-', replay.replay_id
+                print('Processing', replay.pk, '-', replay.replay_id)
 
                 try:
                     replay.processed = False
                     replay.save()
                 except Exception as e:
-                    print 'Unable to process.', e
+                    print('Unable to process.', e)

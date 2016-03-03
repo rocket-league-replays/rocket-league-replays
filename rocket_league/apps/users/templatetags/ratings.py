@@ -19,7 +19,7 @@ def league_data(context):
     try:
         assert user.profile
     except Exception as e:
-        print e.__class__.__name__
+        print(e.__class__.__name__)
 
         if e.__class__.__name__ == 'RelatedObjectDoesNotExist':
             Profile.objects.create(

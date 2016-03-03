@@ -21,7 +21,7 @@ if platform.python_implementation() == "PyPy":
 try:
     from . import secrets
 except:
-    print 'Secrets config not found, environment variables have not been set.'
+    print('Secrets config not found, environment variables have not been set.')
 
 # The name of this site.  Used for branding in the online admin area.
 

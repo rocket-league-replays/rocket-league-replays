@@ -72,12 +72,12 @@ class Command(BaseCommand):
                         process = subprocess.check_output(command)
                         data = json.loads(process)
                     except Exception as e:
-                        print 'Unable to get data for replay {}.'.format(replay.pk), e
+                        print('Unable to get data for replay {}.'.format(replay.pk), e)
                         data = []
                 except subprocess.CalledProcessError as e:
                     # The parser crashed, not a lot we can do about this.. Just move on.
                     data = []
-                    print 'CalledProcessError from replay {}'.format(replay.pk), e
+                    print('CalledProcessError from replay {}'.format(replay.pk), e)
 
                 for player in data:
                     player_objs = replay.player_set.filter(

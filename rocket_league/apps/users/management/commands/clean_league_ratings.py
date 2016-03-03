@@ -32,7 +32,7 @@ class Command(BaseCommand):
             ratings = LeagueRating.objects.filter(
                 steamid=steam_id,
             )[:10]
-            print 'Working on', steam_id
+            print('Working on', steam_id)
 
             duels = None
             doubles = None

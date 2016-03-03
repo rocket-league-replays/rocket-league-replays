@@ -22,7 +22,7 @@ class Season(models.Model):
 
     start_date = models.DateTimeField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     class Meta:
@@ -61,7 +61,7 @@ class Map(models.Model):
         null=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or self.slug
 
     class Meta:
@@ -634,7 +634,7 @@ class Player(models.Model):
         default=False,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return u'{} on Team {}'.format(
             self.player_name,
             self.team,
@@ -675,7 +675,7 @@ class Goal(models.Model):
             int(seconds),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return u'Goal {} by {}'.format(
             self.number,
             self.player,
@@ -749,7 +749,7 @@ class ReplayPack(models.Model):
             int(seconds),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):

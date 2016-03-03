@@ -1,4 +1,4 @@
-django-validate-on-save==1.1.1
+git+https://github.com/danielsamuels/django-validate-on-save.git
 awscli==1.10.6
 chardet==2.3.0
 twython==3.3.0
@@ -8,7 +8,6 @@ onespacemedia-cms==1.9.8.1
 pathlib==1.0.1
 praw==3.2.1
 -e git+https://github.com/danielsamuels/rocket-league-replay-parser.git@a23f1a0c25590c052f74f2aeb6d8b20d56d77f4b#egg=rocket_league_replay_parser-master
-wsgiref==0.1.2
 django-braces==1.8.1
 django-filter==0.10.0
 django-rest-swagger==0.3.3
