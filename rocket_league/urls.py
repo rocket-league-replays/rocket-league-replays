@@ -46,7 +46,7 @@ urlpatterns = patterns(
     url(r"^robots.txt$", TextTemplateView.as_view(template_name="robots.txt")),
 
     # There's no favicon here!
-    url(r"^favicon.ico$", generic.RedirectView.as_view(url='/static/build/img/icons/favicon.ico')),
+    url(r"^favicon.ico$", generic.RedirectView.as_view(url='/static/build/img/icons/favicon.ico', permanent=True)),
 
     url(r'^api/', include(router.urls)),
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
