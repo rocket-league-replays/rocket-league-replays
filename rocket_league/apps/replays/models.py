@@ -10,7 +10,8 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from replay_parser import ReplayParser
+from .parser import Parser
+import bitstring
 
 
 class Season(models.Model):
@@ -87,6 +88,11 @@ class Replay(models.Model):
         max_length=32,
         blank=True,
         null=True,
+    )
+
+    playlist = models.PositiveIntegerField(
+        choices=[(v, k) for k, v in settings.PLAYLISTS.items()],
+        default=-1,
     )
 
     file = models.FileField(
@@ -409,33 +415,44 @@ class Replay(models.Model):
             return
 
         if self.file:
-            # Process the file.
-            parser = ReplayParser()
+            # Ensure we're at the start of the file as `clean()` can sometimes
+            # be called multiple times (for some reason..)
+            self.file.seek(0)
 
             try:
-                replay_data = parser.parse(self.file)['header']
-
-                # Check if this replay has already been uploaded.
-                replay = Replay.objects.filter(
-                    replay_id=replay_data['Id']
-                )
-
-                if replay.count() > 0:
-                    raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
-                        replay[0].get_absolute_url()
-                    )))
-            except struct.error:
+                self.parser = Parser(self.file.read())
+            except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
+
+            # Check if this replay has already been uploaded.
+            replay = Replay.objects.filter(
+                replay_id=self.parser.replay_id,
+            )
+
+            if replay.count() > 0:
+                raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
+                    replay[0].get_absolute_url()
+                )))
+
+            self.replay_id = self.parser.replay_id
 
     def save(self, *args, **kwargs):
         super(Replay, self).save(*args, **kwargs)
 
-        # Server name
-
         if self.file and not self.processed:
-            # Process the file.
-            parser = ReplayParser()
-            data = parser.parse(self.file)['header']
+            self.file.seek(0)
+
+            parser = Parser(self.file.read(), parse_netstream=True)
+
+            print(parser.replay.header)
+            print(dir(parser))
+            print(parser)
+            print(parser.actor_metadata)
+            print(parser.goal_metadata)
+            print(parser.match_metadata)
+            # print(parser.actors)
+            return
+
 
             Goal.objects.filter(
                 replay=self,

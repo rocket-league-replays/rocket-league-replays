@@ -7,7 +7,6 @@ wheel==0.24.0
 onespacemedia-cms==1.9.8.1
 pathlib==1.0.1
 praw==3.2.1
--e git+https://github.com/danielsamuels/rocket-league-replay-parser.git@a23f1a0c25590c052f74f2aeb6d8b20d56d77f4b#egg=rocket_league_replay_parser-master
 django-braces==1.8.1
 django-filter==0.10.0
 django-rest-swagger==0.3.3
@@ -15,3 +14,4 @@ django-s3-storage==0.9.8
 django>=1.8,<1.9
 django-watson==1.1.9
 django-reversion==1.8.7
+git+https://github.com/danielsamuels/pyrope.git
