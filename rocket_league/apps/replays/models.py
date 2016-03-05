@@ -92,7 +92,7 @@ class Replay(models.Model):
 
     playlist = models.PositiveIntegerField(
         choices=[(v, k) for k, v in settings.PLAYLISTS.items()],
-        default=-1,
+        default=0,
     )
 
     file = models.FileField(
