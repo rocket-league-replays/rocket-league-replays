@@ -193,5 +193,5 @@ def get_league_data(steam_ids):
 
 def chunks(input_list, chunk_length):
     """Yield successive n-sized chunks from l."""
-    for i in xrange(0, len(input_list), chunk_length):
+    for i in range(0, len(input_list), chunk_length):
         yield input_list[i:i+chunk_length]

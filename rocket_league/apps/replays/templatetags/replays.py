@@ -36,7 +36,7 @@ def custom_scoreboard(context, steam_info):
     data_dicts = []
     season_id = get_default_season()
 
-    for size in xrange(1, 5):
+    for size in range(1, 5):
         player_data = Player.objects.filter(
             replay__team_sizes=size,
             replay__season_id=season_id,
