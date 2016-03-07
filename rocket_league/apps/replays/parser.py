@@ -16,6 +16,7 @@ class Parser(object):
     actor_metadata = {}
     goal_metadata = {}
     match_metadata = {}
+    team_metadata = {}
     actors = {}
 
     def __init__(self, file_path, parse_netstream=False):
@@ -23,6 +24,7 @@ class Parser(object):
         self.replay_id = self.replay.header['Id']
 
         pickle_filename = 'uploads/pickle_files/{}.pickle'.format(self.replay_id)
+        json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
 
         if parse_netstream:
             try:
@@ -44,6 +46,9 @@ class Parser(object):
 
         for player in self.actors.copy():
             # Get their position data.
+            if 'type' not in self.actors[player]:
+                continue
+
             if self.actors[player]['type'] == 'player':
                 self.actors[player]['position_data'] = self._get_player_position_data(player)
             elif self.actors[player]['type'] == 'ball':
@@ -61,14 +66,37 @@ class Parser(object):
 
                 del self.actors[player]
 
-        collated_data = {
-            'actors': self.actors,
-            'goal_metadata': self.goal_metadata,
-            'actor_metadata': self.actor_metadata,
-            'match_metadata': self.match_metadata,
-        }
+        # Compress the location data per (player) actor.
+        compressed_data = {}
 
-        self.json = json.dumps(collated_data, indent=2)
+        for actor in self.actors:
+            if 'type' not in self.actors[actor]:
+                continue
+
+            if self.actors[actor]['type'] == 'player':
+                compressed_data[actor] = {}
+
+                current_key = ''
+                key = ''
+
+                for frame in range(min(self.actors[actor]['position_data'], key=int), max(self.actors[actor]['position_data'], key=int)):
+                    if frame in self.actors[actor]['position_data']:
+                        data = self.actors[actor]['position_data'][frame]
+                        key = '{},{}'.format(data['x'], data['y'])
+
+                    if key == current_key:
+                        compressed_data[actor][key] += 1
+                    else:
+                        if key not in compressed_data[actor]:
+                            compressed_data[actor][key] = 1
+                        else:
+                            compressed_data[actor][key] += 1
+
+                assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
+
+        default_storage.save(json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
+
+        self.json_filename = json_filename
 
     def _get_match_metadata(self, frame):
         # Search through the frames looking for some game replication info.
@@ -89,6 +117,19 @@ class Parser(object):
             'server_name': game_info['Engine.GameReplicationInfo:ServerName'],
             'playlist': game_info['ProjectX.GRI_X:ReplicatedGamePlaylist']
         }
+
+    def _get_team_metadata(self, frame):
+        # Search through the frame looking for team info.
+        team_info = [
+            value for name, value in frame.actors.items()
+            if 'Archetypes.Teams.Team' in value['actor_type'] and value['new']
+        ]
+
+        if not team_info:
+            return
+
+        for team in team_info:
+            self.team_metadata[team['actor_id']] = team['actor_type'].replace('Archetypes.Teams.Team', '')
 
     def _extract_goal_data(self, base_index, search_index=None):
         if not search_index:
@@ -122,6 +163,9 @@ class Parser(object):
             # save us having to loop the netstream more than once.
             if not self.match_metadata:
                 self._get_match_metadata(frame)
+
+            if not self.team_metadata:
+                self._get_team_metadata(frame)
 
             # Find the player actor objects.
             players = [
@@ -158,6 +202,9 @@ class Parser(object):
                  'new': False,
                  'startpos': 102988}
                  """
+
+                if 'data' not in value:
+                    continue
 
                 if 'Engine.PlayerReplicationInfo:PlayerName' not in value['data']:
                     continue

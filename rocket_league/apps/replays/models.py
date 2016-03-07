@@ -1,17 +1,18 @@
 import re
-import struct
 import time
 from datetime import datetime
 
-import chardet
 from django.conf import settings
-from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from .parser import Parser
+from social.apps.django_app.default.fields import JSONField
+
 import bitstring
+
+from .parser import Parser
 
 
 class Season(models.Model):
@@ -93,10 +94,18 @@ class Replay(models.Model):
     playlist = models.PositiveIntegerField(
         choices=[(v, k) for k, v in settings.PLAYLISTS.items()],
         default=0,
+        blank=True,
+        null=True,
     )
 
     file = models.FileField(
         upload_to='uploads/replay_files',
+    )
+
+    location_json_file = models.FileField(
+        upload_to='uploads/replay_json_files',
+        blank=True,
+        null=True,
     )
 
     replay_id = models.CharField(
@@ -444,99 +453,119 @@ class Replay(models.Model):
 
             parser = Parser(self.file.read(), parse_netstream=True)
 
-            print(parser.replay.header)
-            print(dir(parser))
-            print(parser)
-            print(parser.actor_metadata)
-            print(parser.goal_metadata)
-            print(parser.match_metadata)
-            # print(parser.actors)
-            return
+            Goal.objects.filter(replay=self).delete()
+            Player.objects.filter(replay=self).delete()
 
+            self.location_json_file = parser.json_filename
+            self.playlist = parser.match_metadata['playlist']
+            self.server_name = parser.match_metadata['server_name']
 
-            Goal.objects.filter(
-                replay=self,
-                frame__isnull=True,
-            ).delete()
+            # Create the player objects.
+            for player in parser.actor_metadata:
+                """
+                 6: {'Engine.PlayerReplicationInfo:Ping': 5,
+                 'Engine.PlayerReplicationInfo:PlayerID': 481,
+                 'Engine.PlayerReplicationInfo:PlayerName': 'Fishcake',
+                 'Engine.PlayerReplicationInfo:Team': (True, 1),
+                 'Engine.PlayerReplicationInfo:UniqueId': (1, 76561197981862109, 0),
+                 'Engine.PlayerReplicationInfo:bReadyToPlay': True,
+                 'TAGame.PRI_TA:CameraSettings': {'dist': 400.0,
+                                                  'fov': 99.0,
+                                                  'height': 70.0,
+                                                  'pitch': -7.0,
+                                                  'stiff': 0.5,
+                                                  'swiv': 10.0},
+                 'TAGame.PRI_TA:CameraYaw': 181,
+                 'TAGame.PRI_TA:ClientLoadout': (11, [597, 0, 609, 626, 0, 0, 0]),
+                 'TAGame.PRI_TA:PartyLeader': (1, 76561198008869772, 0),
+                 'TAGame.PRI_TA:ReplicatedGameEvent': (True, 2),
+                 'TAGame.PRI_TA:TotalXP': 1174620,
+                 'TAGame.PRI_TA:bUsingSecondaryCamera': True},
+                """
 
-            Player.objects.filter(
-                replay=self,
-            ).delete()
+                data = parser.actor_metadata[player]
 
-            # If we have a stats table, pull in the data.
-            if 'PlayerStats' in data:
-                # We can show a leaderboard!
-                self.show_leaderboard = True
+                print('Creating a player', data.get('Engine.PlayerReplicationInfo:UniqueId', [
+                    data['Engine.PlayerReplicationInfo:Team'][1],
+                    data['Engine.PlayerReplicationInfo:PlayerName']
+                ]))
 
-                for player in data['PlayerStats']:
-                    """
-                    {
-                        'OnlineID': 0,
-                        'Name': 'Swabbie',
-                        'Saves': 0,
-                        'Platform': {
-                            'OnlinePlatform': 'OnlinePlatform_Unknown'
-                        },
-                        'Score': 115,
-                        'Goals': 1,
-                        'Shots': 1,
-                        'Team': 1,
-                        'bBot': True,
-                        'Assists': 0
+                obj, created = Player.objects.update_or_create(
+                    replay=self,
+                    unique_id='-'.join(str(x) for x in data.get('Engine.PlayerReplicationInfo:UniqueId', [
+                        data['Engine.PlayerReplicationInfo:Team'][1],
+                        data['Engine.PlayerReplicationInfo:PlayerName']
+                    ])),
+
+                    defaults={
+                        'player_name': data['Engine.PlayerReplicationInfo:PlayerName'],
+                        'team': parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]],
+                        'actor_id': player,
+                        'bot': 'Engine.PlayerReplicationInfo:bBot' in data,
+                        'camera_settings': data.get('TAGame.PRI_TA:CameraSettings', {}),
+                        'total_xp': data.get('TAGame.PRI_TA:TotalXP', 0),
+                        'platform': data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                        'online_id': data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     }
-                    """
-                    encoding = chardet.detect(player['Name'])
-                    if not encoding['encoding'] or encoding['encoding'] != 'ascii':
-                        encoding['encoding'] = 'latin-1'
+                )
 
-                    Player.objects.get_or_create(
+                assert created is True
+
+            # If any players had a party leader, try to link them up.
+            for player in parser.actor_metadata:
+                data = parser.actor_metadata[player]
+
+                if 'TAGame.PRI_TA:PartyLeader' in data:
+                    # Get this player object, then get the party leader object.
+                    player_obj = Player.objects.get(
                         replay=self,
-                        player_name=player['Name'].decode(encoding['encoding']),
-                        platform=player['Platform'].get('OnlinePlatform', ''),
+                        unique_id='-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId']),
+                    )
+
+                    leader_obj = Player.objects.get(
+                        replay=self,
+                        unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
+                    )
+
+                    if player_obj != leader_obj:
+                        player_obj.party_leader = leader_obj
+                        player_obj.save()
+
+            assert len(parser.actor_metadata) == Player.objects.filter(replay=self).count()
+
+            for player in parser.replay.header['PlayerStats']:
+                # Attempt to match up this player with a Player object.
+                obj = Player.objects.filter(
+                    replay=self,
+                    player_name=player['Name'],
+                    team=player['Team'],
+                    bot=player['bBot'],
+                )
+
+                if obj:
+                    obj.update(
                         saves=player['Saves'],
                         score=player['Score'],
                         goals=player['Goals'],
                         shots=player['Shots'],
-                        team=player['Team'],
                         assists=player['Assists'],
-                        bot=player['bBot'],
-                        online_id=player['OnlineID'],
                     )
+                else:
+                    print('Unable to find an object for', player)
 
-            for index, goal in enumerate(data['Goals']):
-                encoding = chardet.detect(goal['PlayerName'])
-                if not encoding['encoding'] or encoding['encoding'] != 'ascii':
-                    encoding['encoding'] = 'latin-1'
-
-                try:
-                    player, created = Player.objects.get_or_create(
-                        replay=self,
-                        player_name=goal['PlayerName'].decode(encoding['encoding']),
-                        team=goal['PlayerTeam'],
-                    )
-                except MultipleObjectsReturned:
-                    player = Player.objects.filter(
-                        replay=self,
-                        player_name=goal['PlayerName'].decode(encoding['encoding']),
-                        team=goal['PlayerTeam'],
-                    )[0]
-
-                Goal.objects.get_or_create(
+            # Create the Goal objects.
+            for index, goal in enumerate(parser.replay.header['Goals']):
+                Goal.objects.create(
                     replay=self,
-                    number=index + 1,
-                    player=player,
                     frame=goal['frame'],
+                    number=index + 1,
+                    player=Player.objects.get(
+                        replay=self,
+                        actor_id=parser.goal_metadata[goal['frame']],
+                    )
                 )
 
-            data['PlayerName'] = data['PlayerName'].decode(
-                chardet.detect(data['PlayerName'])['encoding']
-            )
-
-            player, created = Player.objects.get_or_create(
-                replay=self,
-                player_name=data['PlayerName'],
-                team=data.get('PrimaryPlayerTeam', 0),
-            )
+            data = parser.replay.header
 
             self.replay_id = data['Id']
             self.player_name = data['PlayerName']
@@ -631,7 +660,8 @@ class Player(models.Model):
         db_index=True,
     )
 
-    online_id = models.BigIntegerField(
+    online_id = models.CharField(
+        max_length=128,
         blank=True,
         null=True,
         db_index=True,
@@ -651,6 +681,36 @@ class Player(models.Model):
         default=False,
     )
 
+    # Taken from the netstream.
+    actor_id = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        null=True,
+    )
+
+    unique_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+    )
+
+    party_leader = models.ForeignKey(
+        'self',
+        blank=True,
+        null=True,
+    )
+
+    camera_settings = JSONField(
+        blank=True,
+        null=True,
+    )
+
+    total_xp = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        null=True,
+    )
+
     def __str__(self):
         return u'{} on Team {}'.format(
             self.player_name,
@@ -659,6 +719,7 @@ class Player(models.Model):
 
     class Meta:
         ordering = ('team', '-score')
+        unique_together = [('unique_id', 'replay')]
 
 
 class Goal(models.Model):
