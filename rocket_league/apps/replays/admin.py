@@ -17,6 +17,7 @@ def recalculate_average_rating(modeladmin, request, queryset):
 
 
 class PlayerInlineAdmin(admin.StackedInline):
+    raw_id_fields = ['party_leader']
     model = Player
     extra = 0
 
