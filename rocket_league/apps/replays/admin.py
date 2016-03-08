@@ -18,14 +18,28 @@ def recalculate_average_rating(modeladmin, request, queryset):
 
 class PlayerInlineAdmin(admin.StackedInline):
     raw_id_fields = ['party_leader']
+    readonly_fields = [field.name for field in Player._meta.fields]
     model = Player
     extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj):
+        return False
 
 
 class GoalInlineAdmin(admin.StackedInline):
     model = Goal
+    readonly_fields = [field.name for field in Goal._meta.fields]
     extra = 0
     raw_id_fields = ['player']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj):
+        return False
 
 
 class ReplayAdmin(admin.ModelAdmin):
