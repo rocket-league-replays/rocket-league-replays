@@ -148,9 +148,9 @@ INSTALLED_APPS = [
     "cms.apps.pages",
     "cms.apps.links",
     "cms.apps.media",
-    "cms.apps.news",
 
     "rocket_league.apps.faqs",
+    "rocket_league.apps.news",
     "rocket_league.apps.replays",
     "rocket_league.apps.site",
     "rocket_league.apps.users",
