@@ -94,7 +94,10 @@ class Parser(object):
 
                 assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
 
-        default_storage.save(json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
+        if default_storage.exists(json_filename):
+            default_storage.delete(json_filename)
+
+        json_filename = default_storage.save(json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
 
         self.json_filename = json_filename
 
