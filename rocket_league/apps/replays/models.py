@@ -485,31 +485,21 @@ class Replay(models.Model):
 
                 data = parser.actor_metadata[player]
 
-                print('Creating a player', data.get('Engine.PlayerReplicationInfo:UniqueId', [
-                    data['Engine.PlayerReplicationInfo:Team'][1],
-                    data['Engine.PlayerReplicationInfo:PlayerName']
-                ]))
-
-                obj, created = Player.objects.update_or_create(
+                Player.objects.create(
                     replay=self,
                     unique_id='-'.join(str(x) for x in data.get('Engine.PlayerReplicationInfo:UniqueId', [
                         data['Engine.PlayerReplicationInfo:Team'][1],
                         data['Engine.PlayerReplicationInfo:PlayerName']
                     ])),
-
-                    defaults={
-                        'player_name': data['Engine.PlayerReplicationInfo:PlayerName'],
-                        'team': parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]],
-                        'actor_id': player,
-                        'bot': 'Engine.PlayerReplicationInfo:bBot' in data,
-                        'camera_settings': data.get('TAGame.PRI_TA:CameraSettings', {}),
-                        'total_xp': data.get('TAGame.PRI_TA:TotalXP', 0),
-                        'platform': data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                        'online_id': data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                    }
+                    player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
+                    team=parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]],
+                    actor_id=player,
+                    bot='Engine.PlayerReplicationInfo:bBot' in data,
+                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
+                    total_xp=data.get('TAGame.PRI_TA:TotalXP', 0),
+                    platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                 )
-
-                assert created is True
 
             # If any players had a party leader, try to link them up.
             for player in parser.actor_metadata:
