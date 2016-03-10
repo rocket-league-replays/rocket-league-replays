@@ -525,25 +525,29 @@ class Replay(models.Model):
 
             assert len(parser.actor_metadata) == Player.objects.filter(replay=self).count()
 
-            for player in parser.replay.header['PlayerStats']:
-                # Attempt to match up this player with a Player object.
-                obj = Player.objects.filter(
-                    replay=self,
-                    player_name=player['Name'],
-                    team=player['Team'],
-                    bot=player['bBot'],
-                )
+            if 'PlayerStats' in parser.replay.header:
+                # We can show a leaderboard!
+                self.show_leaderboard = True
 
-                if obj:
-                    obj.update(
-                        saves=player['Saves'],
-                        score=player['Score'],
-                        goals=player['Goals'],
-                        shots=player['Shots'],
-                        assists=player['Assists'],
+                for player in parser.replay.header['PlayerStats']:
+                    # Attempt to match up this player with a Player object.
+                    obj = Player.objects.filter(
+                        replay=self,
+                        player_name=player['Name'],
+                        team=player['Team'],
+                        bot=player['bBot'],
                     )
-                else:
-                    print('Unable to find an object for', player)
+
+                    if obj:
+                        obj.update(
+                            saves=player['Saves'],
+                            score=player['Score'],
+                            goals=player['Goals'],
+                            shots=player['Shots'],
+                            assists=player['Assists'],
+                        )
+                    else:
+                        print('Unable to find an object for', player)
 
             # Create the Goal objects.
             for index, goal in enumerate(parser.replay.header['Goals']):
