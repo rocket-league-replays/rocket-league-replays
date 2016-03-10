@@ -10,6 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from social.apps.django_app.default.fields import JSONField
 
+from itertools import zip_longest
 import bitstring
 
 from .parser import Parser
@@ -250,7 +251,7 @@ class Replay(models.Model):
         return self.team_x_player_list(1)
 
     def player_pairs(self):
-        return map(None, self.team_0_player_list(), self.team_1_player_list())
+        return zip_longest(self.team_0_player_list(), self.team_1_player_list())
 
     def region(self):
         if not self.server_name:
