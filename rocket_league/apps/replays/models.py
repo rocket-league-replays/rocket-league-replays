@@ -485,6 +485,8 @@ class Replay(models.Model):
 
                 data = parser.actor_metadata[player]
 
+                assert data['Engine.PlayerReplicationInfo:Team'][1] in parser.team_metadata
+
                 Player.objects.create(
                     replay=self,
                     unique_id='-'.join(str(x) for x in data.get('Engine.PlayerReplicationInfo:UniqueId', [
