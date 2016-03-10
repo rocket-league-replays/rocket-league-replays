@@ -23,6 +23,14 @@ class Parser(object):
         self.replay = Replay(file_path)
         self.replay_id = self.replay.header['Id']
 
+        self.actor_metadata = {}
+        self.goal_metadata = {}
+        self.match_metadata = {}
+        self.team_metadata = {}
+        self.actors = {}
+
+        assert len(self.team_metadata) == 0
+
         pickle_filename = 'uploads/pickle_files/{}.pickle'.format(self.replay_id)
         json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
 
@@ -30,7 +38,6 @@ class Parser(object):
             try:
                 self.replay = pickle.loads(default_storage.open(pickle_filename).read())
             except Exception as e:
-                print(e)
                 self.replay.parse_netstream()
                 default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
 
@@ -79,7 +86,12 @@ class Parser(object):
                 current_key = ''
                 key = ''
 
-                for frame in range(min(self.actors[actor]['position_data'], key=int), max(self.actors[actor]['position_data'], key=int)):
+                keys = self.actors[actor]['position_data'].keys()
+
+                if len(keys) == 0:
+                    continue
+
+                for frame in range(min(keys), max(keys)):
                     if frame in self.actors[actor]['position_data']:
                         data = self.actors[actor]['position_data'][frame]
                         key = '{},{}'.format(data['x'], data['y'])
