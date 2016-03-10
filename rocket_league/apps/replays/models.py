@@ -302,7 +302,7 @@ class Replay(models.Model):
 
         if self.team_0_score > self.team_1_score:
             # Team 0 won, but were they ever losing?
-            deficit_values = filter(lambda x: x > 0, swing_values)
+            deficit_values = [x for x in swing_values if x < 0]
 
             if deficit_values:
                 deficit = max(swing_values)
@@ -312,7 +312,7 @@ class Replay(models.Model):
             score_min_def = self.team_0_score - deficit
         else:
             # Team 1 won, but were they ever losing?
-            deficit_values = filter(lambda x: x < 0, swing_values)
+            deficit_values = [x for x in swing_values if x < 0]
 
             if deficit_values:
                 deficit = abs(min(deficit_values))
