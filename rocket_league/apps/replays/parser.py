@@ -166,7 +166,15 @@ class Parser(object):
                 scorer = value['actor_id']
                 break
 
-        if not scorer:
+            if 'TAGame.PRI_TA:MatchAssists' in value['data']:
+                # print('we have the assister!', value['actor_id'])
+                pass
+
+        if scorer is None:
+            if search_index < base_index - 3:
+                print('Unable to find goal for frame', base_index)
+                return
+
             self._extract_goal_data(base_index, search_index - 1)
             return
 
