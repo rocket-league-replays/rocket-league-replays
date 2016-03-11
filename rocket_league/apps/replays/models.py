@@ -577,7 +577,13 @@ class Replay(models.Model):
                             assists=player['Assists'],
                         )
                     else:
-                        print('Unable to find an object for', player)
+                        # Unless this player actually did something, we don't
+                        # really care if we can't assign their stats.
+
+                        keys = ['Goals', 'Saves', 'Shots', 'Score']
+
+                        if sum(player.get(key, 0) for key in keys) > 0:
+                            print('Unable to find an object for', player)
 
             # Create the Goal objects.
             for index, goal in enumerate(parser.replay.header['Goals']):
