@@ -484,10 +484,6 @@ class Replay(models.Model):
                  'TAGame.PRI_TA:bUsingSecondaryCamera': True},
                 """
 
-                if 'Engine.PlayerReplicationInfo:bIsSpectator' in data:
-                    # This person isn't actually on a team.
-                    assert 'Engine.PlayerReplicationInfo:Team' not in data
-
                 # Geneate the unique ID string/
                 if 'Engine.PlayerReplicationInfo:UniqueId' in data:
                     unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
