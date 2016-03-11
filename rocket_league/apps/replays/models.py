@@ -486,22 +486,28 @@ class Replay(models.Model):
 
                 data = parser.actor_metadata[player]
 
-                assert data['Engine.PlayerReplicationInfo:Team'][1] in parser.team_metadata
+                if 'Engine.PlayerReplicationInfo:bIsSpectator' in data:
+                    # This person isn't actually on a team.
+                    assert 'Engine.PlayerReplicationInfo:Team' not in data
+                else:
+                    assert 'Engine.PlayerReplicationInfo:Team' in data
+                    assert data['Engine.PlayerReplicationInfo:Team'][1] in parser.team_metadata
 
                 Player.objects.create(
                     replay=self,
                     unique_id='-'.join(str(x) for x in data.get('Engine.PlayerReplicationInfo:UniqueId', [
-                        data['Engine.PlayerReplicationInfo:Team'][1],
+                        data.get('Engine.PlayerReplicationInfo:Team', [-1, -1])[1],
                         data['Engine.PlayerReplicationInfo:PlayerName']
                     ])),
                     player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
-                    team=parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]],
+                    team=parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]] if 'Engine.PlayerReplicationInfo:Team' in data else -1,
                     actor_id=player,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
                     total_xp=data.get('TAGame.PRI_TA:TotalXP', 0),
                     platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
                 )
 
             # If any players had a party leader, try to link them up.
