@@ -37,7 +37,7 @@ class Parser(object):
         if parse_netstream:
             try:
                 self.replay = pickle.loads(default_storage.open(pickle_filename).read())
-            except Exception as e:
+            except FileNotFoundError:
                 self.replay.parse_netstream()
                 default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
 
@@ -175,17 +175,24 @@ class Parser(object):
                 # print('we have the assister!', value['actor_id'])
                 pass
 
+        # Search in the closest frames, then gradually expand the search.
+
         if scorer is None:
-            if search_index < base_index - 5:
+            if search_index < base_index - 100:
                 print('Unable to find goal for frame', base_index)
                 return
 
-            if search_index == base_index and first_run:
-                self._extract_goal_data(base_index, base_index + 5)
-            else:
-                self._extract_goal_data(base_index, search_index - 1)
+            if search_index == base_index:
+                next_index = base_index - 1
+            elif search_index - base_index < 0:
+                next_index = base_index + abs(search_index - base_index)
+            elif search_index - base_index > 0:
+                next_index = base_index + (search_index - base_index + 1) * -1
+
+            self._extract_goal_data(base_index, next_index)
             return
 
+        # print('Found goal', search_index - base_index)
         self.goal_metadata[base_index] = scorer
 
     def _get_actors(self):
@@ -306,6 +313,7 @@ class Parser(object):
 
         car_actor_obj = None
 
+        # TODO: Refactor this to only loop the netstream once.
         if player['type'] == 'player':
             for index in range(player['join'], player['left']):
                 try:
