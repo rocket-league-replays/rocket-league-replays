@@ -516,6 +516,14 @@ class Replay(models.Model):
                             data['Engine.PlayerReplicationInfo:PlayerName']
                         ])
 
+                if 'TAGame.PRI_TA:TotalXP' in data:
+                    if data['TAGame.PRI_TA:TotalXP'] >= 0:
+                        total_xp = data['TAGame.PRI_TA:TotalXP']
+                    else:
+                        total_xp = 0
+                else:
+                    total_xp = 0
+
                 Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
@@ -524,7 +532,7 @@ class Replay(models.Model):
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
-                    total_xp=data.get('TAGame.PRI_TA:TotalXP', 0),
+                    total_xp=total_xp,
                     platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
