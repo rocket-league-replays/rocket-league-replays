@@ -51,6 +51,8 @@ class Parser(object):
 
         self._get_actors()
 
+        assert len(self.team_metadata) == 2
+
         for player in self.actors.copy():
             # Get their position data.
             if 'type' not in self.actors[player]:
@@ -147,7 +149,10 @@ class Parser(object):
             self.team_metadata[team['actor_id']] = team['actor_type'].replace('Archetypes.Teams.Team', '')
 
     def _extract_goal_data(self, base_index, search_index=None):
+        first_run = False
+
         if not search_index:
+            first_run = True
             search_index = base_index
 
         frame = self.replay.netstream[search_index]
@@ -171,11 +176,14 @@ class Parser(object):
                 pass
 
         if scorer is None:
-            if search_index < base_index - 3:
+            if search_index < base_index - 5:
                 print('Unable to find goal for frame', base_index)
                 return
 
-            self._extract_goal_data(base_index, search_index - 1)
+            if search_index == base_index and first_run:
+                self._extract_goal_data(base_index, base_index + 5)
+            else:
+                self._extract_goal_data(base_index, search_index - 1)
             return
 
         self.goal_metadata[base_index] = scorer
@@ -255,6 +263,12 @@ class Parser(object):
 
                     if actor_id not in self.actor_metadata:
                         self.actor_metadata[actor_id] = value['data']
+
+                # See if our current data value has any new fields.
+                if actor_id in self.actor_metadata:
+                    for key, value in value['data'].items():
+                        if key not in self.actor_metadata[actor_id]:
+                            self.actor_metadata[actor_id][key] = value
 
             # Get the ball data (if any).
             ball = [
