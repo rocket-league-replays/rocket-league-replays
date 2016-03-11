@@ -250,8 +250,15 @@ class Parser(object):
                     team_id = value['data']['Engine.PlayerReplicationInfo:Team'][1]
 
                 if actor_id in self.actors:
-                    if (not self.actors[actor_id]['team'] and team_id) or team_id == -1:
-                        self.actors[actor_id]['team'] = team_id
+                    if team_id is not None:
+                        if self.actors[actor_id]['team'] != team_id:
+                            if actor_id in self.actor_metadata:
+                                self.actor_metadata[actor_id]['Engine.PlayerReplicationInfo:Team'] = value['data']['Engine.PlayerReplicationInfo:Team']
+
+                            self.actors[actor_id]['team'] = team_id
+
+                        if not self.actors[actor_id]['team'] or team_id == -1:
+                            self.actors[actor_id]['team'] = team_id
 
                 elif 'TAGame.PRI_TA:ClientLoadout' in value['data']:
                     player_name = value['data']['Engine.PlayerReplicationInfo:PlayerName']

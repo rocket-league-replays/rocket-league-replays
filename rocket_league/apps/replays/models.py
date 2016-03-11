@@ -524,11 +524,17 @@ class Replay(models.Model):
                 else:
                     total_xp = 0
 
+                # Try to work out the player's team.
+                if 'Engine.PlayerReplicationInfo:Team' in data:
+                    team = parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]]
+                else:
+                    team = -1
+
                 Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
                     player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
-                    team=parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]] if 'Engine.PlayerReplicationInfo:Team' in data else -1,
+                    team=team,
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
