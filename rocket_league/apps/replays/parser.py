@@ -195,7 +195,7 @@ class Parser(object):
             if not self.match_metadata:
                 self._get_match_metadata(frame)
 
-            if not self.team_metadata:
+            if len(self.team_metadata) < 2:
                 self._get_team_metadata(frame)
 
             # Find the player actor objects.
