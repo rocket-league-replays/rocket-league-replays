@@ -605,16 +605,17 @@ class Replay(models.Model):
                             print('Unable to find an object for', player)
 
             # Create the Goal objects.
-            for index, goal in enumerate(parser.replay.header['Goals']):
-                Goal.objects.create(
-                    replay=self,
-                    frame=goal['frame'],
-                    number=index + 1,
-                    player=Player.objects.get(
+            if 'Goals' in parser.replay.header:
+                for index, goal in enumerate(parser.replay.header['Goals']):
+                    Goal.objects.create(
                         replay=self,
-                        actor_id=parser.goal_metadata[goal['frame']],
+                        frame=goal['frame'],
+                        number=index + 1,
+                        player=Player.objects.get(
+                            replay=self,
+                            actor_id=parser.goal_metadata[goal['frame']],
+                        )
                     )
-                )
 
             data = parser.replay.header
 
