@@ -268,7 +268,9 @@ class Parser(object):
                         self.actor_metadata[actor_id] = value['data']
 
                 # See if our current data value has any new fields.
-                if actor_id in self.actor_metadata:
+                if actor_id not in self.actor_metadata:
+                    self.actor_metadata[actor_id] = value['data']
+                else:
                     for key, value in value['data'].items():
                         if key not in self.actor_metadata[actor_id]:
                             self.actor_metadata[actor_id][key] = value
