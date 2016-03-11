@@ -489,6 +489,23 @@ class Replay(models.Model):
                 if 'Engine.PlayerReplicationInfo:bIsSpectator' in data:
                     # This person isn't actually on a team.
                     assert 'Engine.PlayerReplicationInfo:Team' not in data
+
+                # Geneate the unique ID string/
+                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                    unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
+
+                    # If a console player is playing split-screen, there can
+                    # sometimes be two actors with the same 'unique id', so this
+                    # handles that situation.
+
+                    while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
+                        data['Engine.PlayerReplicationInfo:UniqueId'] = (
+                            data['Engine.PlayerReplicationInfo:UniqueId'][0],
+                            data['Engine.PlayerReplicationInfo:UniqueId'][1],
+                            data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
+                        )
+
+                        unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
                 else:
                     assert 'Engine.PlayerReplicationInfo:Team' in data
                     assert data['Engine.PlayerReplicationInfo:Team'][1] in parser.team_metadata
