@@ -240,6 +240,9 @@ class Parser(object):
                 if 'Engine.PlayerReplicationInfo:PlayerName' not in value['data']:
                     continue
 
+                if 'Engine.PlayerReplicationInfo:bWaitingPlayer' in value['data']:
+                    continue
+
                 team_id = None
                 actor_id = value['actor_id']
 
