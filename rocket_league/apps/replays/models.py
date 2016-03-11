@@ -541,10 +541,13 @@ class Replay(models.Model):
                         unique_id='-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId']),
                     )
 
-                    leader_obj = Player.objects.get(
-                        replay=self,
-                        unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
-                    )
+                    try:
+                        leader_obj = Player.objects.get(
+                            replay=self,
+                            unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
+                        )
+                    except Player.DoesNotExist:
+                        leader_obj = None
 
                     if player_obj != leader_obj:
                         player_obj.party_leader = leader_obj
