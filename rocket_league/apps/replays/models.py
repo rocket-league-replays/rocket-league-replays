@@ -462,7 +462,7 @@ class Replay(models.Model):
             self.server_name = parser.match_metadata['server_name']
 
             # Create the player objects.
-            for player in parser.actor_metadata:
+            for actor_id, data in parser.actor_metadata.items():
                 """
                  6: {'Engine.PlayerReplicationInfo:Ping': 5,
                  'Engine.PlayerReplicationInfo:PlayerID': 481,
@@ -483,8 +483,6 @@ class Replay(models.Model):
                  'TAGame.PRI_TA:TotalXP': 1174620,
                  'TAGame.PRI_TA:bUsingSecondaryCamera': True},
                 """
-
-                data = parser.actor_metadata[player]
 
                 if 'Engine.PlayerReplicationInfo:bIsSpectator' in data:
                     # This person isn't actually on a team.
@@ -507,18 +505,23 @@ class Replay(models.Model):
 
                         unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
                 else:
-                    assert 'Engine.PlayerReplicationInfo:Team' in data
-                    assert data['Engine.PlayerReplicationInfo:Team'][1] in parser.team_metadata
+                    if 'Engine.PlayerReplicationInfo:Team' in data:
+                        unique_id = '-'.join([
+                            str(data['Engine.PlayerReplicationInfo:Team'][1]),
+                            data['Engine.PlayerReplicationInfo:PlayerName']
+                        ])
+                    else:
+                        unique_id = '-'.join([
+                            '-1',
+                            data['Engine.PlayerReplicationInfo:PlayerName']
+                        ])
 
                 Player.objects.create(
                     replay=self,
-                    unique_id='-'.join(str(x) for x in data.get('Engine.PlayerReplicationInfo:UniqueId', [
-                        data.get('Engine.PlayerReplicationInfo:Team', [-1, -1])[1],
-                        data['Engine.PlayerReplicationInfo:PlayerName']
-                    ])),
+                    unique_id=unique_id,
                     player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
                     team=parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]] if 'Engine.PlayerReplicationInfo:Team' in data else -1,
-                    actor_id=player,
+                    actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
                     total_xp=data.get('TAGame.PRI_TA:TotalXP', 0),
