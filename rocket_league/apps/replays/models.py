@@ -484,6 +484,11 @@ class Replay(models.Model):
                  'TAGame.PRI_TA:bUsingSecondaryCamera': True},
                 """
 
+                # Sometimes actor objects can come across with just a player
+                # name. We can't really do much with those, so ignore them.
+                if len(data) == 1:
+                    continue
+
                 # Geneate the unique ID string/
                 if 'Engine.PlayerReplicationInfo:UniqueId' in data:
                     unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
@@ -563,7 +568,11 @@ class Replay(models.Model):
                         player_obj.party_leader = leader_obj
                         player_obj.save()
 
-            assert len(parser.actor_metadata) == Player.objects.filter(replay=self).count()
+            assert len([
+                1
+                for _, data in parser.actor_metadata.items()
+                if len(data) > 1
+            ]) == Player.objects.filter(replay=self).count()
 
             if 'PlayerStats' in parser.replay.header:
                 # We can show a leaderboard!
