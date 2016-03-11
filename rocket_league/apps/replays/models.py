@@ -668,6 +668,10 @@ class Player(models.Model):
         default=False,
     )
 
+    spectator = models.BooleanField(
+        default=False,
+    )
+
     heatmap = models.FileField(
         upload_to='uploads/heatmap_files',
         blank=True,
