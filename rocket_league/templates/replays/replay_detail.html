@@ -311,33 +311,6 @@
             <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
         </div>
     </div>
-
-    <script>
-    "use strict"
-
-    // Load up the JSON file.
-    const request = new XMLHttpRequest();
-    request.open('GET', '{{ replay.location_json_file.url }}', true);
-
-    request.onload = function() {
-        if (this.status >= 200 && this.status < 400) {
-            // Success!
-            const data = JSON.parse(this.response);
-            render_heatmap(data);
-        } else {
-        // We reached our target server, but it returned an error
-            console.error(this.status)
-        }
-    };
-
-    request.onerror = function(e) {
-      // There was a connection error of some sort
-      console.error("Error Status: " + e.target.status);
-    };
-
-
-    request.send();
-    </script>
 {% endblock %}
 
 {% block additional_css %}
@@ -787,4 +760,34 @@ function render_heatmap(data) {
     }
 </script>
 {% endif %}
+{% endblock %}
+
+
+{% block uncompressed_js %}
+<script>
+"use strict"
+
+// Load up the JSON file.
+const request = new XMLHttpRequest();
+request.open('GET', '{{ replay.location_json_file.url }}', true);
+
+request.onload = function() {
+    if (this.status >= 200 && this.status < 400) {
+        // Success!
+        const data = JSON.parse(this.response);
+        render_heatmap(data);
+    } else {
+    // We reached our target server, but it returned an error
+        console.error(this.status)
+    }
+};
+
+request.onerror = function(e) {
+  // There was a connection error of some sort
+  console.error("Error Status: " + e.target.status);
+};
+
+
+request.send();
+</script>
 {% endblock %}
