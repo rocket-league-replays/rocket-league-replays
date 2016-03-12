@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache replays %}
+{% load cache replays static %}
 
 {% block content_primary %}
     {% if replay.title %}
@@ -355,7 +355,7 @@
         bottom: 0;
         left: 0;
 
-        background-image: url(/static/img/arena_overlay2.png);
+        background-image: url({% static 'img/arena_overlay2.png' %});
         background-size: 100%;
         background-repeat: no-repeat;
 
@@ -390,7 +390,7 @@
         font-size: 24px;
 
         background-color: rgba(0, 0, 0, 0.6);
-        background-image: url(/static/img/arena_quadrants4.png);
+        background-image: url({% static 'img/arena_quadrants4.png' %});
         background-size: 200%;
         background-repeat: no-repeat;
 
@@ -410,7 +410,7 @@
 
         font-size: 16px;
 
-        background-image: url(/static/img/arena_quadrants5.png);
+        background-image: url({% static 'img/arena_quadrants5.png' %});
         pointer-events: all;
     }
 
@@ -429,7 +429,7 @@
         background-color: rgba(0, 0, 0, 0.6);
         pointer-events: none;
 
-        background-image: url(/static/img/arena_quadrants5.png);
+        background-image: url({% static 'img/arena_quadrants5.png' %});
         background-size: 300%;
         background-repeat: no-repeat;
     }
