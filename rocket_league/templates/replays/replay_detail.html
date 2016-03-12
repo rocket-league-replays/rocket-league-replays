@@ -741,10 +741,10 @@ function render_heatmap(data) {
                  return sum + parseInt(quadrantData[key], 10);
              }, 0);
 
-            quadrants.querySelector('.top-left').innerHTML = `${(quadrantData.topLeft / quadrantSum * 100).toFixed(2)}%`
-            quadrants.querySelector('.top-right').innerHTML = `${(quadrantData.topRight / quadrantSum * 100).toFixed(2)}%`
-            quadrants.querySelector('.bottom-left').innerHTML = `${(quadrantData.bottomLeft / quadrantSum * 100).toFixed(2)}%`
-            quadrants.querySelector('.bottom-right').innerHTML = `${(quadrantData.bottomRight / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.top-left').innerHTML = `${(quadrantData.topLeft / quadrantSum * 100).toFixed(2)}%`;
+            quadrants.querySelector('.top-right').innerHTML = `${(quadrantData.topRight / quadrantSum * 100).toFixed(2)}%`;
+            quadrants.querySelector('.bottom-left').innerHTML = `${(quadrantData.bottomLeft / quadrantSum * 100).toFixed(2)}%`;
+            quadrants.querySelector('.bottom-right').innerHTML = `${(quadrantData.bottomRight / quadrantSum * 100).toFixed(2)}%`;
 
             const thirds = document.querySelector(`.thirds[data-actor-id="${selected_actor}"]`)
 
@@ -753,9 +753,9 @@ function render_heatmap(data) {
                  return sum + parseInt(thirdData[key], 10);
              }, 0);
 
-            thirds.querySelector('.left').innerHTML = `${(thirdData.left / thirdSum * 100).toFixed(2)}%`
-            thirds.querySelector('.middle').innerHTML = `${(thirdData.middle / thirdSum * 100).toFixed(2)}%`
-            thirds.querySelector('.right').innerHTML = `${(thirdData.right / thirdSum * 100).toFixed(2)}%`
+            thirds.querySelector('.left').innerHTML = `${(thirdData.left / thirdSum * 100).toFixed(2)}%`;
+            thirds.querySelector('.middle').innerHTML = `${(thirdData.middle / thirdSum * 100).toFixed(2)}%`;
+            thirds.querySelector('.right').innerHTML = `${(thirdData.right / thirdSum * 100).toFixed(2)}%`;
         }
     }
 </script>
