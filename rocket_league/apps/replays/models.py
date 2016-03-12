@@ -458,8 +458,6 @@ class Replay(models.Model):
         if self.file and not self.processed:
             self.file.seek(0)
 
-            print('parse_netstream?', parse_netstream)
-
             parser = Parser(self.file.read(), parse_netstream=parse_netstream)
 
             Goal.objects.filter(replay=self).delete()
