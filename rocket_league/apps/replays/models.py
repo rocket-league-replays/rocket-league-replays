@@ -599,7 +599,14 @@ class Replay(models.Model):
                         bot=player['bBot'],
                     )
 
-                    if obj:
+                    if not obj:
+                        # Try with just the player name.
+                        obj = Player.objects.filter(
+                            replay=self,
+                            player_name=player['Name'],
+                        )
+
+                    if obj and obj.count() == 1:
                         obj.update(
                             saves=player['Saves'],
                             score=player['Score'],
@@ -614,6 +621,8 @@ class Replay(models.Model):
                         keys = ['Goals', 'Saves', 'Shots', 'Score']
 
                         if sum(player.get(key, 0) for key in keys) > 0:
+                            from pprint import pprint
+                            pprint(parser.actor_metadata)
                             print('Unable to find an object for', player)
 
             # Create the Goal objects.
