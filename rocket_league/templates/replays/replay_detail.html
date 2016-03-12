@@ -90,6 +90,7 @@
     </div>
 </div>
 
+{% if not replay.location_json_file %}
 <div class="flex-row">
     {% team_players 0 as players %}
     <div class="flex-6">
@@ -119,6 +120,65 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+{# JSON powered heatmaps #}
+{% if replay.location_json_file %}
+<div class="flex-row">
+    {% team_players 0 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            <div class="flex-6">
+              <h5>{{ player.player_name }}</h5>
+              <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                  <p>Loading heatmap..</p>
+
+                  <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                        <div class="quadrant-value top-left"></div>
+                        <div class="quadrant-value top-right"></div>
+                        <div class="quadrant-value bottom-left"></div>
+                        <div class="quadrant-value bottom-right"></div>
+                  </div>
+              </div>
+
+
+              <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+
+    {% team_players 1 as players %}
+    <div class="flex-6">
+        <div class="flex-row">
+        {% for player in players.players %}
+            <div class="flex-6">
+                <h5>{{ player.player_name }}</h5>
+                <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                    <p>Loading heatmap..</p>
+
+                    <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                        <div class="quadrant-value top-left"></div>
+                        <div class="quadrant-value top-right"></div>
+                        <div class="quadrant-value bottom-left"></div>
+                        <div class="quadrant-value bottom-right"></div>
+                    </div>
+                </div>
+
+
+              <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+            </div>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+
+    </div>
+    <div class="medium-4 columns">
+    </div>
+</div>
+{% endif %}
 
 <div class="row">
     <div class="medium-6 columns">
@@ -245,4 +305,321 @@
     <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
   </div>
 </div>
+
+
+<style>
+.heatmap {
+    position: relative;
+
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.heatmap p {
+    position: absolute;
+
+    top: 50%;
+    right: 0;
+    left: 0;
+
+    margin: 0 auto;
+    text-align: center;
+
+    transform: translateY(-50%);
+}
+
+.heatmap canvas {
+  z-index: 1;
+}
+
+.quadrants, .heatmap::before {
+    content: '';
+
+    display: block;
+    padding-bottom: calc(100% / (1003 / 709));
+}
+
+.heatmap::after {
+    content: '';
+
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    background-image: url(/static/img/arena_overlay2.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+
+    z-index: 2;
+}
+
+.heatmap:hover .quadrants {
+    opacity: 1;
+}
+
+.quadrants {
+    width: 100%;
+    opacity: 0;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3;
+    background: rgba(0, 0, 0, 0.4);
+
+    transition: opacity 0.25s ease-in-out;
+}
+
+.quadrants::after {
+    content: '';
+
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    background-image: url(/static/img/arena_quadrants2.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+
+    z-index: 2;
+}
+
+.quadrant-value {
+    position: absolute;
+    text-align: center;
+
+    color: #fff;
+    text-shadow: #000 1px 1px 2px;
+    font-size: 24px;
+}
+
+.quadrant-value.top-left {
+    top: 25%;
+    right: 50%;
+    left: 17px;
+
+    transform: translateY(-25%);
+}
+
+.quadrant-value.top-right {
+    top: 25%;
+    right: 17px;
+    left: 50%;
+
+    transform: translateY(-25%);
+}
+
+.quadrant-value.bottom-left {
+    bottom: 25%;
+    left: 17px;
+    right: 50%;
+
+    transform: translateY(25%);
+}
+
+.quadrant-value.bottom-right {
+    bottom: 25%;
+    right: 17px;
+    left: 50%;
+
+    transform: translateY(25%);
+}
+
+</style>
 {% endblock content_primary %}
+
+{% block additional_js %}
+  {% if replay.location_json_file %}
+    <script src="https://rawgit.com/pa7/heatmap.js/master/build/heatmap.js"></script>
+    <script>
+    "use strict"
+
+    var data;
+
+    // Load up the JSON file.
+    var request = new XMLHttpRequest();
+    request.open('GET', '{{ replay.location_json_file.url }}', true);
+
+    request.onload = function() {
+      if (this.status >= 200 && this.status < 400) {
+        // Success!
+        data = JSON.parse(this.response);
+        render_heatmap();
+      }
+    };
+    request.send();
+
+    function render_heatmap() {
+        const elements = document.querySelectorAll('.heatmap')
+        for (var index in elements) {
+            if ( ! elements.hasOwnProperty(index)) {
+                return
+            }
+
+            const el = elements[index]
+
+            let radius = 20
+            let blur
+
+            if (el.offsetWidth > 300) {
+                radius = 30
+                blur = 0.45
+            }
+
+            var heatmap = h337.create({
+                container: el,
+                radius: radius,
+                blur: 0.45,
+                minOpacity: 0.1,
+                maxOpacity: 1,
+                backgroundColor: '#fff'
+            });
+
+            // el.parentNode.querySelector('.heatmap-download').classList.add('hide')
+            const selected_actor = el.getAttribute('data-actor-id')
+
+            // Rework the data to work with the heatmap library.
+            let formatted_data = []
+            let min_value = null
+            let max_value = null
+
+            let max_x = null
+            let max_y = null
+            let min_x = null
+            let min_y = null
+
+            Object.keys(data[selected_actor]).forEach(function(item) {
+                const value = data[selected_actor][item]
+                let x = parseInt(item.split(',')[0], 10)
+                let y = parseInt(item.split(',')[1], 10)
+
+                // Rotate the points -90deg
+                const rotation = (Math.PI / 2) * -1
+                const rotatedX = Math.cos(rotation) * x - Math.sin(rotation) * y
+                const rotatedY = Math.sin(rotation) * x + Math.cos(rotation) * y
+
+                x = rotatedX
+                y = rotatedY
+
+                formatted_data.push({
+                    x: x,
+                    y: y,
+                    value: value
+                })
+
+                if (min_value === null || value < min_value) {
+                    min_value = value
+                }
+
+                if (max_value === null || value > max_value) {
+                    max_value = value
+                }
+
+                if (min_x === null || x < min_x) {
+                    min_x = x
+                }
+
+                if (min_y === null || y < min_y) {
+                    min_y = y
+                }
+
+                if (max_x === null || x > max_x) {
+                    max_x = x
+                }
+
+                if (max_y === null || y > max_y) {
+                    max_y = y
+                }
+            })
+
+            // Re-work all of the values to be positive. 🌝
+            min_x = Math.abs(min_x)
+            min_y = Math.abs(min_y)
+            max_x += min_x
+            max_y += min_y
+
+            let reformatted_data = []
+
+            const canvas_width = el.offsetWidth
+            const canvas_height = el.offsetHeight
+
+            const stats = {}
+            const quadrantData = {
+                'topLeft': 0,
+                'topRight': 0,
+                'bottomLeft': 0,
+                'bottomRight': 0,
+            }
+
+            formatted_data.forEach(function(item) {
+                // Rework the x values to be between 0 and `canvas width`.
+                let offsetX = item.x + min_x
+                offsetX /= max_x / canvas_width
+
+                // Rework the y values to be between 0 and `canvas height`.
+                let offsetY = item.y + min_y
+                offsetY /= max_y / canvas_height
+
+                // Which quadrant is this data point in?
+                let quadrant = ''
+
+                if (offsetX <= canvas_width / 2) {
+                    if (offsetY <= canvas_height / 2) {
+                        quadrant = 'topLeft'
+                    } else {
+                        quadrant = 'bottomLeft'
+                    }
+                } else {
+                    if (offsetY <= canvas_height / 2) {
+                        quadrant = 'topRight'
+                    } else {
+                        quadrant = 'bottomRight'
+                    }
+                }
+
+                quadrantData[quadrant] += item.value
+
+                // Determine the value distribution.
+                if (stats[item.value] === undefined) {
+                  stats[item.value] = 1
+                } else {
+                  stats[item.value] += 1
+                }
+
+                // Push the data into the final array.
+                reformatted_data.push({
+                    x: offsetX,
+                    y: offsetY,
+                    value: item.value
+                })
+            })
+
+            console.table([stats])
+            console.table([quadrantData])
+
+            heatmap.setData({
+                min: Object.keys(stats).shift(),
+                max: Object.keys(stats).pop(),
+                data: reformatted_data,
+            })
+
+            const quadrants = document.querySelector(`.quadrants[data-actor-id="${selected_actor}"]`)
+
+            // Sum all of the quadrant data.
+            const quadrantSum = Object.keys(quadrantData).reduce(function(sum, key) {
+                 return sum + parseInt(quadrantData[key], 10);
+            }, 0);
+
+            quadrants.querySelector('.top-left').innerHTML = `${(quadrantData.topLeft / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.top-right').innerHTML = `${(quadrantData.topRight / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.bottom-left').innerHTML = `${(quadrantData.bottomLeft / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.bottom-right').innerHTML = `${(quadrantData.bottomRight / quadrantSum * 100).toFixed(2)}%`
+        }
+    }
+    </script>
+  {% endif %}
+{% endblock %}
