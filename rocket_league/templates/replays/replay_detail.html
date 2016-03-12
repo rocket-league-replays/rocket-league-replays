@@ -128,32 +128,60 @@
         {% team_players 0 as players %}
         <div class="flex-6">
             <div class="flex-row">
-            {% for player in players.players %}
+                {% for player in players.players %}
                 <div class="flex-6">
-                  <h5>{{ player.player_name }}</h5>
-                  <div class="heatmap" data-actor-id="{{ player.actor_id }}">
-                      <p>Loading heatmap..</p>
+                      <h5>{{ player.player_name }}</h5>
+                      <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                          <p>Loading heatmap..</p>
 
-                      <div class="thirds" data-actor-id="{{ player.actor_id }}">
-                        <div class="third-value left">33.33%</div>
-                        <div class="third-value middle">43.33%</div>
-                        <div class="third-value right">23.33%</div>
+                          <div class="thirds" data-actor-id="{{ player.actor_id }}">
+                            <div class="third-value left"></div>
+                            <div class="third-value middle"></div>
+                            <div class="third-value right"></div>
+                        </div>
+
+                        <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                            <div class="quadrant-value top-left"></div>
+                            <div class="quadrant-value top-right"></div>
+                            <div class="quadrant-value bottom-left"></div>
+                            <div class="quadrant-value bottom-right"></div>
+                        </div>
                     </div>
 
-                    <div class="quadrants" data-actor-id="{{ player.actor_id }}">
-                        <div class="quadrant-value top-left"></div>
-                        <div class="quadrant-value top-right"></div>
-                        <div class="quadrant-value bottom-left"></div>
-                        <div class="quadrant-value bottom-right"></div>
-                    </div>
+                    <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
                 </div>
-
-
-                <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+                {% endfor %}
             </div>
-        {% endfor %}
         </div>
-    </div>
+
+        {% team_players 1 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+                {% for player in players.players %}
+                <div class="flex-6">
+                      <h5>{{ player.player_name }}</h5>
+                      <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                          <p>Loading heatmap..</p>
+
+                          <div class="thirds" data-actor-id="{{ player.actor_id }}">
+                            <div class="third-value left"></div>
+                            <div class="third-value middle"></div>
+                            <div class="third-value right"></div>
+                        </div>
+
+                        <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                            <div class="quadrant-value top-left"></div>
+                            <div class="quadrant-value top-right"></div>
+                            <div class="quadrant-value bottom-left"></div>
+                            <div class="quadrant-value bottom-right"></div>
+                        </div>
+                    </div>
+
+                    <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
     {% endif %}
 
