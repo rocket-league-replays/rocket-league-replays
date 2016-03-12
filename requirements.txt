@@ -18,5 +18,6 @@ django-historylinks
 django-watson==1.1.9
 django-extensions
 django-cachalot
+opbeat
 python-social-auth
 Werkzeug
