@@ -44,12 +44,12 @@ class Parser(object):
         if not parse_netstream:
             return
 
+        self._get_actors()
+
         # Extract the goal information.
         if 'Goals' in self.replay.header:
             for goal in self.replay.header['Goals']:
                 self._extract_goal_data(goal['frame'])
-
-        self._get_actors()
 
         assert len(self.team_metadata) == 2
 
@@ -151,9 +151,30 @@ class Parser(object):
     def _extract_goal_data(self, base_index, search_index=None):
         first_run = False
 
+        # If the player name is unique within the actor set, then don't bother
+        # searching through frames for the data.
+        for goal in self.replay.header['Goals']:
+            if goal['frame'] == base_index:
+                player = [
+                    actor_id
+                    for actor_id, data in self.actors.items()
+                    if data['type'] == 'player' and data['name'] == goal['PlayerName']
+                ]
+
+                if len(player) == 1:
+                    self.goal_metadata[base_index] = player[0]
+                    return
+
+                # We found the goal we wanted, we just couldn't find the player,
+                # but break out early as a minor optimisation.
+                break
+
         if not search_index:
             first_run = True
             search_index = base_index
+
+            if base_index not in self.replay.netstream:
+                search_index = base_index - 1
 
         frame = self.replay.netstream[search_index]
 
@@ -188,6 +209,9 @@ class Parser(object):
                 next_index = base_index + abs(search_index - base_index)
             elif search_index - base_index > 0:
                 next_index = base_index + (search_index - base_index + 1) * -1
+
+            if next_index not in self.replay.netstream:
+                next_index = search_index - 1
 
             self._extract_goal_data(base_index, next_index)
             return
