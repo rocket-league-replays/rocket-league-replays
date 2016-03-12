@@ -9,6 +9,7 @@ django-filter==0.10.0
 django-rest-swagger==0.3.3
 django-s3-storage==0.9.8
 django>=1.8,<1.9
+git+https://github.com/onespacemedia/server-management@feature/python-3
 git+https://github.com/danielsamuels/pyrope.git
 django-suit==0.2.18
 django-compressor==2.0
