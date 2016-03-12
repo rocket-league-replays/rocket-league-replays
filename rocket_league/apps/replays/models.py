@@ -842,7 +842,7 @@ class Player(models.Model):
         )
 
     class Meta:
-        ordering = ('team', '-score')
+        ordering = ('team', '-score', 'player_name')
         unique_together = [('unique_id', 'replay')]
 
 
