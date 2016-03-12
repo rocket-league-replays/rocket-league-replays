@@ -1,9 +1,9 @@
 import os
-import StringIO
 import sys
 from contextlib import contextmanager
 from zipfile import ZipFile
 
+import io
 import requests
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 print('Processing', obj.pk)
                 zip_filename = '{}.zip'.format(str(obj))
 
-                zip_string = StringIO.StringIO()
+                zip_string = io.StringIO()
 
                 with ZipFile(zip_string, 'w') as f:
                     for replay in obj.replays.all():

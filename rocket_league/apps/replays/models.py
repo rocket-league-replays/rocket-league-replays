@@ -12,7 +12,6 @@ from social.apps.django_app.default.fields import JSONField
 
 from itertools import zip_longest
 import bitstring
-from pprint import pprint
 
 from .parser import Parser
 
@@ -228,7 +227,7 @@ class Replay(models.Model):
 
     def team_x_player_list(self, team):
         return [
-            u"{}{}".format(
+            "{}{}".format(
                 player.player_name,
                 " ({})".format(player.goal_set.count()) if player.goal_set.count() > 0 else '',
             ) for player in self.player_set.filter(
@@ -842,7 +841,7 @@ class Player(models.Model):
     )
 
     def __str__(self):
-        return u'{} on Team {}'.format(
+        return '{} on Team {}'.format(
             self.player_name,
             self.team,
         )
@@ -884,7 +883,7 @@ class Goal(models.Model):
         )
 
     def __str__(self):
-        return u'Goal {} by {}'.format(
+        return 'Goal {} by {}'.format(
             self.number,
             self.player,
         )
