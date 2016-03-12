@@ -448,17 +448,25 @@ class Replay(models.Model):
             self.replay_id = self.parser.replay_id
 
     def save(self, *args, **kwargs):
+        parse_netstream = False
+
+        if 'parse_netstream' in kwargs:
+            parse_netstream = kwargs.pop('parse_netstream')
+
         super(Replay, self).save(*args, **kwargs)
 
         if self.file and not self.processed:
             self.file.seek(0)
 
-            parser = Parser(self.file.read(), parse_netstream=True)
+            print('parse_netstream?', parse_netstream)
+
+            parser = Parser(self.file.read(), parse_netstream=parse_netstream)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
 
-            self.location_json_file = parser.json_filename
+            if parse_netstream:
+                self.location_json_file = parser.json_filename
 
             if 'playlist' in parser.match_metadata:
                 self.playlist = parser.match_metadata['playlist']

@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
                 try:
                     replay.processed = False
-                    replay.save()
+                    replay.save(parse_netstream=True)
                 except Exception:
                     print('Unable to process.')
                     traceback.print_exc()

@@ -18,6 +18,7 @@ def recalculate_average_rating(modeladmin, request, queryset):
 
 class PlayerInlineAdmin(admin.StackedInline):
     raw_id_fields = ['party_leader']
+
     readonly_fields = [field.name for field in Player._meta.fields]
     model = Player
     extra = 0
@@ -29,8 +30,9 @@ class PlayerInlineAdmin(admin.StackedInline):
         return False
 
 
-class GoalInlineAdmin(admin.StackedInline):
+class GoalInlineAdmin(admin.TabularInline):
     model = Goal
+    fields = ['number', 'player', 'frame']
     readonly_fields = [field.name for field in Goal._meta.fields]
     extra = 0
     raw_id_fields = ['player']
