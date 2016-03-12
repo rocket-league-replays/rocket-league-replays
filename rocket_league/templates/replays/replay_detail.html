@@ -560,7 +560,7 @@
 
 {% block additional_js %}
 {% if replay.location_json_file %}
-<script src="https://rawgit.com/pa7/heatmap.js/master/build/heatmap.js"></script>
+<script src="{% static 'js/vendor/heatmap.js' %}"></script>
 <script>
     "use strict"
 
