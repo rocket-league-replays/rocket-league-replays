@@ -12,6 +12,7 @@ from social.apps.django_app.default.fields import JSONField
 
 from itertools import zip_longest
 import bitstring
+from pprint import pprint
 
 from .parser import Parser
 
@@ -465,6 +466,39 @@ class Replay(models.Model):
             if 'server_name' in parser.match_metadata:
                 self.server_name = parser.match_metadata['server_name']
 
+            if len(parser.actor_metadata) == 0:
+                # Parse the players the 'old' way.
+                if 'PlayerStats' in parser.replay.header:
+                    for player in parser.replay.header['PlayerStats']:
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=player['Name'],
+                            platform=player['Platform'].get('OnlinePlatform', ''),
+                            saves=player['Saves'],
+                            score=player['Score'],
+                            goals=player['Goals'],
+                            shots=player['Shots'],
+                            team=player['Team'],
+                            assists=player['Assists'],
+                            bot=player['bBot'],
+                            online_id=player['OnlineID'],
+                        )
+                else:
+                    # The best we can do is to get the goal scorers and the player.
+                    for goal in parser.replay.header.get('Goals', []):
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=goal['PlayerName'],
+                            team=goal['PlayerTeam'],
+                        )
+
+                    if 'PlayerName' in parser.replay.header and 'PrimaryPlayerTeam' in parser.replay.header:
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=parser.replay.header['PlayerName'],
+                            team=parser.replay.header['PrimaryPlayerTeam'],
+                        )
+
             # Create the player objects.
             for actor_id, data in parser.actor_metadata.items():
                 """
@@ -580,11 +614,12 @@ class Replay(models.Model):
                         player_obj.party_leader = leader_obj
                         player_obj.save()
 
-            assert len([
-                1
-                for _, data in parser.actor_metadata.items()
-                if len(data) > 1
-            ]) == Player.objects.filter(replay=self).count()
+            if len(parser.actor_metadata) > 0:
+                assert len([
+                    1
+                    for _, data in parser.actor_metadata.items()
+                    if len(data) > 1
+                ]) == Player.objects.filter(replay=self).count()
 
             if 'PlayerStats' in parser.replay.header:
                 # We can show a leaderboard!
@@ -621,21 +656,33 @@ class Replay(models.Model):
                         keys = ['Goals', 'Saves', 'Shots', 'Score']
 
                         if sum(player.get(key, 0) for key in keys) > 0:
-                            from pprint import pprint
-                            pprint(parser.actor_metadata)
                             print('Unable to find an object for', player)
 
             # Create the Goal objects.
             if 'Goals' in parser.replay.header:
                 for index, goal in enumerate(parser.replay.header['Goals']):
+                    player = None
+
+                    if goal['frame'] in parser.goal_metadata:
+                        player = Player.objects.get(
+                            replay=self,
+                            actor_id=parser.goal_metadata[goal['frame']],
+                        )
+                    else:
+                        player = Player.objects.filter(
+                            replay=self,
+                            player_name=goal['PlayerName'],
+                            team=goal['PlayerTeam']
+                        )
+
+                        if player.count() > 0:
+                            player = player[0]
+
                     Goal.objects.create(
                         replay=self,
                         frame=goal['frame'],
                         number=index + 1,
-                        player=Player.objects.get(
-                            replay=self,
-                            actor_id=parser.goal_metadata[goal['frame']],
-                        )
+                        player=player,
                     )
 
             data = parser.replay.header

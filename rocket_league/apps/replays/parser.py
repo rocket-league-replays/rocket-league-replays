@@ -9,6 +9,7 @@ from django.core.files.storage import default_storage
 
 from bitstring import Bits
 from pyrope import Replay
+from pyrope.exceptions import FrameParsingError
 
 
 class Parser(object):
@@ -28,6 +29,7 @@ class Parser(object):
         self.match_metadata = {}
         self.team_metadata = {}
         self.actors = {}
+        self.json_filename = None
 
         assert len(self.team_metadata) == 0
 
@@ -38,8 +40,12 @@ class Parser(object):
             try:
                 self.replay = pickle.loads(default_storage.open(pickle_filename).read())
             except FileNotFoundError:
-                self.replay.parse_netstream()
-                default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
+                try:
+                    self.replay.parse_netstream()
+                    default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
+                except FrameParsingError:
+                    # Bail us out of here early, just provide an 'old school' parse.
+                    parse_netstream = False
 
         if not parse_netstream:
             return
