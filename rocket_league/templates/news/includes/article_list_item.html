@@ -5,5 +5,5 @@
 </div>
 
 <h4>
-    <a href="{% article_url article %}">{{ article }}</a>
+    <a href="{{ article.get_absolute_url }}">{{ article }}</a>
 </h4>

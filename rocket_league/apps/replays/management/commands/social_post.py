@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
             twitter.update_status(status=random.choice(status_strings).format(
                 size=replay.team_sizes,
-                map=unicode(replay.map),
+                map=str(replay.map),
                 url='http://{base_url}{replay_url}'.format(
                     base_url=settings.SITE_DOMAIN,
                     replay_url=replay.get_absolute_url(),

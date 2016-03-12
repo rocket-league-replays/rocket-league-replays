@@ -10,7 +10,13 @@
         <hr>
 
         <div class="small-7 small-centered columns">
-            {% article_list article_list %}
+            <ul class="news-article-list">
+                {% for article in article_list %}
+                    <li>
+                      {% include "news/includes/article_list_item.html" %}
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </div>

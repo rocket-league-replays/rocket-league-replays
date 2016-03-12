@@ -66,3 +66,4 @@ bower_components/
 */static/css/
 secrets.py
 webpack-stats.json
+.venv-python2

@@ -2,247 +2,777 @@
 {% load cache replays %}
 
 {% block content_primary %}
-{% if replay.title %}
-<div class="row">
-    <div class="medium-12 columns">
-        <h2>{{ replay.title }}</h2>
-        <hr>
+    {% if replay.title %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h2>{{ replay.title }}</h2>
+            <hr>
+        </div>
     </div>
-</div>
-{% endif %}
-
-<div class="row">
-
-    <div class="medium-6 columns">
-    {% if replay.show_leaderboard %}
-        {% scoreboard 0 %}
-        {% scoreboard 1 %}
-    {% else %}
-        <h3>Teams</h3>
-
-        <table width="100%">
-            <thead>
-                <tr>
-                    <th><span class="primary">Blue Team</span></th>
-                    <th><span class="secondary">Orange Team</span></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for orange, blue in replay.player_pairs %}
-                <tr>
-                    <td>
-                        {% if orange %}{{ orange }}{% endif %}
-                    </td>
-                    <td>
-                        {% if blue %}{{ blue }}{% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% if replay.player_set.count != replay.team_sizes|add:replay.team_sizes %}
-        <p>
-            It looks like there might be some players missing from this list.
-            {% if replay.user == user %}
-                If you know their names, you can <a href="{% url 'replay:update' pk=replay.pk %}">add them here</a>.
-            {% else %}
-                <a href="/faqs/">Click here</a> to find out why.</p>
-            {% endif %}
-        {% endif %}
     {% endif %}
-    </div>
-    <div class="medium-6 columns">
-        <table width="100%">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Time</th>
-                    <th colspan="2">Goal scorer</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for goal in object.goal_set.all %}
-                <tr>
-                    <td>{{ goal.number }}</td>
-                    <td>{{ goal.goal_time }}</td>
-                    <td>
-                        {% if goal.player.team == 0 %}
-                            <span class="primary">{{ goal.player.player_name }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if goal.player.team == 1 %}
-                            <span class="secondary">{{ goal.player.player_name }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
 
-                <tfoot>
-                    <td>Total:</td>
-                    <td>{{ replay.match_length }}</td>
-                    <td>{{ replay.team_0_score }}</td>
-                    <td>{{ replay.team_1_score }}</td>
-                </tfoot>
-            </tbody>
-        </table>
-    </div>
-</div>
+    <div class="row">
+        <div class="medium-6 columns">
+        {% if replay.show_leaderboard %}
+            {% scoreboard 0 %}
+            {% scoreboard 1 %}
+        {% else %}
+            <h3>Teams</h3>
 
-<div class="flex-row">
-    {% team_players 0 as players %}
-    <div class="flex-6">
-        <div class="flex-row">
-        {% for player in players.players %}
-            {% if player.heatmap %}
-                <div class="flex-6">
-                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
-                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
-                </div>
-            {% endif %}
-        {% endfor %}
-        </div>
-    </div>
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th><span class="primary">Blue Team</span></th>
+                        <th><span class="secondary">Orange Team</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orange, blue in replay.player_pairs %}
+                    <tr>
+                        <td>
+                            {% if orange %}{{ orange }}{% endif %}
+                        </td>
+                        <td>
+                            {% if blue %}{{ blue }}{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-    {% team_players 1 as players %}
-    <div class="flex-6">
-        <div class="flex-row">
-        {% for player in players.players %}
-            {% if player.heatmap %}
-                <div class="flex-6">
-                    <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
-                    <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
-                </div>
-            {% endif %}
-        {% endfor %}
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="medium-6 columns">
-        {% if replay.user == user %}
-        <table width="100%">
-            <tbody>
-                <tr>
-                  <td class="text-center">
-                    <a href="{% url 'replay:update' pk=replay.pk %}">
-                        {% if replay.title %}
-                            Rename this replay
-                        {% else %}
-                            Give this replay a name
-                        {% endif %}
-                    </a>
-                  </td>
-                  <td class="text-center">
-                    <a href="{% url 'replay:delete' pk=replay.pk %}" class="alert">Delete this replay</a>
-                  </td>
-                </tr>
-            </tbody>
-        </table>
-        {% endif %}
-
-        <table width="100%">
-            <tbody>
-                <tr>
-                  <td colspan="2" class="text-center">
-                    <a href="{{ replay.file.url }}" target="_blank">Download this replay</a>
-                  </td>
-                </tr>
-
-                <tr>
-                    <td colspan="2">
-                        <strong>What do I do once the file has downloaded?</strong>
-                        <p>Put the file into your replays folder (found at <code>Documents/My Games/Rocket League/TAGame/Demos</code>), then load up the game and go to the replay listing. The game should appear for viewing.</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="medium-6 columns">
-        <table width="100%">
-            <tbody>
-                <tr>
-                    <td>
-                        Replay ID:
-                    </td>
-                    <td>
-                        {{ replay.replay_id }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Season:</td>
-                    <td>{{ replay.season }}</td>
-                </tr>
-
-                <tr>
-                    <td>Timestamp:</td>
-                    <td>{{ replay.timestamp }}</td>
-                </tr>
-
-                <tr>
-                    <td>Uploader:</td>
-                    <td>
-                        {% if replay.user %}
-                            <a href="{{ replay.user.profile.get_absolute_url }}">{{ replay.user }}</a>
-                        {% else %}
-                            {{ replay.player_name }}
-                        {% endif %}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td>Map name:</td>
-                    <td>{{ replay.map }}</td>
-                </tr>
-
-                {% if replay.server_name %}
-                <tr>
-                    <td>Server name:</td>
-                    <td>{{ replay.server_name }}</td>
-                </tr>
+            {% if replay.player_set.count != replay.team_sizes|add:replay.team_sizes %}
+            <p>
+                It looks like there might be some players missing from this list.
+                {% if replay.user == user %}
+                    If you know their names, you can <a href="{% url 'replay:update' pk=replay.pk %}">add them here</a>.
+                {% else %}
+                    <a href="/faqs/">Click here</a> to find out why.
                 {% endif %}
+            </p>
+            {% endif %}
+        {% endif %}
+        </div>
+        <div class="medium-6 columns">
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Time</th>
+                        <th colspan="2">Goal scorer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for goal in object.goal_set.all %}
+                    <tr>
+                        <td>{{ goal.number }}</td>
+                        <td>{{ goal.goal_time }}</td>
+                        <td>
+                            {% if goal.player.team == 0 %}
+                                <span class="primary">{{ goal.player.player_name }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if goal.player.team == 1 %}
+                                <span class="secondary">{{ goal.player.player_name }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
 
-                <tr>
-                    <td>Game size:</td>
-                    <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
-                </tr>
-
-                <tr>
-                    <td>Match type:</td>
-                    <td>{{ replay.match_type }}</td>
-                </tr>
-
-                <tr>
-                    <td>Match length:</td>
-                    <td>{{ replay.match_length }}</td>
-                </tr>
-            </tbody>
-        </table>
+                    <tfoot>
+                        <td>Total:</td>
+                        <td>{{ replay.match_length }}</td>
+                        <td>{{ replay.team_0_score }}</td>
+                        <td>{{ replay.team_1_score }}</td>
+                    </tfoot>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<div class="row">
-  <div class="medium-12 columns">
-    <div id="disqus_thread"></div>
-    <script>
-    var disqus_config = function () {
-      this.page.url = 'http{% if request.is_secure %}s{% endif %}://{{ settings.SITE_DOMAIN }}{{ request.path }}';
-      this.page.identifier = 'replay_{{ replay.pk }}';
-    };
-    (function() { // DON'T EDIT BELOW THIS LINE
-    var d = document, s = d.createElement('script');
+    {% if not replay.location_json_file %}
+    <div class="flex-row">
+        {% team_players 0 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+            {% for player in players.players %}
+                {% if player.heatmap %}
+                    <div class="flex-6">
+                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                    </div>
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
 
-    s.src = '//rlr.disqus.com/embed.js';
+        {% team_players 1 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+            {% for player in players.players %}
+                {% if player.heatmap %}
+                    <div class="flex-6">
+                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                    </div>
+                {% endif %}
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-    s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
-    })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-  </div>
-</div>
-{% endblock content_primary %}
+    {# JSON powered heatmaps #}
+    {% if replay.location_json_file %}
+    <div class="flex-row">
+        {% team_players 0 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+                {% for player in players.players %}
+                <div class="flex-6">
+                      <h5>{{ player.player_name }}</h5>
+                      <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                          <p>Loading heatmap..</p>
+
+                          <div class="thirds" data-actor-id="{{ player.actor_id }}">
+                            <div class="third-value left"></div>
+                            <div class="third-value middle"></div>
+                            <div class="third-value right"></div>
+                        </div>
+
+                        <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                            <div class="quadrant-value top-left"></div>
+                            <div class="quadrant-value top-right"></div>
+                            <div class="quadrant-value bottom-left"></div>
+                            <div class="quadrant-value bottom-right"></div>
+                        </div>
+                    </div>
+
+                    <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% team_players 1 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+                {% for player in players.players %}
+                <div class="flex-6">
+                      <h5>{{ player.player_name }}</h5>
+                      <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                          <p>Loading heatmap..</p>
+
+                          <div class="thirds" data-actor-id="{{ player.actor_id }}">
+                            <div class="third-value left"></div>
+                            <div class="third-value middle"></div>
+                            <div class="third-value right"></div>
+                        </div>
+
+                        <div class="quadrants" data-actor-id="{{ player.actor_id }}">
+                            <div class="quadrant-value top-left"></div>
+                            <div class="quadrant-value top-right"></div>
+                            <div class="quadrant-value bottom-left"></div>
+                            <div class="quadrant-value bottom-right"></div>
+                        </div>
+                    </div>
+
+                    <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="medium-6 columns">
+            {% if replay.user == user %}
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td class="text-center">
+                            <a href="{% url 'replay:update' pk=replay.pk %}">
+                                {% if replay.title %}
+                                    Rename this replay
+                                {% else %}
+                                    Give this replay a name
+                                {% endif %}
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'replay:delete' pk=replay.pk %}" class="alert">Delete this replay</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            {% endif %}
+
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td colspan="2" class="text-center">
+                            <a href="{{ replay.file.url }}" target="_blank">Download this replay</a>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2">
+                            <strong>What do I do once the file has downloaded?</strong>
+                            <p>Put the file into your replays folder (found at <code>Documents/My Games/Rocket League/TAGame/Demos</code>), then load up the game and go to the replay listing. The game should appear for viewing.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="medium-6 columns">
+            <table width="100%">
+                <tbody>
+                    <tr>
+                        <td>
+                            Replay ID:
+                        </td>
+                        <td>
+                            {{ replay.replay_id }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Season:</td>
+                        <td>{{ replay.season }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Timestamp:</td>
+                        <td>{{ replay.timestamp }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Uploader:</td>
+                        <td>
+                            {% if replay.user %}
+                            <a href="{{ replay.user.profile.get_absolute_url }}">{{ replay.user }}</a>
+                            {% else %}
+                            {{ replay.player_name }}
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Map name:</td>
+                        <td>{{ replay.map }}</td>
+                    </tr>
+
+                    {% if replay.server_name %}
+                    <tr>
+                        <td>Server name:</td>
+                        <td>{{ replay.server_name }}</td>
+                    </tr>
+                    {% endif %}
+
+                    <tr>
+                        <td>Game size:</td>
+                        <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Match type:</td>
+                        <td>{{ replay.match_type }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Match length:</td>
+                        <td>{{ replay.match_length }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <div id="disqus_thread"></div>
+
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http{% if request.is_secure %}s{% endif %}://{{ settings.SITE_DOMAIN }}{{ request.path }}';
+                    this.page.identifier = 'replay_{{ replay.pk }}';
+                };
+                (function() { // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+
+                    s.src = '//rlr.disqus.com/embed.js';
+
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional_css %}
+    <style>
+        .heatmap {
+            position: relative;
+
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .heatmap p {
+            position: absolute;
+
+            top: 50%;
+            right: 0;
+            left: 0;
+
+            margin: 0 auto;
+            text-align: center;
+
+            transform: translateY(-50%);
+        }
+
+        .heatmap canvas {
+          z-index: 1;
+      }
+
+      .heatmap::before {
+        content: '';
+
+        display: block;
+        padding-bottom: calc(100% / (1003 / 709));
+    }
+
+    .heatmap::after {
+        content: '';
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        background-image: url(/static/img/arena_overlay2.png);
+        background-size: 100%;
+        background-repeat: no-repeat;
+
+        z-index: 2;
+    }
+
+    .heatmap:hover .quadrants {
+        opacity: 1;
+    }
+
+    .thirds {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 4;
+
+        display: flex;
+        pointer-events: none;
+    }
+
+    .third-value, .quadrant-value {
+        opacity: 0;
+
+        position: absolute;
+        text-align: center;
+
+        color: #fff;
+        text-shadow: #000 1px 1px 2px;
+        font-size: 24px;
+
+        background-color: rgba(0, 0, 0, 0.6);
+        background-image: url(/static/img/arena_quadrants4.png);
+        background-size: 200%;
+        background-repeat: no-repeat;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        transition: opacity 0.25s ease-in-out;
+
+        cursor: default;
+    }
+
+    .third-value {
+        height: 33%;
+        top: 33%;
+        background-size: 300%;
+
+        font-size: 16px;
+
+        background-image: url(/static/img/arena_quadrants5.png);
+        pointer-events: all;
+    }
+
+    .third-value:hover {
+        opacity: 1;
+    }
+
+    .third-value::before, .third-value::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
+
+        width: 100%;
+        height: calc(100% + 2px);
+
+        background-color: rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+
+        background-image: url(/static/img/arena_quadrants5.png);
+        background-size: 300%;
+        background-repeat: no-repeat;
+    }
+
+    .third-value::before {
+        top: calc(-100% - 2px);
+        left: 0;
+    }
+
+    .third-value::after {
+        bottom: calc(-100% - 2px);
+        left: 0;
+    }
+
+    .third-value.left {
+        left: 0;
+        right: calc(100% / 3 * 2);
+
+        padding-left: 17px;
+
+        background-position: center left;
+    }
+
+    .third-value.left::before {
+        background-position: top left;
+    }
+
+    .third-value.left::after {
+        background-position: bottom left;
+    }
+
+    .third-value.middle {
+        left: calc(100% / 3);
+        right: calc(100% / 3);
+
+        background-position: center center;
+    }
+
+    .third-value.middle::before {
+        background-position: top center;
+    }
+
+    .third-value.middle::after {
+        background-position: bottom center;
+    }
+
+    .third-value.right {
+        left: calc(100% / 3 * 2);
+        right: 0;
+
+        padding-right: 17px;
+
+        background-position: center right;
+    }
+
+    .third-value.right::before {
+        background-position: top right;
+    }
+
+    .third-value.right::after {
+        background-position: bottom right;
+    }
+
+    .quadrants {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 3;
+    }
+
+    .quadrant-value {
+
+    }
+
+    .quadrant-value:hover {
+        opacity: 1;
+    }
+
+    .quadrant-value.top-left {
+        top: 0;
+        right: 50%;
+        bottom: 50%;
+        left: 0;
+
+        padding-left: 17px;
+
+        background-position: top left;
+    }
+
+    .quadrant-value.top-right {
+        top: 0;
+        right: 0;
+        bottom: 50%;
+        left: 50%;
+
+        padding-right: 17px;
+
+        background-position: top right;
+    }
+
+    .quadrant-value.bottom-left {
+        top: 50%;
+        right: 50%;
+        bottom: 0;
+        left: 0;
+
+        padding-left: 17px;
+
+        background-position: bottom left;
+    }
+
+    .quadrant-value.bottom-right {
+        top: 50%;
+        right: 0;
+        bottom: 0;
+        left: 50%;
+
+        padding-right: 17px;
+
+        background-position: bottom right;
+    }
+
+</style>
+{% endblock %}
+
+{% block additional_js %}
+{% if replay.location_json_file %}
+<script src="https://rawgit.com/pa7/heatmap.js/master/build/heatmap.js"></script>
+<script>
+    "use strict"
+
+    var data;
+
+    // Load up the JSON file.
+    var request = new XMLHttpRequest();
+    request.open('GET', '{{ replay.location_json_file.url }}', true);
+
+    request.onload = function() {
+      if (this.status >= 200 && this.status < 400) {
+        // Success!
+        data = JSON.parse(this.response);
+        render_heatmap();
+    }
+};
+request.send();
+
+function render_heatmap() {
+    const elements = document.querySelectorAll('.heatmap')
+    for (var index in elements) {
+        if ( ! elements.hasOwnProperty(index)) {
+            return
+        }
+
+        const el = elements[index]
+
+        let radius = 20
+        let blur
+
+        if (el.offsetWidth > 300) {
+            radius = 30
+            blur = 0.45
+        }
+
+        var heatmap = h337.create({
+            container: el,
+            radius: radius,
+            blur: 0.45,
+            minOpacity: 0.1,
+            maxOpacity: 1,
+            backgroundColor: '#fff'
+        });
+
+            // el.parentNode.querySelector('.heatmap-download').classList.add('hide')
+            const selected_actor = el.getAttribute('data-actor-id')
+
+            // Rework the data to work with the heatmap library.
+            let formatted_data = []
+            let min_value = null
+            let max_value = null
+
+            let max_x = null
+            let max_y = null
+            let min_x = null
+            let min_y = null
+
+            Object.keys(data[selected_actor]).forEach(function(item) {
+                const value = data[selected_actor][item]
+                let x = parseInt(item.split(',')[0], 10)
+                let y = parseInt(item.split(',')[1], 10)
+
+                // Rotate the points -90deg
+                const rotation = (Math.PI / 2) * -1
+                const rotatedX = Math.cos(rotation) * x - Math.sin(rotation) * y
+                const rotatedY = Math.sin(rotation) * x + Math.cos(rotation) * y
+
+                x = rotatedX
+                y = rotatedY
+
+                formatted_data.push({
+                    x: x,
+                    y: y,
+                    value: value
+                })
+
+                if (min_value === null || value < min_value) {
+                    min_value = value
+                }
+
+                if (max_value === null || value > max_value) {
+                    max_value = value
+                }
+
+                if (min_x === null || x < min_x) {
+                    min_x = x
+                }
+
+                if (min_y === null || y < min_y) {
+                    min_y = y
+                }
+
+                if (max_x === null || x > max_x) {
+                    max_x = x
+                }
+
+                if (max_y === null || y > max_y) {
+                    max_y = y
+                }
+            })
+
+            // Re-work all of the values to be positive. 🌝
+            min_x = Math.abs(min_x)
+            min_y = Math.abs(min_y)
+            max_x += min_x
+            max_y += min_y
+
+            let reformatted_data = []
+
+            const canvas_width = el.offsetWidth
+            const canvas_height = el.offsetHeight
+
+            const stats = {}
+            const quadrantData = {
+                'topLeft': 0,
+                'topRight': 0,
+                'bottomLeft': 0,
+                'bottomRight': 0,
+            }
+
+            const thirdData = {
+                'left': 0,
+                'middle': 0,
+                'right': 0
+            }
+
+            formatted_data.forEach(function(item) {
+                // Rework the x values to be between 0 and `canvas width`.
+                let offsetX = item.x + min_x
+                offsetX /= max_x / canvas_width
+
+                // Rework the y values to be between 0 and `canvas height`.
+                let offsetY = item.y + min_y
+                offsetY /= max_y / canvas_height
+
+                // Which quadrant is this data point in?
+                let quadrant = ''
+
+                if (offsetX <= canvas_width / 2) {
+                    if (offsetY <= canvas_height / 2) {
+                        quadrant = 'topLeft'
+                    } else {
+                        quadrant = 'bottomLeft'
+                    }
+                } else {
+                    if (offsetY <= canvas_height / 2) {
+                        quadrant = 'topRight'
+                    } else {
+                        quadrant = 'bottomRight'
+                    }
+                }
+
+                quadrantData[quadrant] += item.value
+
+                // Which third is this data point in?
+                let third = ''
+
+                if (offsetX <= canvas_width / 3) {
+                    third = 'left'
+                } else if (offsetX >= canvas_width / 3 && offsetX <= canvas_width / 3 * 2) {
+                    third = 'middle'
+                } else {
+                    third = 'right'
+                }
+
+                thirdData[third] += item.value
+
+                // Determine the value distribution.
+                if (stats[item.value] === undefined) {
+                  stats[item.value] = 1
+              } else {
+                  stats[item.value] += 1
+              }
+
+                // Push the data into the final array.
+                reformatted_data.push({
+                    x: offsetX,
+                    y: offsetY,
+                    value: item.value
+                })
+            })
+
+            heatmap.setData({
+                min: Object.keys(stats).shift(),
+                max: Object.keys(stats).pop(),
+                data: reformatted_data,
+            })
+
+            const quadrants = document.querySelector(`.quadrants[data-actor-id="${selected_actor}"]`)
+
+            // Sum all of the quadrant data.
+            const quadrantSum = Object.keys(quadrantData).reduce(function(sum, key) {
+                 return sum + parseInt(quadrantData[key], 10);
+             }, 0);
+
+            quadrants.querySelector('.top-left').innerHTML = `${(quadrantData.topLeft / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.top-right').innerHTML = `${(quadrantData.topRight / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.bottom-left').innerHTML = `${(quadrantData.bottomLeft / quadrantSum * 100).toFixed(2)}%`
+            quadrants.querySelector('.bottom-right').innerHTML = `${(quadrantData.bottomRight / quadrantSum * 100).toFixed(2)}%`
+
+            const thirds = document.querySelector(`.thirds[data-actor-id="${selected_actor}"]`)
+
+            // Sum all of the quadrant data.
+            const thirdSum = Object.keys(thirdData).reduce(function(sum, key) {
+                 return sum + parseInt(thirdData[key], 10);
+             }, 0);
+
+            thirds.querySelector('.left').innerHTML = `${(thirdData.left / thirdSum * 100).toFixed(2)}%`
+            thirds.querySelector('.middle').innerHTML = `${(thirdData.middle / thirdSum * 100).toFixed(2)}%`
+            thirds.querySelector('.right').innerHTML = `${(thirdData.right / thirdSum * 100).toFixed(2)}%`
+        }
+    }
+</script>
+{% endif %}
+{% endblock %}

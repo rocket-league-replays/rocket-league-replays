@@ -1,9 +1,9 @@
 import os
-import StringIO
 import sys
 from contextlib import contextmanager
 from zipfile import ZipFile
 
+import io
 import requests
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand
@@ -15,8 +15,7 @@ from ...models import ReplayPack
 @contextmanager
 def file_lock(lock_file):
     if os.path.exists(lock_file):
-        print 'Only one script can run at once. '\
-              'Script is locked with %s' % lock_file
+        print('Only one script can run at once. Script is locked with %s' % lock_file)
         sys.exit(-1)
     else:
         open(lock_file, 'w').write("1")
@@ -45,16 +44,16 @@ class Command(BaseCommand):
             replay_packs = replay_packs.order_by('pk')
 
             for obj in replay_packs:
-                print 'Processing', obj.pk
+                print('Processing', obj.pk)
                 zip_filename = '{}.zip'.format(str(obj))
 
-                zip_string = StringIO.StringIO()
+                zip_string = io.StringIO()
 
                 with ZipFile(zip_string, 'w') as f:
                     for replay in obj.replays.all():
                         filename = '{}.replay'.format(replay.replay_id)
 
-                        print 'Getting {}'.format(replay.file.url)
+                        print('Getting {}'.format(replay.file.url))
                         r = requests.get(replay.file.url, stream=True)
 
                         for chunk in r.iter_content(1024):

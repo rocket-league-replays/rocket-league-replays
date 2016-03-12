@@ -1,16 +1,19 @@
 import re
-import struct
 import time
 from datetime import datetime
 
-import chardet
 from django.conf import settings
-from django.core.exceptions import MultipleObjectsReturned, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
-from replay_parser import ReplayParser
+from social.apps.django_app.default.fields import JSONField
+
+from itertools import zip_longest
+import bitstring
+
+from .parser import Parser
 
 
 class Season(models.Model):
@@ -22,7 +25,7 @@ class Season(models.Model):
 
     start_date = models.DateTimeField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     class Meta:
@@ -61,7 +64,7 @@ class Map(models.Model):
         null=True,
     )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title or self.slug
 
     class Meta:
@@ -89,8 +92,21 @@ class Replay(models.Model):
         null=True,
     )
 
+    playlist = models.PositiveIntegerField(
+        choices=[(v, k) for k, v in settings.PLAYLISTS.items()],
+        default=0,
+        blank=True,
+        null=True,
+    )
+
     file = models.FileField(
         upload_to='uploads/replay_files',
+    )
+
+    location_json_file = models.FileField(
+        upload_to='uploads/replay_json_files',
+        blank=True,
+        null=True,
     )
 
     replay_id = models.CharField(
@@ -211,7 +227,7 @@ class Replay(models.Model):
 
     def team_x_player_list(self, team):
         return [
-            u"{}{}".format(
+            "{}{}".format(
                 player.player_name,
                 " ({})".format(player.goal_set.count()) if player.goal_set.count() > 0 else '',
             ) for player in self.player_set.filter(
@@ -235,7 +251,7 @@ class Replay(models.Model):
         return self.team_x_player_list(1)
 
     def player_pairs(self):
-        return map(None, self.team_0_player_list(), self.team_1_player_list())
+        return zip_longest(self.team_0_player_list(), self.team_1_player_list())
 
     def region(self):
         if not self.server_name:
@@ -287,7 +303,7 @@ class Replay(models.Model):
 
         if self.team_0_score > self.team_1_score:
             # Team 0 won, but were they ever losing?
-            deficit_values = filter(lambda x: x > 0, swing_values)
+            deficit_values = [x for x in swing_values if x < 0]
 
             if deficit_values:
                 deficit = max(swing_values)
@@ -297,7 +313,7 @@ class Replay(models.Model):
             score_min_def = self.team_0_score - deficit
         else:
             # Team 1 won, but were they ever losing?
-            deficit_values = filter(lambda x: x < 0, swing_values)
+            deficit_values = [x for x in swing_values if x < 0]
 
             if deficit_values:
                 deficit = abs(min(deficit_values))
@@ -409,117 +425,272 @@ class Replay(models.Model):
             return
 
         if self.file:
-            # Process the file.
-            parser = ReplayParser()
+            # Ensure we're at the start of the file as `clean()` can sometimes
+            # be called multiple times (for some reason..)
+            self.file.seek(0)
 
             try:
-                replay_data = parser.parse(self.file)['header']
-
-                # Check if this replay has already been uploaded.
-                replay = Replay.objects.filter(
-                    replay_id=replay_data['Id']
-                )
-
-                if replay.count() > 0:
-                    raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
-                        replay[0].get_absolute_url()
-                    )))
-            except struct.error:
+                self.parser = Parser(self.file.read())
+            except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
+            # Check if this replay has already been uploaded.
+            replay = Replay.objects.filter(
+                replay_id=self.parser.replay_id,
+            )
+
+            if replay.count() > 0:
+                raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
+                    replay[0].get_absolute_url()
+                )))
+
+            self.replay_id = self.parser.replay_id
+
     def save(self, *args, **kwargs):
+        parse_netstream = False
+
+        if 'parse_netstream' in kwargs:
+            parse_netstream = kwargs.pop('parse_netstream')
+
         super(Replay, self).save(*args, **kwargs)
 
-        # Server name
-
         if self.file and not self.processed:
-            # Process the file.
-            parser = ReplayParser()
-            data = parser.parse(self.file)['header']
+            self.file.seek(0)
 
-            Goal.objects.filter(
-                replay=self,
-                frame__isnull=True,
-            ).delete()
+            parser = Parser(self.file.read(), parse_netstream=parse_netstream)
 
-            Player.objects.filter(
-                replay=self,
-            ).delete()
+            Goal.objects.filter(replay=self).delete()
+            Player.objects.filter(replay=self).delete()
 
-            # If we have a stats table, pull in the data.
-            if 'PlayerStats' in data:
+            if parse_netstream:
+                self.location_json_file = parser.json_filename
+
+            if 'playlist' in parser.match_metadata:
+                self.playlist = parser.match_metadata['playlist']
+
+            if 'server_name' in parser.match_metadata:
+                self.server_name = parser.match_metadata['server_name']
+
+            if len(parser.actor_metadata) == 0:
+                # Parse the players the 'old' way.
+                if 'PlayerStats' in parser.replay.header:
+                    for player in parser.replay.header['PlayerStats']:
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=player['Name'],
+                            platform=player['Platform'].get('OnlinePlatform', ''),
+                            saves=player['Saves'],
+                            score=player['Score'],
+                            goals=player['Goals'],
+                            shots=player['Shots'],
+                            team=player['Team'],
+                            assists=player['Assists'],
+                            bot=player['bBot'],
+                            online_id=player['OnlineID'],
+                        )
+                else:
+                    # The best we can do is to get the goal scorers and the player.
+                    for goal in parser.replay.header.get('Goals', []):
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=goal['PlayerName'],
+                            team=goal['PlayerTeam'],
+                        )
+
+                    if 'PlayerName' in parser.replay.header and 'PrimaryPlayerTeam' in parser.replay.header:
+                        Player.objects.get_or_create(
+                            replay=self,
+                            player_name=parser.replay.header['PlayerName'],
+                            team=parser.replay.header['PrimaryPlayerTeam'],
+                        )
+
+            # Create the player objects.
+            for actor_id, data in parser.actor_metadata.items():
+                """
+                 6: {'Engine.PlayerReplicationInfo:Ping': 5,
+                 'Engine.PlayerReplicationInfo:PlayerID': 481,
+                 'Engine.PlayerReplicationInfo:PlayerName': 'Fishcake',
+                 'Engine.PlayerReplicationInfo:Team': (True, 1),
+                 'Engine.PlayerReplicationInfo:UniqueId': (1, 76561197981862109, 0),
+                 'Engine.PlayerReplicationInfo:bReadyToPlay': True,
+                 'TAGame.PRI_TA:CameraSettings': {'dist': 400.0,
+                                                  'fov': 99.0,
+                                                  'height': 70.0,
+                                                  'pitch': -7.0,
+                                                  'stiff': 0.5,
+                                                  'swiv': 10.0},
+                 'TAGame.PRI_TA:CameraYaw': 181,
+                 'TAGame.PRI_TA:ClientLoadout': (11, [597, 0, 609, 626, 0, 0, 0]),
+                 'TAGame.PRI_TA:PartyLeader': (1, 76561198008869772, 0),
+                 'TAGame.PRI_TA:ReplicatedGameEvent': (True, 2),
+                 'TAGame.PRI_TA:TotalXP': 1174620,
+                 'TAGame.PRI_TA:bUsingSecondaryCamera': True},
+                """
+
+                # Sometimes actor objects can come across with just a player
+                # name. We can't really do much with those, so ignore them.
+                if len(data) == 1:
+                    continue
+
+                # Geneate the unique ID string/
+                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                    unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
+
+                    # If a console player is playing split-screen, there can
+                    # sometimes be two actors with the same 'unique id', so this
+                    # handles that situation.
+
+                    while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
+                        data['Engine.PlayerReplicationInfo:UniqueId'] = (
+                            data['Engine.PlayerReplicationInfo:UniqueId'][0],
+                            data['Engine.PlayerReplicationInfo:UniqueId'][1],
+                            data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
+                        )
+
+                        unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
+                else:
+                    if 'Engine.PlayerReplicationInfo:Team' in data:
+                        id_parts = [
+                            str(data['Engine.PlayerReplicationInfo:Team'][1]),
+                            data['Engine.PlayerReplicationInfo:PlayerName'],
+                            '0',
+                        ]
+
+                        unique_id = '-'.join(id_parts)
+
+                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
+                            id_parts[2] = str(int(id_parts[2]) + 1)
+                            unique_id = '-'.join(id_parts)
+
+                    else:
+                        unique_id = '-'.join([
+                            '-1',
+                            data['Engine.PlayerReplicationInfo:PlayerName']
+                        ])
+
+                if 'TAGame.PRI_TA:TotalXP' in data:
+                    if data['TAGame.PRI_TA:TotalXP'] >= 0:
+                        total_xp = data['TAGame.PRI_TA:TotalXP']
+                    else:
+                        total_xp = 0
+                else:
+                    total_xp = 0
+
+                # Try to work out the player's team.
+                if 'Engine.PlayerReplicationInfo:Team' in data:
+                    team = parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]]
+                else:
+                    team = -1
+
+                Player.objects.create(
+                    replay=self,
+                    unique_id=unique_id,
+                    player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
+                    team=team,
+                    actor_id=actor_id,
+                    bot='Engine.PlayerReplicationInfo:bBot' in data,
+                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
+                    total_xp=total_xp,
+                    platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
+                )
+
+            # If any players had a party leader, try to link them up.
+            for player in parser.actor_metadata:
+                data = parser.actor_metadata[player]
+
+                if 'TAGame.PRI_TA:PartyLeader' in data:
+                    # Get this player object, then get the party leader object.
+                    player_obj = Player.objects.get(
+                        replay=self,
+                        unique_id='-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId']),
+                    )
+
+                    try:
+                        leader_obj = Player.objects.get(
+                            replay=self,
+                            unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
+                        )
+                    except Player.DoesNotExist:
+                        leader_obj = None
+
+                    if player_obj != leader_obj:
+                        player_obj.party_leader = leader_obj
+                        player_obj.save()
+
+            if len(parser.actor_metadata) > 0:
+                assert len([
+                    1
+                    for _, data in parser.actor_metadata.items()
+                    if len(data) > 1
+                ]) == Player.objects.filter(replay=self).count()
+
+            if 'PlayerStats' in parser.replay.header:
                 # We can show a leaderboard!
                 self.show_leaderboard = True
 
-                for player in data['PlayerStats']:
-                    """
-                    {
-                        'OnlineID': 0,
-                        'Name': 'Swabbie',
-                        'Saves': 0,
-                        'Platform': {
-                            'OnlinePlatform': 'OnlinePlatform_Unknown'
-                        },
-                        'Score': 115,
-                        'Goals': 1,
-                        'Shots': 1,
-                        'Team': 1,
-                        'bBot': True,
-                        'Assists': 0
-                    }
-                    """
-                    encoding = chardet.detect(player['Name'])
-                    if not encoding['encoding'] or encoding['encoding'] != 'ascii':
-                        encoding['encoding'] = 'latin-1'
-
-                    Player.objects.get_or_create(
+                for player in parser.replay.header['PlayerStats']:
+                    # Attempt to match up this player with a Player object.
+                    obj = Player.objects.filter(
                         replay=self,
-                        player_name=player['Name'].decode(encoding['encoding']),
-                        platform=player['Platform'].get('OnlinePlatform', ''),
-                        saves=player['Saves'],
-                        score=player['Score'],
-                        goals=player['Goals'],
-                        shots=player['Shots'],
+                        player_name=player['Name'],
                         team=player['Team'],
-                        assists=player['Assists'],
                         bot=player['bBot'],
-                        online_id=player['OnlineID'],
                     )
 
-            for index, goal in enumerate(data['Goals']):
-                encoding = chardet.detect(goal['PlayerName'])
-                if not encoding['encoding'] or encoding['encoding'] != 'ascii':
-                    encoding['encoding'] = 'latin-1'
+                    if not obj:
+                        # Try with just the player name.
+                        obj = Player.objects.filter(
+                            replay=self,
+                            player_name=player['Name'],
+                        )
 
-                try:
-                    player, created = Player.objects.get_or_create(
+                    if obj and obj.count() == 1:
+                        obj.update(
+                            saves=player['Saves'],
+                            score=player['Score'],
+                            goals=player['Goals'],
+                            shots=player['Shots'],
+                            assists=player['Assists'],
+                        )
+                    else:
+                        # Unless this player actually did something, we don't
+                        # really care if we can't assign their stats.
+
+                        keys = ['Goals', 'Saves', 'Shots', 'Score']
+
+                        if sum(player.get(key, 0) for key in keys) > 0:
+                            print('Unable to find an object for', player)
+
+            # Create the Goal objects.
+            if 'Goals' in parser.replay.header:
+                for index, goal in enumerate(parser.replay.header['Goals']):
+                    player = None
+
+                    if goal['frame'] in parser.goal_metadata:
+                        player = Player.objects.get(
+                            replay=self,
+                            actor_id=parser.goal_metadata[goal['frame']],
+                        )
+                    else:
+                        player = Player.objects.filter(
+                            replay=self,
+                            player_name=goal['PlayerName'],
+                            team=goal['PlayerTeam']
+                        )
+
+                        if player.count() > 0:
+                            player = player[0]
+
+                    Goal.objects.create(
                         replay=self,
-                        player_name=goal['PlayerName'].decode(encoding['encoding']),
-                        team=goal['PlayerTeam'],
+                        frame=goal['frame'],
+                        number=index + 1,
+                        player=player,
                     )
-                except MultipleObjectsReturned:
-                    player = Player.objects.filter(
-                        replay=self,
-                        player_name=goal['PlayerName'].decode(encoding['encoding']),
-                        team=goal['PlayerTeam'],
-                    )[0]
 
-                Goal.objects.get_or_create(
-                    replay=self,
-                    number=index + 1,
-                    player=player,
-                    frame=goal['frame'],
-                )
-
-            data['PlayerName'] = data['PlayerName'].decode(
-                chardet.detect(data['PlayerName'])['encoding']
-            )
-
-            player, created = Player.objects.get_or_create(
-                replay=self,
-                player_name=data['PlayerName'],
-                team=data.get('PrimaryPlayerTeam', 0),
-            )
+            data = parser.replay.header
 
             self.replay_id = data['Id']
             self.player_name = data['PlayerName']
@@ -614,13 +785,18 @@ class Player(models.Model):
         db_index=True,
     )
 
-    online_id = models.BigIntegerField(
+    online_id = models.CharField(
+        max_length=128,
         blank=True,
         null=True,
         db_index=True,
     )
 
     bot = models.BooleanField(
+        default=False,
+    )
+
+    spectator = models.BooleanField(
         default=False,
     )
 
@@ -634,14 +810,45 @@ class Player(models.Model):
         default=False,
     )
 
-    def __unicode__(self):
-        return u'{} on Team {}'.format(
+    # Taken from the netstream.
+    actor_id = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        null=True,
+    )
+
+    unique_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+    )
+
+    party_leader = models.ForeignKey(
+        'self',
+        blank=True,
+        null=True,
+    )
+
+    camera_settings = JSONField(
+        blank=True,
+        null=True,
+    )
+
+    total_xp = models.PositiveIntegerField(
+        default=0,
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return '{} on Team {}'.format(
             self.player_name,
             self.team,
         )
 
     class Meta:
-        ordering = ('team', '-score')
+        ordering = ('team', '-score', 'player_name')
+        unique_together = [('unique_id', 'replay')]
 
 
 class Goal(models.Model):
@@ -675,8 +882,8 @@ class Goal(models.Model):
             int(seconds),
         )
 
-    def __unicode__(self):
-        return u'Goal {} by {}'.format(
+    def __str__(self):
+        return 'Goal {} by {}'.format(
             self.number,
             self.player,
         )
@@ -749,7 +956,7 @@ class ReplayPack(models.Model):
             int(seconds),
         )
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):

@@ -1,3 +1,5 @@
+
+import traceback
 from django.core.management.base import BaseCommand
 
 from ...models import Replay
@@ -16,14 +18,15 @@ class Command(BaseCommand):
         else:
             replays = Replay.objects.all()
 
-        replays = replays.order_by('pk')
+        replays = replays.order_by('-pk')
 
         for replay in replays:
             if replay.replay_id and replay.file:
-                print 'Processing', replay.pk, '-', replay.replay_id
+                print('Processing', replay.pk, '-', replay.replay_id)
 
                 try:
                     replay.processed = False
-                    replay.save()
-                except Exception as e:
-                    print 'Unable to process.', e
+                    replay.save(parse_netstream=True)
+                except Exception:
+                    print('Unable to process.')
+                    traceback.print_exc()

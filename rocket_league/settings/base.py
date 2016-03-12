@@ -8,8 +8,6 @@ For an explanation of these settings, please see the Django documentation at:
 While many of these settings assume sensible defaults, you must provide values
 for the site, database, media and email sections below.
 """
-from __future__ import unicode_literals
-
 import os
 import platform
 import sys
@@ -21,7 +19,7 @@ if platform.python_implementation() == "PyPy":
 try:
     from . import secrets
 except:
-    print 'Secrets config not found, environment variables have not been set.'
+    print('Secrets config not found, environment variables have not been set.')
 
 # The name of this site.  Used for branding in the online admin area.
 
@@ -148,9 +146,9 @@ INSTALLED_APPS = [
     "cms.apps.pages",
     "cms.apps.links",
     "cms.apps.media",
-    "cms.apps.news",
 
     "rocket_league.apps.faqs",
+    "rocket_league.apps.news",
     "rocket_league.apps.replays",
     "rocket_league.apps.site",
     "rocket_league.apps.users",
@@ -164,9 +162,6 @@ INSTALLED_APPS = [
 
     'social.apps.django_app.default',
 ]
-
-if sys.version_info[0] == 3:
-    INSTALLED_APPS.remove("server_management")
 
 # Additional static file locations.
 
@@ -336,6 +331,7 @@ PLAYLISTS = {
     'RankedDoubles': 11,
     'RankedSoloStandard': 12,
     'RankedStandard': 13,
+    'RocketLabs': 16,  # TODO: Check this is correct.
 }
 
 TIERS = {

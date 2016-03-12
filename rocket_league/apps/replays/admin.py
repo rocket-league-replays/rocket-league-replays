@@ -11,21 +11,37 @@ reprocess_matches.short_description = "Reprocess all matches"
 
 
 def recalculate_average_rating(modeladmin, request, queryset):
-    print queryset
     for obj in queryset:
         obj.average_rating = obj.calculate_average_rating()
         obj.save()
 
 
 class PlayerInlineAdmin(admin.StackedInline):
+    raw_id_fields = ['party_leader']
+
+    readonly_fields = [field.name for field in Player._meta.fields]
     model = Player
     extra = 0
 
+    def has_add_permission(self, request):
+        return False
 
-class GoalInlineAdmin(admin.StackedInline):
+    def has_delete_permission(self, request, obj):
+        return False
+
+
+class GoalInlineAdmin(admin.TabularInline):
     model = Goal
+    fields = ['number', 'player', 'frame']
+    readonly_fields = [field.name for field in Goal._meta.fields]
     extra = 0
     raw_id_fields = ['player']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj):
+        return False
 
 
 class ReplayAdmin(admin.ModelAdmin):
