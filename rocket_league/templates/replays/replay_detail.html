@@ -764,6 +764,7 @@ function render_heatmap(data) {
 
 
 {% block uncompressed_js %}
+{% if replay.location_json_file %}
 <script>
 "use strict"
 
@@ -790,4 +791,5 @@ request.onerror = function(e) {
 
 request.send();
 </script>
+{% endif %}
 {% endblock %}
