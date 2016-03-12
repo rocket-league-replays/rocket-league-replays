@@ -51,7 +51,8 @@ class Parser(object):
             for goal in self.replay.header['Goals']:
                 self._extract_goal_data(goal['frame'])
 
-        assert len(self.team_metadata) == 2
+        if 'NumFrames' in self.replay.header:
+            assert len(self.team_metadata) == 2
 
         for player in self.actors.copy():
             # Get their position data.
