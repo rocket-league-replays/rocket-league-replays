@@ -21,3 +21,4 @@ django-cachalot
 opbeat
 python-social-auth
 Werkzeug
+python-memcached
