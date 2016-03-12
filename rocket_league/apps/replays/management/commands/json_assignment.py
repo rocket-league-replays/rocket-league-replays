@@ -46,6 +46,6 @@ class Command(BaseCommand):
                 continue
 
             print('Processing', replay.pk, '-', replay.replay_id)
-            if not default_storage.exists(replay.location_json_file.file):
+            if not default_storage.exists(replay.location_json_file.file.path):
                 replay.location_json_file = None
                 replay.save()
