@@ -458,8 +458,12 @@ class Replay(models.Model):
             Player.objects.filter(replay=self).delete()
 
             self.location_json_file = parser.json_filename
-            self.playlist = parser.match_metadata['playlist']
-            self.server_name = parser.match_metadata['server_name']
+
+            if 'playlist' in parser.match_metadata:
+                self.playlist = parser.match_metadata['playlist']
+
+            if 'server_name' in parser.match_metadata:
+                self.server_name = parser.match_metadata['server_name']
 
             # Create the player objects.
             for actor_id, data in parser.actor_metadata.items():
