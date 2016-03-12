@@ -311,35 +311,62 @@
             <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
         </div>
     </div>
+
+    <script>
+    "use strict"
+
+    // Load up the JSON file.
+    const request = new XMLHttpRequest();
+    request.open('GET', '{{ replay.location_json_file.url }}', true);
+
+    request.onload = function() {
+        if (this.status >= 200 && this.status < 400) {
+            // Success!
+            const data = JSON.parse(this.response);
+            render_heatmap(data);
+        } else {
+        // We reached our target server, but it returned an error
+            console.error(this.status)
+        }
+    };
+
+    request.onerror = function(e) {
+      // There was a connection error of some sort
+      console.error("Error Status: " + e.target.status);
+    };
+
+
+    request.send();
+    </script>
 {% endblock %}
 
 {% block additional_css %}
     <style>
-        .heatmap {
-            position: relative;
+    .heatmap {
+        position: relative;
 
-            width: 100%;
-            margin-bottom: 30px;
-        }
+        width: 100%;
+        margin-bottom: 30px;
+    }
 
-        .heatmap p {
-            position: absolute;
+    .heatmap p {
+        position: absolute;
 
-            top: 50%;
-            right: 0;
-            left: 0;
+        top: 50%;
+        right: 0;
+        left: 0;
 
-            margin: 0 auto;
-            text-align: center;
+        margin: 0 auto;
+        text-align: center;
 
-            transform: translateY(-50%);
-        }
+        transform: translateY(-50%);
+    }
 
-        .heatmap canvas {
-          z-index: 1;
-      }
+    .heatmap canvas {
+      z-index: 1;
+  }
 
-      .heatmap::before {
+  .heatmap::before {
         content: '';
 
         display: block;
@@ -562,24 +589,9 @@
 {% if replay.location_json_file %}
 <script src="{% static 'js/vendor/heatmap.js' %}"></script>
 <script>
-    "use strict"
+"use strict"
 
-    var data;
-
-    // Load up the JSON file.
-    var request = new XMLHttpRequest();
-    request.open('GET', '{{ replay.location_json_file.url }}', true);
-
-    request.onload = function() {
-      if (this.status >= 200 && this.status < 400) {
-        // Success!
-        data = JSON.parse(this.response);
-        render_heatmap();
-    }
-};
-request.send();
-
-function render_heatmap() {
+function render_heatmap(data) {
     const elements = document.querySelectorAll('.heatmap')
     for (var index in elements) {
         if ( ! elements.hasOwnProperty(index)) {
