@@ -90,41 +90,55 @@
         </div>
     </div>
 
-{# JSON powered heatmaps #}
-{% if replay.location_json_file %}
-<div class="flex-row">
-    {% team_players 0 as players %}
-    <div class="flex-6">
-        <div class="flex-row">
-        {% for player in players.players %}
-            <div class="flex-6">
-              <h5>{{ player.player_name }}</h5>
-              <div class="heatmap" data-actor-id="{{ player.actor_id }}">
-                  <p>Loading heatmap..</p>
-
-                  <div class="quadrants" data-actor-id="{{ player.actor_id }}">
-                        <div class="quadrant-value top-left"></div>
-                        <div class="quadrant-value top-right"></div>
-                        <div class="quadrant-value bottom-left"></div>
-                        <div class="quadrant-value bottom-right"></div>
-                  </div>
-              </div>
-
-
-              <a href="#" target="_blank" class="heatmap-download hide">Download this heatmap</a><br>
+    {% if not replay.location_json_file %}
+    <div class="flex-row">
+        {% team_players 0 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+            {% for player in players.players %}
+                {% if player.heatmap %}
+                    <div class="flex-6">
+                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                    </div>
+                {% endif %}
+            {% endfor %}
             </div>
-        {% endfor %}
+        </div>
+
+        {% team_players 1 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+            {% for player in players.players %}
+                {% if player.heatmap %}
+                    <div class="flex-6">
+                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
+                    </div>
+                {% endif %}
+            {% endfor %}
+            </div>
         </div>
     </div>
+    {% endif %}
 
-    {% team_players 1 as players %}
-    <div class="flex-6">
-        <div class="flex-row">
-        {% for player in players.players %}
-            <div class="flex-6">
-                <h5>{{ player.player_name }}</h5>
-                <div class="heatmap" data-actor-id="{{ player.actor_id }}">
-                    <p>Loading heatmap..</p>
+    {# JSON powered heatmaps #}
+    {% if replay.location_json_file %}
+    <div class="flex-row">
+        {% team_players 0 as players %}
+        <div class="flex-6">
+            <div class="flex-row">
+            {% for player in players.players %}
+                <div class="flex-6">
+                  <h5>{{ player.player_name }}</h5>
+                  <div class="heatmap" data-actor-id="{{ player.actor_id }}">
+                      <p>Loading heatmap..</p>
+
+                      <div class="thirds" data-actor-id="{{ player.actor_id }}">
+                        <div class="third-value left">33.33%</div>
+                        <div class="third-value middle">43.33%</div>
+                        <div class="third-value right">23.33%</div>
+                    </div>
 
                     <div class="quadrants" data-actor-id="{{ player.actor_id }}">
                         <div class="quadrant-value top-left"></div>
@@ -269,138 +283,257 @@
             <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
         </div>
     </div>
+{% endblock %}
 
+{% block additional_css %}
+    <style>
+        .heatmap {
+            position: relative;
 
+            width: 100%;
+            margin-bottom: 30px;
+        }
 
-<style>
-.heatmap {
-    position: relative;
+        .heatmap p {
+            position: absolute;
 
-    width: 100%;
-    margin-bottom: 30px;
-}
+            top: 50%;
+            right: 0;
+            left: 0;
 
-.heatmap p {
-    position: absolute;
+            margin: 0 auto;
+            text-align: center;
 
-    top: 50%;
-    right: 0;
-    left: 0;
+            transform: translateY(-50%);
+        }
 
-    margin: 0 auto;
-    text-align: center;
+        .heatmap canvas {
+          z-index: 1;
+      }
 
-    transform: translateY(-50%);
-}
+      .heatmap::before {
+        content: '';
 
-.heatmap canvas {
-  z-index: 1;
-}
+        display: block;
+        padding-bottom: calc(100% / (1003 / 709));
+    }
 
-.quadrants, .heatmap::before {
-    content: '';
+    .heatmap::after {
+        content: '';
 
-    display: block;
-    padding-bottom: calc(100% / (1003 / 709));
-}
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
 
-.heatmap::after {
-    content: '';
+        background-image: url(/static/img/arena_overlay2.png);
+        background-size: 100%;
+        background-repeat: no-repeat;
 
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+        z-index: 2;
+    }
 
-    background-image: url(/static/img/arena_overlay2.png);
-    background-size: 100%;
-    background-repeat: no-repeat;
+    .heatmap:hover .quadrants {
+        opacity: 1;
+    }
 
-    z-index: 2;
-}
+    .thirds {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
 
-.heatmap:hover .quadrants {
-    opacity: 1;
-}
+        z-index: 4;
 
-.quadrants {
-    width: 100%;
-    opacity: 0;
+        display: flex;
+        pointer-events: none;
+    }
 
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 3;
-    background: rgba(0, 0, 0, 0.4);
+    .third-value, .quadrant-value {
+        opacity: 0;
 
-    transition: opacity 0.25s ease-in-out;
-}
+        position: absolute;
+        text-align: center;
 
-.quadrants::after {
-    content: '';
+        color: #fff;
+        text-shadow: #000 1px 1px 2px;
+        font-size: 24px;
 
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
+        background-color: rgba(0, 0, 0, 0.6);
+        background-image: url(/static/img/arena_quadrants4.png);
+        background-size: 200%;
+        background-repeat: no-repeat;
 
-    background-image: url(/static/img/arena_quadrants4.png);
-    background-size: 100%;
-    background-repeat: no-repeat;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    z-index: 2;
-}
+        transition: opacity 0.25s ease-in-out;
 
-.quadrant-value {
-    position: absolute;
-    text-align: center;
+        cursor: default;
+    }
 
-    color: #fff;
-    text-shadow: #000 1px 1px 2px;
-    font-size: 24px;
-}
+    .third-value {
+        height: 33%;
+        top: 33%;
+        background-size: 300%;
 
-.quadrant-value.top-left {
-    top: 25%;
-    right: 50%;
-    left: 17px;
+        font-size: 16px;
 
-    transform: translateY(-25%);
-}
+        background-image: url(/static/img/arena_quadrants5.png);
+        pointer-events: all;
+    }
 
-.quadrant-value.top-right {
-    top: 25%;
-    right: 17px;
-    left: 50%;
+    .third-value:hover {
+        opacity: 1;
+    }
 
-    transform: translateY(-25%);
-}
+    .third-value::before, .third-value::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
 
-.quadrant-value.bottom-left {
-    bottom: 25%;
-    left: 17px;
-    right: 50%;
+        width: 100%;
+        height: calc(100% + 2px);
 
-    transform: translateY(25%);
-}
+        background-color: rgba(0, 0, 0, 0.6);
+        pointer-events: none;
 
-.quadrant-value.bottom-right {
-    bottom: 25%;
-    right: 17px;
-    left: 50%;
+        background-image: url(/static/img/arena_quadrants5.png);
+        background-size: 300%;
+        background-repeat: no-repeat;
+    }
 
-    transform: translateY(25%);
-}
+    .third-value::before {
+        top: calc(-100% - 2px);
+        left: 0;
+    }
+
+    .third-value::after {
+        bottom: calc(-100% - 2px);
+        left: 0;
+    }
+
+    .third-value.left {
+        left: 0;
+        right: calc(100% / 3 * 2);
+
+        padding-left: 17px;
+
+        background-position: center left;
+    }
+
+    .third-value.left::before {
+        background-position: top left;
+    }
+
+    .third-value.left::after {
+        background-position: bottom left;
+    }
+
+    .third-value.middle {
+        left: calc(100% / 3);
+        right: calc(100% / 3);
+
+        background-position: center center;
+    }
+
+    .third-value.middle::before {
+        background-position: top center;
+    }
+
+    .third-value.middle::after {
+        background-position: bottom center;
+    }
+
+    .third-value.right {
+        left: calc(100% / 3 * 2);
+        right: 0;
+
+        padding-right: 17px;
+
+        background-position: center right;
+    }
+
+    .third-value.right::before {
+        background-position: top right;
+    }
+
+    .third-value.right::after {
+        background-position: bottom right;
+    }
+
+    .quadrants {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        z-index: 3;
+    }
+
+    .quadrant-value {
+
+    }
+
+    .quadrant-value:hover {
+        opacity: 1;
+    }
+
+    .quadrant-value.top-left {
+        top: 0;
+        right: 50%;
+        bottom: 50%;
+        left: 0;
+
+        padding-left: 17px;
+
+        background-position: top left;
+    }
+
+    .quadrant-value.top-right {
+        top: 0;
+        right: 0;
+        bottom: 50%;
+        left: 50%;
+
+        padding-right: 17px;
+
+        background-position: top right;
+    }
+
+    .quadrant-value.bottom-left {
+        top: 50%;
+        right: 50%;
+        bottom: 0;
+        left: 0;
+
+        padding-left: 17px;
+
+        background-position: bottom left;
+    }
+
+    .quadrant-value.bottom-right {
+        top: 50%;
+        right: 0;
+        bottom: 0;
+        left: 50%;
+
+        padding-right: 17px;
+
+        background-position: bottom right;
+    }
 
 </style>
-{% endblock content_primary %}
+{% endblock %}
 
 {% block additional_js %}
-  {% if replay.location_json_file %}
-    <script src="https://rawgit.com/pa7/heatmap.js/master/build/heatmap.js"></script>
-    <script>
+{% if replay.location_json_file %}
+<script src="https://rawgit.com/pa7/heatmap.js/master/build/heatmap.js"></script>
+<script>
     "use strict"
 
     var data;
@@ -414,35 +547,35 @@
         // Success!
         data = JSON.parse(this.response);
         render_heatmap();
-      }
-    };
-    request.send();
+    }
+};
+request.send();
 
-    function render_heatmap() {
-        const elements = document.querySelectorAll('.heatmap')
-        for (var index in elements) {
-            if ( ! elements.hasOwnProperty(index)) {
-                return
-            }
+function render_heatmap() {
+    const elements = document.querySelectorAll('.heatmap')
+    for (var index in elements) {
+        if ( ! elements.hasOwnProperty(index)) {
+            return
+        }
 
-            const el = elements[index]
+        const el = elements[index]
 
-            let radius = 20
-            let blur
+        let radius = 20
+        let blur
 
-            if (el.offsetWidth > 300) {
-                radius = 30
-                blur = 0.45
-            }
+        if (el.offsetWidth > 300) {
+            radius = 30
+            blur = 0.45
+        }
 
-            var heatmap = h337.create({
-                container: el,
-                radius: radius,
-                blur: 0.45,
-                minOpacity: 0.1,
-                maxOpacity: 1,
-                backgroundColor: '#fff'
-            });
+        var heatmap = h337.create({
+            container: el,
+            radius: radius,
+            blur: 0.45,
+            minOpacity: 0.1,
+            maxOpacity: 1,
+            backgroundColor: '#fff'
+        });
 
             // el.parentNode.querySelector('.heatmap-download').classList.add('hide')
             const selected_actor = el.getAttribute('data-actor-id')
@@ -520,6 +653,12 @@
                 'bottomRight': 0,
             }
 
+            const thirdData = {
+                'left': 0,
+                'middle': 0,
+                'right': 0
+            }
+
             formatted_data.forEach(function(item) {
                 // Rework the x values to be between 0 and `canvas width`.
                 let offsetX = item.x + min_x
@@ -548,12 +687,25 @@
 
                 quadrantData[quadrant] += item.value
 
+                // Which third is this data point in?
+                let third = ''
+
+                if (offsetX <= canvas_width / 3) {
+                    third = 'left'
+                } else if (offsetX >= canvas_width / 3 && offsetX <= canvas_width / 3 * 2) {
+                    third = 'middle'
+                } else {
+                    third = 'right'
+                }
+
+                thirdData[third] += item.value
+
                 // Determine the value distribution.
                 if (stats[item.value] === undefined) {
                   stats[item.value] = 1
-                } else {
+              } else {
                   stats[item.value] += 1
-                }
+              }
 
                 // Push the data into the final array.
                 reformatted_data.push({
@@ -562,9 +714,6 @@
                     value: item.value
                 })
             })
-
-            console.table([stats])
-            console.table([quadrantData])
 
             heatmap.setData({
                 min: Object.keys(stats).shift(),
@@ -577,14 +726,25 @@
             // Sum all of the quadrant data.
             const quadrantSum = Object.keys(quadrantData).reduce(function(sum, key) {
                  return sum + parseInt(quadrantData[key], 10);
-            }, 0);
+             }, 0);
 
             quadrants.querySelector('.top-left').innerHTML = `${(quadrantData.topLeft / quadrantSum * 100).toFixed(2)}%`
             quadrants.querySelector('.top-right').innerHTML = `${(quadrantData.topRight / quadrantSum * 100).toFixed(2)}%`
             quadrants.querySelector('.bottom-left').innerHTML = `${(quadrantData.bottomLeft / quadrantSum * 100).toFixed(2)}%`
             quadrants.querySelector('.bottom-right').innerHTML = `${(quadrantData.bottomRight / quadrantSum * 100).toFixed(2)}%`
+
+            const thirds = document.querySelector(`.thirds[data-actor-id="${selected_actor}"]`)
+
+            // Sum all of the quadrant data.
+            const thirdSum = Object.keys(thirdData).reduce(function(sum, key) {
+                 return sum + parseInt(thirdData[key], 10);
+             }, 0);
+
+            thirds.querySelector('.left').innerHTML = `${(thirdData.left / thirdSum * 100).toFixed(2)}%`
+            thirds.querySelector('.middle').innerHTML = `${(thirdData.middle / thirdSum * 100).toFixed(2)}%`
+            thirds.querySelector('.right').innerHTML = `${(thirdData.right / thirdSum * 100).toFixed(2)}%`
         }
     }
-    </script>
-  {% endif %}
+</script>
+{% endif %}
 {% endblock %}
