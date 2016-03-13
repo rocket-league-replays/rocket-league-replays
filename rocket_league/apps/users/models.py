@@ -135,7 +135,8 @@ class Profile(models.Model):
 
 class LeagueRating(models.Model):
 
-    steamid = models.BigIntegerField(
+    steamid = models.CharField(
+        max_length=300,
         blank=True,
         null=True,
         db_index=True,
