@@ -40,7 +40,7 @@ class Command(BaseCommand):
                 replays = Replay.objects.all()
 
             replays = replays.filter(
-                location_json_file__isnull=True,
+                location_json_file='',
             ).exclude(
                 crashed_heatmap_parser=True,
             )
