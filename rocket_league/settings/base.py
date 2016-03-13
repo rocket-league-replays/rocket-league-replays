@@ -266,18 +266,58 @@ CACHES = {
 SECRET_KEY = "alqoe3)6+-nsd!ffs_qjp=!^_e5$)t2w$3rq0g&c_8_u%^3*x)"
 
 
-REDACTOR_OPTIONS = {
-    "plugins": ["table", "imagemanager", "video", "filemanager"],
-    "imageUpload": "/admin/media/file/redactor/upload/image/",
-    "fileUpload": "/admin/media/file/redactor/upload/file/",
-    "minHeight": 300,
-    "formattingAdd": [
+WYSIWYG_OPTIONS = {
+    # Overall height of the WYSIWYG
+    'height': 500,
+
+    # Main plugins to load, this has been stripped to match the toolbar
+    # See https://www.tinymce.com/docs/get-started/work-with-plugins/
+    'plugins': [
+        "advlist autolink link image lists charmap hr anchor pagebreak",
+        "wordcount visualblocks visualchars code fullscreen cmsimage hr",
+        "table contextmenu directionality paste textcolor colorpicker textpattern"
+    ],
+
+    # Items to display on the 3 toolbar lines
+    'toolbar1': "code | cut copy paste pastetext | undo redo | bullist numlist | link unlink anchor cmsimage | blockquote charmap",
+    'toolbar2': "styleselect formatselect | bold italic underline hr | alignleft aligncenter alignright | table | removeformat | subscript superscript",
+    'toolbar3': "",
+
+    # Display menubar with dropdowns
+    'menubar': False,
+
+    # Make toolbar smaller
+    'toolbar_items_size': 'small',
+
+    # Custom style formats
+    'style_formats': [
         {
-            "tag": "a",
-            "title": "Button",
-            "class": "button primary",
+            'title': 'Buttons',
+            'items': [
+                {
+                    'title': 'Primary',
+                    'selector': 'a',
+                    'classes': 'button primary'
+                },
+                {
+                    'title': 'Secondary',
+                    'selector': 'a',
+                    'classes': 'button secondary'
+                },
+            ]
         }
-    ]
+    ],
+
+    # Make all elements valid
+    'valid_elements': '*[*]',
+
+    # Disable automatic URL manipulation
+    'convert_urls': False,
+
+    # Make TinyMCE past as text by default
+    'paste_as_text': True,
+
+    'image_advtab': True
 }
 
 REST_FRAMEWORK = {
