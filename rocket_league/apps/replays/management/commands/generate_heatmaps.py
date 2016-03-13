@@ -4,6 +4,7 @@ import traceback
 from contextlib import contextmanager
 
 from django.core.management.base import BaseCommand
+from django.utils.timezone import now
 
 from ...models import Replay
 
@@ -11,7 +12,10 @@ from ...models import Replay
 @contextmanager
 def file_lock(lock_file):
     if os.path.exists(lock_file):
-        print('Only one script can run at once. Script is locked with %s' % lock_file)
+        print('[{}] Only one script can run at once. Script is locked with {}'.format(
+            now(),
+            lock_file
+        ))
         sys.exit(-1)
     else:
         open(lock_file, 'w').write("1")
@@ -45,7 +49,11 @@ class Command(BaseCommand):
 
             for replay in replays:
                 if replay.replay_id and replay.file:
-                    print('Processing', replay.pk, '-', replay.replay_id)
+                    print('[{}] Processing {} - {}'.format(
+                        now(),
+                        replay.pk,
+                        replay.replay_id
+                    ))
 
                     try:
                         replay.processed = False
