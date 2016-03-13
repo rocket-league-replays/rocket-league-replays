@@ -682,6 +682,12 @@ class Replay(models.Model):
 
                         if players.count() > 0:
                             player = players[0]
+                        else:
+                            player = Player.objects.create(
+                                replay=self,
+                                player_name=goal['PlayerName'],
+                                team=goal['PlayerTeam']
+                            )
 
                     Goal.objects.create(
                         replay=self,
