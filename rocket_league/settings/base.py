@@ -371,6 +371,7 @@ PLAYLISTS = {
     'RankedDoubles': 11,
     'RankedSoloStandard': 12,
     'RankedStandard': 13,
+    'SnowDay': 15,
     'RocketLabs': 16,  # TODO: Check this is correct.
 }
 
