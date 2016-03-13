@@ -45,7 +45,10 @@ class Command(BaseCommand):
                 crashed_heatmap_parser=True,
             )
 
-            replays = replays.order_by('-pk')[:10]
+            replays = replays.extra(select={
+                'timestamp__date': 'DATE(timestamp)'
+            })
+            replays = replays.order_by('-timestamp__date', '-average_rating')[:10]
 
             for replay in replays:
                 if replay.replay_id and replay.file:
