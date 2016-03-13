@@ -10,6 +10,7 @@ from django.core.files.storage import default_storage
 from bitstring import Bits
 from pyrope import Replay
 from pyrope.exceptions import FrameParsingError
+from boto.exception import S3ResponseError
 
 
 class Parser(object):
@@ -39,7 +40,7 @@ class Parser(object):
         if parse_netstream:
             try:
                 self.replay = pickle.loads(default_storage.open(pickle_filename).read())
-            except FileNotFoundError:
+            except (FileNotFoundError, OSError, S3ResponseError):
                 try:
                     self.replay.parse_netstream()
                     default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
