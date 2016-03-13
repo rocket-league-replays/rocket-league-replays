@@ -147,14 +147,14 @@ class Parser(object):
         # Search through the frame looking for team info.
         team_info = [
             value for name, value in frame.actors.items()
-            if 'Archetypes.Teams.Team' in value['actor_type'] and value['new']
+            if 'Archetypes.Teams.Team' in value.get('actor_type', value.get('act`or_type', '')) and value['new']
         ]
 
         if not team_info:
             return
 
         for team in team_info:
-            self.team_metadata[team['actor_id']] = team['actor_type'].replace('Archetypes.Teams.Team', '')
+            self.team_metadata[team['actor_id']] = team.get('actor_type', team.get('act`or_type', '')).replace('Archetypes.Teams.Team', '')
 
     def _extract_goal_data(self, base_index, search_index=None):
         first_run = False
@@ -241,7 +241,7 @@ class Parser(object):
             players = [
                 value
                 for name, value in frame.actors.items()
-                if value['actor_type'] == 'TAGame.Default__PRI_TA'
+                if value.get('actor_type', value.get('act`or_type', '')) == 'TAGame.Default__PRI_TA'
             ]
 
             for value in players:
@@ -326,7 +326,7 @@ class Parser(object):
                 value
                 for name, value in frame.actors.items()
                 if (
-                    value['actor_type'] == 'Archetypes.Ball.Ball_Default' and
+                    value.get('actor_type', value.get('act`or_type', '')) == 'Archetypes.Ball.Ball_Default' and
                     'TAGame.RBActor_TA:ReplicatedRBState' in value.get('data', {})
                 )
             ]

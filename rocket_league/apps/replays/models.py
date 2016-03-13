@@ -674,14 +674,20 @@ class Replay(models.Model):
                             actor_id=parser.goal_metadata[goal['frame']],
                         )
                     else:
-                        player = Player.objects.filter(
+                        players = Player.objects.filter(
                             replay=self,
                             player_name=goal['PlayerName'],
                             team=goal['PlayerTeam']
                         )
 
-                        if player.count() > 0:
-                            player = player[0]
+                        if players.count() > 0:
+                            player = players[0]
+                        else:
+                            player = Player.objects.create(
+                                replay=self,
+                                player_name=goal['PlayerName'],
+                                team=goal['PlayerTeam']
+                            )
 
                     Goal.objects.create(
                         replay=self,

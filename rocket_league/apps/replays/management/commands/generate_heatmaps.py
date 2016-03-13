@@ -1,8 +1,24 @@
-
+import os
+import sys
 import traceback
+from contextlib import contextmanager
+
 from django.core.management.base import BaseCommand
 
 from ...models import Replay
+
+
+@contextmanager
+def file_lock(lock_file):
+    if os.path.exists(lock_file):
+        print('Only one script can run at once. Script is locked with %s' % lock_file)
+        sys.exit(-1)
+    else:
+        open(lock_file, 'w').write("1")
+        try:
+            yield
+        finally:
+            os.remove(lock_file)
 
 
 class Command(BaseCommand):
@@ -13,29 +29,30 @@ class Command(BaseCommand):
         parser.add_argument('replay_id', nargs='?', type=int)
 
     def handle(self, *args, **options):
-        if options['replay_id']:
-            replays = Replay.objects.filter(pk=options['replay_id'])
-        else:
-            replays = Replay.objects.all()
+        with file_lock('/tmp/generate_heatmaps.lock'):
+            if options['replay_id']:
+                replays = Replay.objects.filter(pk=options['replay_id'])
+            else:
+                replays = Replay.objects.all()
 
-        replays = replays.filter(
-            location_json_file__isnull=True,
-        ).exclude(
-            crashed_heatmap_parser=True,
-        )
+            replays = replays.filter(
+                location_json_file__isnull=True,
+            ).exclude(
+                crashed_heatmap_parser=True,
+            )
 
-        replays = replays.order_by('-pk')[:10]
+            replays = replays.order_by('-pk')[:10]
 
-        for replay in replays:
-            if replay.replay_id and replay.file:
-                print('Processing', replay.pk, '-', replay.replay_id)
+            for replay in replays:
+                if replay.replay_id and replay.file:
+                    print('Processing', replay.pk, '-', replay.replay_id)
 
-                try:
-                    replay.processed = False
-                    replay.save(parse_netstream=True)
-                except Exception:
-                    replay.crashed_heatmap_parser = True
-                    replay.save()
+                    try:
+                        replay.processed = False
+                        replay.save(parse_netstream=True)
+                    except Exception:
+                        replay.crashed_heatmap_parser = True
+                        replay.save()
 
-                    print('Unable to process.')
-                    traceback.print_exc()
+                        print('Unable to process.')
+                        traceback.print_exc()
