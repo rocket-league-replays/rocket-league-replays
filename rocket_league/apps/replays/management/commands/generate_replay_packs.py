@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 print('Processing', obj.pk)
                 zip_filename = '{}.zip'.format(str(obj))
 
-                zip_string = io.StringIO()
+                zip_string = io.BytesIO()
 
                 with ZipFile(zip_string, 'w') as f:
                     for replay in obj.replays.all():
