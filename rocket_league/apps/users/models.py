@@ -32,29 +32,34 @@ class Profile(models.Model):
     )
 
     twitter_username = models.CharField(
+        "Twitter username",
         max_length=100,
         blank=True,
         null=True,
     )
 
     twitch_username = models.CharField(
+        "Twitch.tv username",
         max_length=100,
         blank=True,
         null=True,
     )
 
     reddit_username = models.CharField(
+        "reddit username",
         max_length=100,
         blank=True,
         null=True,
     )
 
     youtube_url = models.URLField(
+        "YouTube URL",
         blank=True,
         null=True,
     )
 
     facebook_url = models.URLField(
+        "Facebook URL",
         blank=True,
         null=True,
     )

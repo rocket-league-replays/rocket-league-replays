@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.views.generic import DetailView, TemplateView, UpdateView
 
-from .forms import UserSettingsForm
+from .forms import UserSettingsForm, PatreonSettingsForm
 from .models import SteamCache
 from ..replays.models import Replay
 
@@ -24,6 +24,19 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = 'users/user_settings.html'
     model = User
     form_class = UserSettingsForm
+    success_message = "Your settings were successfully updated."
+
+    def get_success_url(self):
+        return reverse('users:settings')
+
+    def get_object(self):
+        return self.request.user
+
+
+class PatreonSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    template_name = 'users/patreon_settings.html'
+    model = User
+    form_class = PatreonSettingsForm
     success_message = "Your settings were successfully updated."
 
     def get_success_url(self):
