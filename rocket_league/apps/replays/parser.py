@@ -1,16 +1,16 @@
 import json
 import pickle
 import sys
+import traceback
 from pprint import pprint
 
+from bitstring import Bits
+from boto.exception import S3ResponseError
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-
-from bitstring import Bits
 from pyrope import Replay
 from pyrope.exceptions import FrameParsingError
-from boto.exception import S3ResponseError
 
 
 class Parser(object):
@@ -47,6 +47,7 @@ class Parser(object):
                 except FrameParsingError:
                     # Bail us out of here early, just provide an 'old school' parse.
                     parse_netstream = False
+                    traceback.print_exc()
 
         if not parse_netstream:
             return

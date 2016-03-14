@@ -56,9 +56,17 @@ class Command(BaseCommand):
                     try:
                         replay.processed = False
                         replay.save(parse_netstream=True)
+
+                        replay.refresh_from_db()
+
+                        if not replay.location_json_file:
+                            replay.crashed_heatmap_parser = True
+                            replay.save()
+
                     except Exception:
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
+                        # https://opbeat.com/docs/articles/get-started-with-django/
                         print('Unable to process.')
                         traceback.print_exc()
