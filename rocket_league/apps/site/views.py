@@ -30,7 +30,7 @@ class StatsView(TemplateView):
 
         # Unique Steam accounts.
         player_ids = Player.objects.filter(
-            platform='OnlinePlatform_Steam',
+            platform__in=['OnlinePlatform_Steam', '1'],
             replay__timestamp__gte=since,
         ).distinct('online_id').values_list('online_id', flat=True).order_by()
 
