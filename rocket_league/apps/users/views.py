@@ -33,7 +33,7 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return self.request.user
 
 
-class PatreonSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class PatreonSettingsView(SuccessMessageMixin, UpdateView):
     template_name = 'users/patreon_settings.html'
     model = User
     form_class = PatreonSettingsForm
