@@ -21,7 +21,7 @@ def display_names(steam_info):
         return None
 
     names = Player.objects.filter(
-        platform='OnlinePlatform_Steam',
+        platform__in=['OnlinePlatform_Steam', '1'],
         online_id=steam_info['steamid'],
     ).exclude(
         player_name=steam_info.get('personaname', '')

@@ -352,7 +352,7 @@ class Replay(models.Model):
         from ..users.models import LeagueRating
 
         players = self.player_set.filter(
-            platform='OnlinePlatform_Steam',
+            platform__in=['OnlinePlatform_Steam', '1'],
         ).exclude(
             online_id__isnull=True,
         )
@@ -371,32 +371,60 @@ class Replay(models.Model):
             ratings = LeagueRating.objects.filter(
                 steamid=player.online_id,
                 season_id=get_season[0].pk if get_season else get_default_season()
-            ).exclude(
-                duels=0,
-                doubles=0,
-                solo_standard=0,
-                standard=0,
-            )[:1]
+            )
+
+            if self.playlist:
+                if self.playlist == settings.PLAYLISTS['RankedDuels']:
+                    ratings = ratings.exclude(duels=0)
+                elif self.playlist == settings.PLAYLISTS['RankedDoubles']:
+                    ratings = ratings.exclude(doubles=0)
+                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard']:
+                    ratings = ratings.exclude(solo_standard=0)
+                elif self.playlist == settings.PLAYLISTS['RankedStandard']:
+                    ratings = ratings.exclude(standard=0)
+            else:
+                if team_sizes == 1:
+                    ratings = ratings.exclude(duels=0)
+                elif team_sizes == 2:
+                    ratings = ratings.exclude(doubles=0)
+                elif team_sizes == 3:
+                    ratings = ratings.exclude(solo_standard=0, standard=0)
+
+                ratings = ratings[:1]
 
             if len(ratings) > 0:
                 rating = ratings[0]
             else:
                 continue
 
-            if team_sizes == 1 and rating.duels > 0:  # Duels
-                total_player_ratings += rating.duels
-                num_player_ratings += 1
-            elif team_sizes == 2 and rating.doubles > 0:  # Doubles
-                total_player_ratings += rating.doubles
-                num_player_ratings += 1
-            elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
-                if rating.solo_standard > 0 and rating.standard <= 0:
+            if self.playlist:
+                if self.playlist == settings.PLAYLISTS['RankedDuels'] and rating.duels > 0:  # Duels
+                    total_player_ratings += rating.duels
+                    num_player_ratings += 1
+                elif self.playlist == settings.PLAYLISTS['RankedDoubles'] and rating.doubles > 0:  # Doubles
+                    total_player_ratings += rating.doubles
+                    num_player_ratings += 1
+                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard'] and rating.solo_standard > 0:
                     total_player_ratings += rating.solo_standard
-                elif rating.standard > 0 and rating.solo_standard <= 0:
+                    num_player_ratings += 1
+                elif self.playlist == settings.PLAYLISTS['RankedStandard'] and rating.standard > 0:
                     total_player_ratings += rating.standard
-                else:
-                    total_player_ratings += (rating.solo_standard + rating.standard) / 2
-                num_player_ratings += 1
+                    num_player_ratings += 1
+            else:
+                if team_sizes == 1 and rating.duels > 0:  # Duels
+                    total_player_ratings += rating.duels
+                    num_player_ratings += 1
+                elif team_sizes == 2 and rating.doubles > 0:  # Doubles
+                    total_player_ratings += rating.doubles
+                    num_player_ratings += 1
+                elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
+                    if rating.solo_standard > 0 and rating.standard <= 0:
+                        total_player_ratings += rating.solo_standard
+                    elif rating.standard > 0 and rating.solo_standard <= 0:
+                        total_player_ratings += rating.standard
+                    else:
+                        total_player_ratings += (rating.solo_standard + rating.standard) / 2
+                    num_player_ratings += 1
 
         if num_player_ratings > 0:
             return total_player_ratings / num_player_ratings

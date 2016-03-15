@@ -40,7 +40,7 @@ def custom_scoreboard(context, steam_info):
         player_data = Player.objects.filter(
             replay__team_sizes=size,
             replay__season_id=season_id,
-            platform='OnlinePlatform_Steam',
+            platform__in=['OnlinePlatform_Steam', '1'],
             online_id=steam_info['steamid'],
         ).aggregate(
             score=Sum('score'),
@@ -84,7 +84,7 @@ def steam_stats(uid):
 
     # Winning goals scored.
     data['winning_goals'] = Goal.objects.filter(
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
         replay__show_leaderboard=True,
         replay__season_id=season_id,
@@ -93,7 +93,7 @@ def steam_stats(uid):
 
     # Last minute goals (literally, goals scored within the last minute of the game)
     data['last_minute_goals'] = Goal.objects.filter(
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
         replay__show_leaderboard=True,
         replay__season_id=season_id,
@@ -120,7 +120,7 @@ def steam_stats(uid):
         season_id=season_id,
         num_frames__gt=60 * 5 * F('record_fps'),
         show_leaderboard=True,
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
         num_goals__gte=2,
     ).prefetch_related('goal_set')
@@ -130,7 +130,7 @@ def steam_stats(uid):
         try:
             goal = replay.goal_set.get(
                 number=replay.num_goals - 1,
-                player__platform='OnlinePlatform_Steam',
+                player__platform__in=['OnlinePlatform_Steam', '1'],
                 player__online_id=uid,
             )
 
@@ -148,7 +148,7 @@ def steam_stats(uid):
             # Did they also score the winning goal?
             replay.goal_set.get(
                 number=replay.num_goals,
-                player__platform='OnlinePlatform_Steam',
+                player__platform__in=['OnlinePlatform_Steam', '1'],
                 player__online_id=uid,
             )
 
@@ -162,7 +162,7 @@ def steam_stats(uid):
     sizes = Replay.objects.filter(
         season_id=season_id,
         show_leaderboard=True,
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
     ).values('team_sizes').annotate(
         Count('team_sizes'),
@@ -177,7 +177,7 @@ def steam_stats(uid):
     role_query = Player.objects.filter(
         replay__show_leaderboard=True,
         replay__season_id=season_id,
-        platform='OnlinePlatform_Steam',
+        platform__in=['OnlinePlatform_Steam', '1'],
         online_id=uid,
     ).aggregate(
         goals=Sum('goals'),
@@ -208,7 +208,7 @@ def steam_stats(uid):
     replays = Replay.objects.filter(
         team_sizes__gte=2,
         show_leaderboard=True,
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
     )
 
@@ -257,7 +257,7 @@ def steam_stats(uid):
     replays = Replay.objects.filter(
         team_sizes__gte=2,
         show_leaderboard=True,
-        player__platform='OnlinePlatform_Steam',
+        player__platform__in=['OnlinePlatform_Steam', '1'],
         player__online_id=uid,
     ).extra(select={
         'goal_diff': 'abs("team_0_score" - "team_1_score")'
@@ -268,7 +268,7 @@ def steam_stats(uid):
         # Which team was the player on? Split screen players will break a .get()
         # here, so we have to filter().
         player = replay.player_set.filter(
-            platform='OnlinePlatform_Steam',
+            platform__in=['OnlinePlatform_Steam', '1'],
             online_id=uid,
         )[0]
 
@@ -286,7 +286,7 @@ def steam_stats(uid):
 
     data.update(Player.objects.filter(
         replay__season_id=season_id,
-        platform='OnlinePlatform_Steam',
+        platform__in=['OnlinePlatform_Steam', '1'],
         online_id=uid,
     ).aggregate(
         highest_score=Max('score'),

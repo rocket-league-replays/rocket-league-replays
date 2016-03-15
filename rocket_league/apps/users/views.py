@@ -137,7 +137,7 @@ class SteamView(TemplateView):
 
         context['appears_in'] = Replay.objects.filter(
             show_leaderboard=True,
-            player__platform='OnlinePlatform_Steam',
+            player__platform__in=['OnlinePlatform_Steam', '1'],
             player__online_id=kwargs['steam_id'],
         ).distinct()
 

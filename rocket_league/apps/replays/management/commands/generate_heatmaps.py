@@ -37,18 +37,13 @@ class Command(BaseCommand):
             if options['replay_id']:
                 replays = Replay.objects.filter(pk=options['replay_id'])
             else:
-                replays = Replay.objects.all()
-
-            replays = replays.filter(
-                location_json_file='',
-            ).exclude(
-                crashed_heatmap_parser=True,
-            )
-
-            replays = replays.extra(select={
-                'timestamp__date': 'DATE(timestamp)'
-            })
-            replays = replays.order_by('-timestamp__date', '-average_rating')[:10]
+                replays = Replay.objects.filter(
+                    location_json_file='',
+                ).exclude(
+                    crashed_heatmap_parser=True,
+                ).extra(select={
+                    'timestamp__date': 'DATE(timestamp)'
+                }).order_by('-timestamp__date', '-average_rating')[:10]
 
             for replay in replays:
                 if replay.replay_id and replay.file:
@@ -61,9 +56,17 @@ class Command(BaseCommand):
                     try:
                         replay.processed = False
                         replay.save(parse_netstream=True)
+
+                        replay.refresh_from_db()
+
+                        if not replay.location_json_file:
+                            replay.crashed_heatmap_parser = True
+                            replay.save()
+
                     except Exception:
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
+                        # https://opbeat.com/docs/articles/get-started-with-django/
                         print('Unable to process.')
                         traceback.print_exc()

@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         player_ids = Player.objects.filter(
-            platform='OnlinePlatform_Steam',
+            platform__in=['OnlinePlatform_Steam', '1'],
         ).distinct('online_id').values_list('online_id', flat=True).order_by()
 
         social_auth_ids = UserSocialAuth.objects.filter(
