@@ -1,5 +1,8 @@
+import xml.etree.ElementTree as ET
+
+import requests
+from braces.views import LoginRequiredMixin
 from django.conf import settings
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
@@ -8,16 +11,12 @@ from django.shortcuts import redirect
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.views.generic import DetailView, TemplateView, UpdateView
-
-from .forms import UserSettingsForm, PatreonSettingsForm
-from .models import SteamCache
-from ..replays.models import Replay
-
-from braces.views import LoginRequiredMixin
-import requests
-from social.backends.steam import USER_INFO
 from social.apps.django_app.default.models import UserSocialAuth
-import xml.etree.ElementTree as ET
+from social.backends.steam import USER_INFO
+
+from ..replays.models import Replay
+from .forms import PatreonSettingsForm, UserSettingsForm
+from .models import Profile, SteamCache
 
 
 class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -35,15 +34,18 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
 class PatreonSettingsView(SuccessMessageMixin, UpdateView):
     template_name = 'users/patreon_settings.html'
-    model = User
+    model = Profile
     form_class = PatreonSettingsForm
-    success_message = "Your settings were successfully updated."
+    success_message = ("Your settings were successfully updated. If you are a "
+                       "new patron it may take a couple of hours for your "
+                       "benefits to be applied. Please get in touch if they're "
+                       "not applied after 24 hours.")
 
     def get_success_url(self):
-        return reverse('users:settings')
+        return reverse('users:patreon')
 
     def get_object(self):
-        return self.request.user
+        return self.request.user.profile
 
 
 class PublicProfileView(DetailView):

@@ -91,6 +91,11 @@ class UserSettingsForm(forms.ModelForm):
 
 class PatreonSettingsForm(forms.ModelForm):
 
+    def __init__(self, *args, **kwargs):
+        super(PatreonSettingsForm, self).__init__(*args, **kwargs)
+
+        self.fields['patreon_email_address'].required = True
+
     class Meta:
         model = Profile
         exclude = ['user', 'patreon_level']
