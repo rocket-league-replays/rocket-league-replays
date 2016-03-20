@@ -24,7 +24,6 @@ class PatronAdmin(admin.ModelAdmin):
                        'pledge_declined_since']
         }),
         ('Patron', {
-            'fields': ['patron_id', 'patron_email', 'patron_facebook',
-                       'patron_twitter', 'patron_youtube']
+            'fields': ['patron_id', 'patron_email']
         }),
     )

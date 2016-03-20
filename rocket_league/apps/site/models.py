@@ -3,8 +3,6 @@ from django.db import models
 from cms.models import HtmlField
 from cms.apps.media.models import ImageRefField
 from cms.apps.pages.models import ContentBase, Page
-import patreon
-import os
 
 
 class Content(ContentBase):
@@ -63,24 +61,6 @@ class Patron(models.Model):
     )
 
     patron_email = models.EmailField()
-
-    patron_facebook = models.CharField(
-        max_length=300,
-        blank=True,
-        null=True,
-    )
-
-    patron_twitter = models.CharField(
-        max_length=300,
-        blank=True,
-        null=True,
-    )
-
-    patron_youtube = models.CharField(
-        max_length=300,
-        blank=True,
-        null=True,
-    )
 
     def __str__(self):
         return self.patron_email
