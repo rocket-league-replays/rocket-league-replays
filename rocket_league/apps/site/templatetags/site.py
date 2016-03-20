@@ -1,6 +1,8 @@
 from django import template
+from social.apps.django_app.default.models import UserSocialAuth
 
 from ...replays.models import Player
+from ..models import Patron
 
 register = template.Library()
 
@@ -41,3 +43,50 @@ def display_names(steam_info):
 @register.filter
 def string(val):
     return str(val)
+
+
+@register.assignment_tag(takes_context=True)
+def patreon_pledge_amount(context, user=None, steam_id=None):
+    # Check if we need to take the user from the context data.
+    if not user and not steam_id:
+        user = context['user']
+
+        if not user.is_authenticated():
+            return 0
+
+    if not user and steam_id:
+        # See if we can get a user object from this Steam ID.
+        try:
+            obj = UserSocialAuth.objects.get(
+                provider='steam',
+                uid=steam_id,
+            )
+
+            user = obj.user
+
+        except UserSocialAuth.DoesNotExist:
+            return 0
+
+    # Does this user have a Patreon email address?
+    if not user.profile.patreon_email_address:
+        return 0
+
+    # Does a patreon object for this email address exist?
+    try:
+        obj = Patron.objects.get(
+            patron_email=user.profile.patreon_email_address,
+        )
+
+        if obj.pledge_declined_since:
+            # TODO: Double check this is correct.
+            return 0
+
+        return obj.pledge_amount
+
+    except Patron.DoesNotExist:
+        return 0
+
+
+@register.assignment_tag(takes_context=True)
+def patreon_pledge_amount_dollars(context):
+    return '{0:.2f}'.format(context['patreon'] / 100.0)

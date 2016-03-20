@@ -1,5 +1,6 @@
 {% load pages html compress ratings site static %}
-
+{% patreon_pledge_amount as patreon %}
+{% patreon_pledge_amount_dollars as patreon_dollars %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -103,7 +104,7 @@
                 </div>
 
                 <div class="row secondary-navigation">
-                    <div class="medium-6 columns ">
+                    <div class="medium-3 columns ">
                         {% if 'steam' not in backends.not_associated %}
                             {% league_data as data %}
 
@@ -237,11 +238,12 @@
                             {% endif %}
                         {% endif %}
                     </div>
-                    <div class="medium-6 columns right text-right ">
+                    <div class="medium-9 columns right text-right ">
                         {% if user.is_authenticated %}
                             <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
                             <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
                             <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
+                            <a href="{% url 'users:patreon' %}">Patreon Settings</a>
 
                             {% if 'steam' in backends.not_associated %}
                                 <a href="{% url 'social:begin' backend='steam' %}">
@@ -270,6 +272,7 @@
 
             {% block footer %}
             <footer class="row">
+                {% if patreon == 0 %}
                 <div class="medium-12 columns text-center hide-below-banner-width">
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
                     <!-- Detail page -->
@@ -281,6 +284,7 @@
                     (adsbygoogle = window.adsbygoogle || []).push({});
                     </script>
                 </div>
+                {% endif %}
 
                 <div class="small-12 columns">
                     <p>Rocket League Replays was created by <a href="http://danielsamuels.co.uk/" target="_blank">Daniel Samuels</a>. Source code available on <a href="https://github.com/rocket-league-replays/rocket-league-replays">Github</a>.</p>

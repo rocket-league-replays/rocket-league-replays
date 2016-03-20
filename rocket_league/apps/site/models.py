@@ -35,3 +35,32 @@ class StandardPage(ContentBase):
         blank=True,
         null=True,
     )
+
+
+class Patron(models.Model):
+
+    # Pledge details
+    pledge_id = models.PositiveIntegerField(
+        b"Pledge ID",
+    )
+
+    pledge_amount = models.PositiveIntegerField(
+        help_text=b"Amount pledged (in cents)"
+    )
+
+    pledge_created = models.DateTimeField()
+
+    pledge_declined_since = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    # Patron details
+    patron_id = models.PositiveIntegerField(
+        b"Patron ID",
+    )
+
+    patron_email = models.EmailField()
+
+    def __str__(self):
+        return self.patron_email

@@ -19,6 +19,45 @@ from ..replays.models import Season, get_default_season
 class Profile(models.Model):
     user = models.OneToOneField(User)
 
+    patreon_email_address = models.EmailField(
+        unique=True,
+        blank=True,
+        null=True,
+    )
+
+    twitter_username = models.CharField(
+        b"Twitter username",
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    twitch_username = models.CharField(
+        b"Twitch.tv username",
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    reddit_username = models.CharField(
+        b"reddit username",
+        max_length=100,
+        blank=True,
+        null=True,
+    )
+
+    youtube_url = models.URLField(
+        b"YouTube URL",
+        blank=True,
+        null=True,
+    )
+
+    facebook_url = models.URLField(
+        b"Facebook URL",
+        blank=True,
+        null=True,
+    )
+
     def latest_ratings(self):
         if not self.has_steam_connected():
             return {}
@@ -211,4 +250,4 @@ class SteamCache(models.Model):
         db_index=True,
     )
 
-    extra_data = JSONField()
+    extra_data = JSONField(default=b'{}')
