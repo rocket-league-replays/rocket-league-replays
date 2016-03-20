@@ -22,7 +22,7 @@
     <tr>
         {% if players.0.player_name %}
         <td>
-            {% if player.platform == 'OnlinePlatform_Steam' %}
+            {% if player.platform == 'OnlinePlatform_Steam' or player.platform == '1' %}
             <a href="{% url 'users:steam' player.online_id %}">
 
             {# Try to get the latest rating for this player in this size. #}
@@ -58,7 +58,7 @@
             {% include 'site/patreon_crown.html' %}
             {{ player.player_name }}
 
-            {% if player.platform == 'OnlinePlatform_Steam' %}
+            {% if player.platform == 'OnlinePlatform_Steam' or player.platform == '1' %}
             </a>
             {% endif %}
         </td>
