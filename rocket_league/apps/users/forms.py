@@ -98,4 +98,4 @@ class PatreonSettingsForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ['patreon_email_address']
+        exclude = ['user', 'patreon_level']
