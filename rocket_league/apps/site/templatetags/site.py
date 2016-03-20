@@ -69,3 +69,8 @@ def patreon_pledge_amount(context):
 
     except Patron.DoesNotExist:
         return 0
+
+
+@register.assignment_tag(takes_context=True)
+def patreon_pledge_amount_dollars(context):
+    return '{0:.2f}'.format(context['patreon'] / 100.0)
