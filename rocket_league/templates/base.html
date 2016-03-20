@@ -271,6 +271,7 @@
 
             {% block footer %}
             <footer class="row">
+                {% if patreon == 0 %}
                 <div class="medium-12 columns text-center hide-below-banner-width">
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
                     <!-- Detail page -->
@@ -282,6 +283,7 @@
                     (adsbygoogle = window.adsbygoogle || []).push({});
                     </script>
                 </div>
+                {% endif %}
 
                 <div class="small-12 columns">
                     <p>Rocket League Replays was created by <a href="http://danielsamuels.co.uk/" target="_blank">Daniel Samuels</a>. Source code available on <a href="https://github.com/rocket-league-replays/rocket-league-replays">Github</a>.</p>
