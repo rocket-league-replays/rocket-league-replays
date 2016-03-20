@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>Patreon settings</h3>
+        <p><strong>Patreon status:</strong> {% if patreon == 0 %}Inactive{% else %}Active (${{ patreon_dollars }}) - thank you!{% endif %}</p>
+    </div>
+</div>
+
+<form action="" method="post">
+    {% csrf_token %}
+
+    {% for message in messages %}
+        <div class="alert-box success">{{ message }}</div>
+    {% endfor %}
+
+    <div class="row {% if form.patreon_email_address.errors %}errored{% endif %}">
+        <div class="medium-4 columns">
+            {{ form.patreon_email_address.label_tag }}
+            {{ form.patreon_email_address }}
+
+            {% for error in form.patreon_email_address.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if patreon >= 500 %}
+    <div class="row">
+        <div class="small-12 columns">
+            <h4>Social media profiles</h4>
+        </div>
+    </div>
+
+    <div class="row {% if form.twitter_username.errors or form.twitch_username.errors or form.reddit_username.errors %}errored{% endif %}">
+        <div class="medium-4 columns">
+            {{ form.twitter_username.label_tag }}
+            {{ form.twitter_username }}
+
+            {% for error in form.twitter_username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="medium-4 columns">
+            {{ form.twitch_username.label_tag }}
+            {{ form.twitch_username }}
+
+            {% for error in form.twitch_username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="medium-4 columns">
+            {{ form.reddit_username.label_tag }}
+            {{ form.reddit_username }}
+
+            {% for error in form.reddit_username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row {% if form.youtube_url.errors or form.facebook_url.errors %}errored{% endif %}">
+        <div class="medium-4 columns">
+            {{ form.youtube_url.label_tag }}
+            {{ form.youtube_url }}
+
+            {% for error in form.youtube_url.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="medium-4 columns end">
+            {{ form.facebook_url.label_tag }}
+            {{ form.facebook_url }}
+
+            {% for error in form.facebook_url.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <div class="row {% if form.username.errors or form.old_password.errors %}errored{% endif %}">
+        <div class="medium-3 columns">
+            {{ form.old_password.label_tag }}
+            {{ form.old_password }}
+
+            {% for error in form.old_password.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <br>
+
+    {% for error in form.non_field_errors %}
+        <span class="field-error">{{ error }}</span>
+    {% endfor %}
+
+    <input type="submit" class="button small" value="Update settings">
+</form>
+
+{% endblock %}
