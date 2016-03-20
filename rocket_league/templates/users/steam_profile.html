@@ -27,6 +27,44 @@
             <a href="{{ steam_info.profileurl }}" class="right" target="_blank">
                 <em class="icon-steam-squared"></em>
             </a>
+
+            {# See if this user has a Patreon pledge #}
+            {% if has_user %}
+                {% patreon_pledge_amount social_obj.user as user_patreon %}
+                {% if user_patreon >= 500 %}
+                    {# Bring in any additional social links #}
+                    {% if social_obj.user.profile.twitter_username %}
+                    <a href="https://twitter.com/{{ social_obj.user.profile.twitter_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-twitter-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.twitch_username %}
+                    <a href="https://www.twitch.tv/{{ social_obj.user.profile.twitch_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-twitch"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.reddit_username %}
+                    <a href="https://reddit.com/u/{{ social_obj.user.profile.reddit_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-reddit-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.youtube_url %}
+                    <a href="{{ social_obj.user.profile.youtube_url }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-youtube-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.facebook_url %}
+                    <a href="{{ social_obj.user.profile.facebook_url }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-facebook-squared"></em>
+                    </a>
+                    {% endif %}
+
+                {% endif %}
+            {% endif %}
         </h3>
 
         {% display_names steam_info as names %}

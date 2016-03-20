@@ -96,6 +96,7 @@ class SteamView(TemplateView):
 
             context['uploaded'] = social_obj.user.replay_set.all()
             context['has_user'] = True
+            context['social_obj'] = social_obj
         except UserSocialAuth.DoesNotExist:
             # Pull the profile data and pass it in.
             context['has_user'] = False
