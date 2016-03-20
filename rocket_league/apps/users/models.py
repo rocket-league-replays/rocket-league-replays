@@ -20,47 +20,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User)
 
     patreon_email_address = models.EmailField(
-        blank=True,
-        null=True,
-    )
-
-    patreon_level = models.DecimalField(
-        max_digits=100,
-        decimal_places=2,
-        blank=True,
-        null=True,
-        default=0,
-    )
-
-    twitter_username = models.CharField(
-        b"Twitter username",
-        max_length=100,
-        blank=True,
-        null=True,
-    )
-
-    twitch_username = models.CharField(
-        b"Twitch.tv username",
-        max_length=100,
-        blank=True,
-        null=True,
-    )
-
-    reddit_username = models.CharField(
-        b"reddit username",
-        max_length=100,
-        blank=True,
-        null=True,
-    )
-
-    youtube_url = models.URLField(
-        b"YouTube URL",
-        blank=True,
-        null=True,
-    )
-
-    facebook_url = models.URLField(
-        b"Facebook URL",
+        unique=True,
         blank=True,
         null=True,
     )
