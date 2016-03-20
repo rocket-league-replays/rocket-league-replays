@@ -68,12 +68,18 @@
                         <td>{{ goal.goal_time }}</td>
                         <td>
                             {% if goal.player.team == 0 %}
-                                <span class="primary">{{ goal.player.player_name }}</span>
+                                <span class="primary">
+                                    {% include 'site/patreon_crown.html' with player=goal.player %}
+                                    {{ goal.player.player_name }}
+                                </span>
                             {% endif %}
                         </td>
                         <td>
                             {% if goal.player.team == 1 %}
-                                <span class="secondary">{{ goal.player.player_name }}</span>
+                                <span class="secondary">
+                                    {% include 'site/patreon_crown.html' with player=goal.player %}
+                                    {{ goal.player.player_name }}
+                                </span>
                             {% endif %}
                         </td>
                     </tr>
@@ -98,7 +104,10 @@
             {% for player in players.players %}
                 {% if player.heatmap %}
                     <div class="flex-6">
-                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <h5 style="margin-bottom: 0;">
+                            {% include 'site/patreon_crown.html' %}
+                            {{ player.player_name }}
+                        </h5>
                         <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
                     </div>
                 {% endif %}
@@ -112,7 +121,10 @@
             {% for player in players.players %}
                 {% if player.heatmap %}
                     <div class="flex-6">
-                        <h5 style="margin-bottom: 0;">{{ player.player_name }}</h5>
+                        <h5 style="margin-bottom: 0;">
+                            {% include 'site/patreon_crown.html' %}
+                            {{ player.player_name }}
+                        </h5>
                         <img style="margin-bottom: 20px;" src="{{ player.heatmap.url }}" />
                     </div>
                 {% endif %}
@@ -130,7 +142,7 @@
             <div class="flex-row">
                 {% for player in players.players %}
                 <div class="flex-6">
-                      <h5>{{ player.player_name }}</h5>
+                      <h5>{% include 'site/patreon_crown.html' %}{{ player.player_name }}</h5>
                       <div class="heatmap" data-actor-id="{{ player.actor_id }}">
                           <p>Loading heatmap..</p>
 

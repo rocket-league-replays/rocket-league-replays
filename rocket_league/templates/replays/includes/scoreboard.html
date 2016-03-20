@@ -54,6 +54,8 @@
 
             {% endif %}
 
+            {# Is this player a patron of the site? #}
+            {% include 'site/patreon_crown.html' %}
             {{ player.player_name }}
 
             {% if player.platform == 'OnlinePlatform_Steam' %}

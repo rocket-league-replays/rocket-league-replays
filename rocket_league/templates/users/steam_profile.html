@@ -21,6 +21,15 @@
 <div class="row">
     <div class="small-12 columns">
         <h3>
+            {% if has_user %}
+                {% patreon_pledge_amount user=social_obj.user as user_patreon %}
+                {% if user_patreon > 0 %}
+                <a href="https://www.patreon.com/danielsamuels" title="This user is supporting Rocket League Replays on Patreon. Click to find out more" target="_blank" class="crowned">
+                    <em class="icon-crown"></em>
+                </a>
+                {% endif %}
+            {% endif %}
+
             <img src="{{ steam_info.avatar }}" alt="">
 
             {{ steam_info.personaname }}
@@ -30,7 +39,7 @@
 
             {# See if this user has a Patreon pledge #}
             {% if has_user %}
-                {% patreon_pledge_amount social_obj.user as user_patreon %}
+                {% patreon_pledge_amount user=social_obj.user as user_patreon %}
                 {% if user_patreon >= 500 %}
                     {# Bring in any additional social links #}
                     {% if social_obj.user.profile.twitter_username %}
