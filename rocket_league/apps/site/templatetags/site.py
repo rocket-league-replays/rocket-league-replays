@@ -45,11 +45,12 @@ def string(val):
 
 
 @register.assignment_tag(takes_context=True)
-def patreon_pledge_amount(context):
-    user = context['user']
+def patreon_pledge_amount(context, user=None):
+    if not user:
+        user = context['user']
 
-    if not user.is_authenticated():
-        return 0
+        if not user.is_authenticated():
+            return 0
 
     # Does this user have a Patreon email address?
     if not user.profile.patreon_email_address:
