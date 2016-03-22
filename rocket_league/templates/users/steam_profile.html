@@ -24,7 +24,7 @@
             {% if has_user %}
                 {% patreon_pledge_amount user=social_obj.user as user_patreon %}
                 {% if user_patreon > 0 %}
-                <a href="https://www.patreon.com/danielsamuels" title="This user is supporting Rocket League Replays on Patreon. Click to find out more" target="_blank" class="crowned">
+                <a href="https://www.patreon.com/danielsamuels" title="This user is supporting Rocket League Replays on Patreon. Click to find out more!" target="_blank" class="crowned">
                     <em class="icon-crown"></em>
                 </a>
                 {% endif %}
@@ -40,7 +40,7 @@
             {# See if this user has a Patreon pledge #}
             {% if has_user %}
                 {% patreon_pledge_amount user=social_obj.user as user_patreon %}
-                {% if user_patreon >= 500 %}
+                {% if user_patreon >= 300 %}
                     {# Bring in any additional social links #}
                     {% if social_obj.user.profile.twitter_username %}
                     <a href="https://twitter.com/{{ social_obj.user.profile.twitter_username }}" class="right" target="_blank" rel="nofollow">

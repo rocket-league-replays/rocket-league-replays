@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache replays static %}
+{% load cache replays site static %}
 
 {% block content_primary %}
     {% if replay.title %}
@@ -264,6 +264,12 @@
                         <td>Uploader:</td>
                         <td>
                             {% if replay.user %}
+                            {% patreon_pledge_amount user=replay.user as user_patreon %}
+                            {% if user_patreon > 0 %}
+                                <a href="https://www.patreon.com/danielsamuels" title="This user is supporting Rocket League Replays on Patreon. Click to find out more!" target="_blank">
+                                    <em class="icon-crown"></em>
+                                </a>
+                            {% endif %}
                             <a href="{{ replay.user.profile.get_absolute_url }}">{{ replay.user }}</a>
                             {% else %}
                             {{ replay.player_name }}
