@@ -73,7 +73,7 @@ AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
 AWS_S3_BUCKET_NAME = "media.rocketleaguereplays.com"
 
 # The S3 calling format to use to connect to the bucket.
-AWS_S3_CALLING_FORMAT = "boto.s3.connection.VHostCallingFormat"
+AWS_S3_CALLING_FORMAT = "boto.s3.connection.OrdinaryCallingFormat"
 
 # Whether to enable querystring authentication for uploaded files.
 AWS_S3_BUCKET_AUTH = False
@@ -85,7 +85,7 @@ AWS_S3_MAX_AGE_SECONDS = 60 * 60 * 24 * 365  # 1 year.
 AWS_S3_BUCKET_NAME_STATIC = "static.rocketleaguereplays.com"
 
 # The S3 calling format to use to connect to the static bucket.
-AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.VHostCallingFormat"
+AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.OrdinaryCallingFormat"
 
 # Whether to enable querystring authentication for static files.
 AWS_S3_BUCKET_AUTH_STATIC = False
