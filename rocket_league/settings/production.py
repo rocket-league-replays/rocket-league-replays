@@ -70,10 +70,10 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', '')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', '')
 
 # The S3 bucket used to store uploaded files.
-AWS_S3_BUCKET_NAME = "rocketleaguereplays-media"
+AWS_S3_BUCKET_NAME = "media.rocketleaguereplays.com"
 
 # The S3 calling format to use to connect to the bucket.
-AWS_S3_CALLING_FORMAT = "boto.s3.connection.SubdomainCallingFormat"
+AWS_S3_CALLING_FORMAT = "boto.s3.connection.VHostCallingFormat"
 
 # Whether to enable querystring authentication for uploaded files.
 AWS_S3_BUCKET_AUTH = False
@@ -82,10 +82,10 @@ AWS_S3_BUCKET_AUTH = False
 AWS_S3_MAX_AGE_SECONDS = 60 * 60 * 24 * 365  # 1 year.
 
 # The S3 bucket used to store static files.
-AWS_S3_BUCKET_NAME_STATIC = "rocketleaguereplays-static"
+AWS_S3_BUCKET_NAME_STATIC = "static.rocketleaguereplays.com"
 
 # The S3 calling format to use to connect to the static bucket.
-AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.SubdomainCallingFormat"
+AWS_S3_CALLING_FORMAT_STATIC = "boto.s3.connection.VHostCallingFormat"
 
 # Whether to enable querystring authentication for static files.
 AWS_S3_BUCKET_AUTH_STATIC = False
@@ -93,14 +93,12 @@ AWS_S3_BUCKET_AUTH_STATIC = False
 # The expire time used to access static files.
 AWS_S3_MAX_AGE_SECONDS_STATIC = 60 * 60 * 24 * 365  # 1 year.
 
-COMPRESS_URL = "https://{}.s3-{}.amazonaws.com/".format(
+COMPRESS_URL = "https://{}/".format(
     AWS_S3_BUCKET_NAME_STATIC,
-    AWS_REGION,
 )
 
-MEDIA_URL = "https://{}.s3-{}.amazonaws.com/".format(
+MEDIA_URL = "https://{}/".format(
     AWS_S3_BUCKET_NAME,
-    AWS_REGION,
 )
 
 STATIC_URL = COMPRESS_URL
