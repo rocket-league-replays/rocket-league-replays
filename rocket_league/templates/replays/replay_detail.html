@@ -96,7 +96,7 @@
         </div>
     </div>
 
-    {% if not replay.location_json_file %}
+    {% if not replay.heatmap_json_file %}
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
@@ -135,7 +135,7 @@
     {% endif %}
 
     {# JSON powered heatmaps #}
-    {% if replay.location_json_file %}
+    {% if replay.heatmap_json_file %}
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
@@ -330,10 +330,10 @@
         </div>
     </div>
 
-    {% if replay.location_json_file %}
+    {% if replay.heatmap_json_file %}
     <script>
     "use strict"
-    var replay_file_url = '{{ replay.location_json_file.url }}'
+    var replay_file_url = '{{ replay.heatmap_json_file.url }}'
     </script>
     {% endif %}
 {% endblock %}
@@ -584,7 +584,7 @@
 {% endblock %}
 
 {% block additional_js %}
-{% if replay.location_json_file %}
+{% if replay.heatmap_json_file %}
 <script src="{% static 'js/vendor/heatmap.js' %}"></script>
 <script>
 </script>

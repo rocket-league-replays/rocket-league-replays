@@ -17,7 +17,7 @@ class Command(BaseCommand):
             replays = Replay.objects.filter(pk=options['replay_id'])
         else:
             replays = Replay.objects.filter(
-                location_json_file__isnull=True,
+                heatmap_json_file__isnull=True,
             ).exclude(
                 crashed_heatmap_parser=True,
             ).order_by('-pk')
@@ -32,20 +32,20 @@ class Command(BaseCommand):
             )
 
             if default_storage.exists(file_name):
-                replay.location_json_file = file_name
+                replay.heatmap_json_file = file_name
                 replay.save()
 
         # Ensure replays have JSON files that actually exist.
         print('=== STAGE 2 ===')
         replays = Replay.objects.exclude(
-            location_json_file__isnull=True,
+            heatmap_json_file__isnull=True,
         ).order_by('-pk')
 
         for replay in replays:
-            if not replay.location_json_file:
+            if not replay.heatmap_json_file:
                 continue
 
             print('Processing', replay.pk, '-', replay.replay_id)
-            if not default_storage.exists(replay.location_json_file.file.path):
-                replay.location_json_file = None
+            if not default_storage.exists(replay.heatmap_json_file.file.path):
+                replay.heatmap_json_file = None
                 replay.save()
