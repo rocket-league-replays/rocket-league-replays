@@ -197,6 +197,26 @@
     </div>
     {% endif %}
 
+    {# Fancy new visualisations for Patreon people #}
+    {% if replay.location_json_file %}
+        <script src="http://threejs.org/build/three.min.js"></script>
+        <script src="http://threejs.org/examples/js/Detector.js"></script>
+        <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+        <script src="http://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+
+        <script src="{% static 'js/2d-rendering/utils.js ' %}"></script>
+        <script src="{% static 'js/2d-rendering/main.js ' %}"></script>
+        <script src="{% static 'js/2d-rendering/objects.js ' %}"></script>
+        <script src="{% static 'js/2d-rendering/replay.js ' %}"></script>
+
+        <div id="container" style="position: relative;"></div>
+
+        <script>
+        loadGameData("{{ replay.location_json_file.url }}");
+        </script>
+
+    {% endif %}
+
     <div class="row">
         <div class="medium-6 columns">
             {% if replay.user == user %}
