@@ -30,12 +30,13 @@ class Parser(object):
         self.match_metadata = {}
         self.team_metadata = {}
         self.actors = {}
-        self.json_filename = None
+        self.heatmap_json_filename = None
 
         assert len(self.team_metadata) == 0
 
         pickle_filename = 'uploads/pickle_files/{}.pickle'.format(self.replay_id)
-        json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
+        heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
+        location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(self.replay_id)
 
         if parse_netstream:
             try:
@@ -117,12 +118,40 @@ class Parser(object):
 
                 assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
 
-        if default_storage.exists(json_filename):
-            default_storage.delete(json_filename)
+        if default_storage.exists(heatmap_json_filename):
+            default_storage.delete(heatmap_json_filename)
 
-        json_filename = default_storage.save(json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
+        heatmap_json_filename = default_storage.save(heatmap_json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
 
-        self.json_filename = json_filename
+        self.heatmap_json_filename = heatmap_json_filename
+
+        # Advanced replay parsing.
+        # Restructure the data so that it's chunkable.
+        frame_data = []
+
+        for frame in range(self.replay.header['NumFrames']):
+            frame_dict = {
+                'time': self.replay.netstream[frame].current,
+                'actors': []
+            }
+
+            for player in self.actors:
+                position_data = self.actors[player]['position_data']
+
+                if frame in position_data:
+                    frame_dict['actors'].append({
+                        'id': player,
+                        'type': self.actors[player].get('type', 'ball'),
+                        **position_data[frame]
+                    })
+
+            frame_data.append(frame_dict)
+
+        if default_storage.exists(location_json_filename):
+            default_storage.delete(location_json_filename)
+
+        location_json_filename = default_storage.save(location_json_filename, ContentFile(json.dumps(frame_data, separators=(',', ':'))))
+        self.location_json_filename = location_json_filename
 
     def _get_match_metadata(self, frame):
         # Search through the frames looking for some game replication info.

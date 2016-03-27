@@ -109,6 +109,12 @@ class Replay(models.Model):
         null=True,
     )
 
+    location_json_file = models.FileField(
+        upload_to='uploads/replay_location_json_files',
+        blank=True,
+        null=True,
+    )
+
     replay_id = models.CharField(
         "replay ID",
         max_length=100,
@@ -491,7 +497,8 @@ class Replay(models.Model):
             Player.objects.filter(replay=self).delete()
 
             if parse_netstream:
-                self.heatmap_json_file = parser.json_filename
+                self.heatmap_json_file = parser.heatmap_json_filename
+                self.location_json_file = parser.location_json_filename
 
             if 'playlist' in parser.match_metadata:
                 self.playlist = parser.match_metadata['playlist']
