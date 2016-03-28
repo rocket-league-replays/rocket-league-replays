@@ -436,6 +436,36 @@ class Replay(models.Model):
             return total_player_ratings / num_player_ratings
         return 0
 
+    def show_analysis(self):
+        patreon_amount = 300
+
+        # Import here to avoid circular imports.
+        from ..site.templatetags.site import patreon_pledge_amount
+
+        # First of all, is there even a JSON file?
+        if not self.location_json_file:
+            return False
+
+        # Is the uploader a patron?
+        if self.user:
+            pledge_amount = patreon_pledge_amount({}, user=self.user)
+
+            if pledge_amount >= patreon_amount:
+                return True
+
+        # Are any of the players patron?
+        players = self.player_set.filter(
+            platform__in=['OnlinePlatform_Steam', '1'],
+        )
+
+        for player in players:
+            pledge_amount = patreon_pledge_amount({}, steam_id=player.online_id)
+
+            if pledge_amount >= patreon_amount:
+                return True
+
+        return False
+
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
             'pk': self.pk,
