@@ -41,7 +41,7 @@ function positionReplayObjects() {
   }
 
   if (secondsData[currentFrame] !== undefined) {
-    document.querySelector('#container .timer .timer-value').innerHTML = formatTime(secondsData[currentFrame])
+    document.querySelector('.sim-Timer_Value').innerHTML = formatTime(secondsData[currentFrame])
   }
 
   // Is there any boost data for this frame?
@@ -53,10 +53,10 @@ function positionReplayObjects() {
       // Current in-game (and %) value.
       const value = Math.ceil(boostData.values[item][currentFrame] * (100 / 255))
 
-      const boostEl = document.querySelector(`.boost-player-${player_id} .boost-inner`)
+      const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
 
       if (boostEl) {
-        boostEl.style.width = `${value}%`
+        boostEl.style.backgroundSize = `${value}% 100%`
         boostEl.innerHTML = value
       }
     }
@@ -76,10 +76,10 @@ function positionReplayObjects() {
     }
   })
 
-  document.querySelector('.team-0-score').innerHTML = team_0_score
-  document.querySelector('.team-1-score').innerHTML = team_1_score
+  document.querySelector('.sim-Timer_Score-0').innerHTML = team_0_score
+  document.querySelector('.sim-Timer_Score-1').innerHTML = team_1_score
 
-  document.querySelector('.timeline-inner').style.width = `${currentFrame / maxFrame * 100}%`
+  document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`
 
   // Do any actors get removed in this frame?
   Object.keys(actorData).forEach(function(item) {
@@ -91,7 +91,7 @@ function positionReplayObjects() {
         scene.remove(carObject)
       }
 
-      const boostEl = document.querySelector(`.boost-player-${item}`)
+      const boostEl = document.querySelector(`.sim-Boost_Outer-actor${item}`)
 
       if (boostEl) {
         boostEl.remove()

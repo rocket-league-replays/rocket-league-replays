@@ -19,7 +19,7 @@ function init() {
   renderer.setSize('1248', '702', false);
   renderer.shadowMap.enabled = true;
 
-  var container = document.getElementById('container');
+  var container = document.querySelector('.sim-Outer');
   container.appendChild(renderer.domElement);
   renderer.domElement.style.width = '100%'
 

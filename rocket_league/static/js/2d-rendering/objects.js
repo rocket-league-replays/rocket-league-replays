@@ -101,20 +101,22 @@ function addCar(name, actor) {
   const team = teamData[actorData[actor.id].team]
 
   const outerElement = document.createElement('div')
-  outerElement.classList.add('boost-outer')
-  outerElement.classList.add(`boost-player-${actor.id}`)
+  outerElement.classList.add('sim-Boost_Outer')
+  outerElement.classList.add(`sim-Boost_Outer-actor${actor.id}`)
 
   const playerName = document.createElement('span')
   playerName.innerHTML = actorData[actor.id].name
+  playerName.classList.add('sim-Boost_Text')
   outerElement.appendChild(playerName)
 
   const innerElement = document.createElement('div')
   innerElement.innerHTML = '34'
-  innerElement.classList.add('boost-inner')
-  innerElement.setAttribute('data-team', team)
+  innerElement.classList.add('sim-Boost_Inner')
+  innerElement.classList.add(`sim-Boost_Inner-team${team}`)
+  innerElement.classList.add(`sim-Boost_Inner-player${actor.id}`)
   outerElement.appendChild(innerElement)
 
-  document.querySelector(`.boost-${team}`).appendChild(outerElement)
+  document.querySelector(`.sim-Boost-team${team}`).appendChild(outerElement)
 
   console.log(`[${name}] Render complete`)
   carsLoading = carsLoading.filter(function(e){ return e !== name })

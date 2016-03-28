@@ -209,157 +209,26 @@
         <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
         <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
 
-        <div id="container" style="position: relative;">
-            <div class="timer">
-                <div class="team-0-score">0</div>
-                <div class="timer-value">0:00</div>
-                <div class="team-1-score">0</div>
+        <div class="sim-Outer" style="position: relative;">
+            <div class="sim-Timer">
+                <div class="sim-Timer_Score sim-Timer_Score-0">0</div>
+                <div class="sim-Timer_Value">0:00</div>
+                <div class="sim-Timer_Score sim-Timer_Score-1">0</div>
             </div>
-            <div class="timeline">
-                <div class="timeline-inner"></div>
+
+            <div class="sim-Timeline">
+                <div class="sim-Timeline_Inner"></div>
                 {% for goal in object.goal_set.all %}
-                    <div class="timeline-goal-marker" data-frame="{{ goal.frame }}" data-team="{{ goal.player.team }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
+                    <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
                 {% endfor %}
             </div>
-            <div class="boost boost-0"></div>
-            <div class="boost boost-1"></div>
+            <div class="sim-Boost sim-Boost-team0"></div>
+            <div class="sim-Boost sim-Boost-team1"></div>
         </div>
 
         <script>
         loadGameData("{{ replay.location_json_file.url }}");
         </script>
-
-        <style>
-        #container {
-            padding-top: 110px;
-            padding-bottom: 110px;
-        }
-
-        .team-0-score {
-            width: 81px;
-            height: 80px;
-            position: absolute;
-            left: calc(50% - 96px);
-            top: 0;
-            transform: translateX(-100%);
-            color: #fff;
-            text-align: center;
-            font-size: 30px;
-            line-height: 75px;
-            background-color: #6086e5;
-        }
-
-        .team-1-score {
-            width: 81px;
-            height: 80px;
-            position: absolute;
-            left: calc(50% + 96px);
-            top: 0;
-            color: #fff;
-            text-align: center;
-            font-size: 30px;
-            line-height: 75px;
-            background-color: #ffae7f;
-        }
-
-        #container .timer {
-            background: url(/static/img/2d-rendering/MatchTimer_Background.png);
-            width: 192px;
-            height: 80px;
-            position: absolute;
-            left: 50%;
-            top: 0;
-            transform: translateX(-50%);
-            color: #fff;
-            text-align: center;
-            font-size: 30px;
-            line-height: 75px;
-        }
-
-        .timeline {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 6px;
-            width: 80%;
-            background-color: #0b4566;
-            border-radius: 3px;
-        }
-
-        .timeline-inner {
-            border-radius: 3px;
-            background: -webkit-linear-gradient(left, #0b85d9, #95fbfc);
-            height: 6px;
-            width: 0%;
-        }
-
-        .timeline-goal-marker {
-            position: absolute;
-            bottom: 5px;
-
-            width: 32px;
-            height: 40px;
-            transform: translateX(calc(-50% + 2px));
-        }
-
-        .timeline-goal-marker[data-team="0"] {
-            background-image: url(/static/img/2d-rendering/Marker_Goal_0.png);
-        }
-
-        .timeline-goal-marker[data-team="1"] {
-            background-image: url(/static/img/2d-rendering/Marker_Goal_1.png);
-        }
-
-        .boost {
-            position: absolute;
-            top: 0;
-            right: 0;
-
-            width: 150px;
-        }
-
-        .boost-0 {
-            right: auto;
-            left: 0;
-        }
-
-        .boost-1 {
-            text-align: right;
-
-        }
-
-        .boost-1 .boost-outer {
-            float: right;
-        }
-
-        .boost-outer {
-            width: 100%;
-        }
-
-        .boost-outer span {
-            display: block;
-        }
-
-        .boost-inner {
-            background-color: orange;
-            width: 34%;
-            margin-bottom: 15px;
-
-            transition: width 0.25s linear;
-        }
-
-        .boost-inner[data-team="0"] {
-            background-color: #6086e5;
-        }
-
-        .boost-inner[data-team="1"] {
-            background-color: #ffae7f;
-            float: right;
-            text-align: right;
-        }
-        </style>
-
     {% endif %}
 
     <div class="row">
