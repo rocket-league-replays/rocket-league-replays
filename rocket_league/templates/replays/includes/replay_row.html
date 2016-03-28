@@ -2,7 +2,14 @@
 
 {% cache 3600 'replay_list_item' replay.pk %}
     <tr data-href="{{ replay.get_absolute_url }}">
-        <td><a href="{{ replay.get_absolute_url }}">{{ replay }}</a></td>
+        <td>
+            <a href="{{ replay.get_absolute_url }}">{{ replay }}</a>
+            {% if replay.show_analysis %}
+            <a href="{% url 'replay:analysis' pk=replay.pk %}" title="This replay has additional analysis because the uploader or a player within the match is supporting {{ settings.SITE_NAME }} on Patreon.">
+                <em class="icon-crown-plus"></em>
+            </a>
+            {% endif %}
+        </td>
         <td>{{ replay.season }}</td>
         <td><span class="primary">{{ replay.team_0_score }}</span> - <span class="secondary">{{ replay.team_1_score }}</span></td>
         <td>{{ replay.team_sizes }}v{{ replay.team_sizes }}</td>
