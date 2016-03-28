@@ -1,7 +1,8 @@
+/*global THREE, textureLoader, scene, r, teamData, actorData, carsLoading:true*/
 'use strict'
 
-function renderRect(width, height) {
-  var rectShape = new THREE.Shape()
+function renderRect (width, height) {
+  const rectShape = new THREE.Shape()
   rectShape.moveTo(-(width / 2), -(height / 2))
   rectShape.lineTo(width / 2, -(height / 2))
   rectShape.lineTo(width / 2, height / 2)
@@ -12,19 +13,19 @@ function renderRect(width, height) {
 }
 
 // Load the stadium outline.
-function addStadium() {
-  var materials = [
+function addStadium () {
+  const materials = [
     new THREE.MeshLambertMaterial({
       map: textureLoader.load('/static/img/2d-rendering/arena_fieldlines.png'),
       transparent: true,
       opacity: 0.5,
-      color: 0xffffff,
+      color: 0xffffff
     }),
     new THREE.MeshLambertMaterial({
       map: textureLoader.load('/static/img/2d-rendering/arena_overlay2.png'),
       transparent: true,
       opacity: 0.7,
-      color: 0xffffff,
+      color: 0xffffff
     }),
     new THREE.MeshLambertMaterial({
       map: textureLoader.load('/static/img/2d-rendering/arena_boost.png'),
@@ -34,19 +35,19 @@ function addStadium() {
     })
   ]
 
-  var mesh = new THREE.SceneUtils.createMultiMaterialObject(
+  const mesh = new THREE.SceneUtils.createMultiMaterialObject(
     new THREE.PlaneGeometry(8240, 12000),
     materials
-  );
+  )
 
   mesh.name = 'stadium'
-  mesh.castShadow = false;
-  mesh.receiveShadow = false;
+  mesh.castShadow = false
+  mesh.receiveShadow = false
 
-  scene.add(mesh);
+  scene.add(mesh)
 }
 
-function addCar(name, actor) {
+function addCar (name, actor) {
   console.log(`[${name}] Adding car`)
   let color = 0xff0000
 
@@ -59,36 +60,27 @@ function addCar(name, actor) {
   const mesh = new THREE.Mesh(
     renderRect(74, 144),
     new THREE.MeshBasicMaterial({ color })
-  );
+    )
 
   mesh.name = name
-  mesh.matrixAutoUpdate = true;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.matrixAutoUpdate = true
+  mesh.castShadow = true
+  mesh.receiveShadow = true
 
   console.log(`[${name}] Adding to scene`)
 
   // Fix the rotation point.
-  var box = new THREE.Box3().setFromObject(mesh);
-  box.center(mesh.position); // this re-sets the mesh position
-  mesh.position.multiplyScalar(-1);
+  const box = new THREE.Box3().setFromObject(mesh)
+  box.center(mesh.position) // this re-sets the mesh position
+  mesh.position.multiplyScalar(-1)
 
-  scene.add(mesh);
+  scene.add(mesh)
 
   // Reposition the car based on the latest data.
   console.log(`[${name}] Setting initial position`)
 
-  mesh.position.set(
-    actor.x * -1,
-    actor.y,
-    actor.z
-  )
-
-  mesh.rotation.set(
-    0,
-    0,
-    r(90) + actor.pitch * Math.PI * -1
-  )
+  mesh.position.set(actor.x * -1, actor.y, actor.z)
+  mesh.rotation.set(0, 0, r(90) + actor.pitch * Math.PI * -1)
 
   // Add the boost gauge.
   /*
@@ -119,10 +111,10 @@ function addCar(name, actor) {
   document.querySelector(`.sim-Boost-team${team}`).appendChild(outerElement)
 
   console.log(`[${name}] Render complete`)
-  carsLoading = carsLoading.filter(function(e){ return e !== name })
+  carsLoading = carsLoading.filter(function (e) { return e !== name })
 }
 
-function addBall(name, actor) {
+function addBall (name, actor) {
   console.log(`[${name}] Adding ball`)
 
   const mesh = new THREE.Mesh(
@@ -130,38 +122,29 @@ function addBall(name, actor) {
     new THREE.MeshLambertMaterial({
       map: textureLoader.load('/static/img/2d-rendering/ball.png')
     })
-  );
+  )
 
   mesh.name = name
-  mesh.matrixAutoUpdate = true;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
+  mesh.matrixAutoUpdate = true
+  mesh.castShadow = true
+  mesh.receiveShadow = true
   mesh.renderOrder = 1
 
   console.log(`[${name}] Adding to scene`)
 
   // Fix the rotation point.
-  var box = new THREE.Box3().setFromObject(mesh);
-  box.center(mesh.position); // this re-sets the mesh position
-  mesh.position.multiplyScalar(-1);
+  const box = new THREE.Box3().setFromObject(mesh)
+  box.center(mesh.position) // this re-sets the mesh position
+  mesh.position.multiplyScalar(-1)
 
-  scene.add(mesh);
+  scene.add(mesh)
 
   // Reposition the car based on the latest data.
   console.log(`[${name}] Setting initial position`)
 
-  mesh.position.set(
-    actor.x * -1,
-    actor.y,
-    actor.z
-  )
-
-  mesh.rotation.set(
-    0,
-    0,
-    actor.yaw * Math.PI
-  )
+  mesh.position.set(actor.x * -1, actor.y, actor.z)
+  mesh.rotation.set(0, 0, actor.yaw * Math.PI)
 
   console.log(`[${name}] Render complete`)
-  carsLoading = carsLoading.filter(function(e){ return e !== name })
+  carsLoading = carsLoading.filter(function (e) { return e !== name })
 }

@@ -1,3 +1,4 @@
+/*global init, formatTime, scene, addCar, addBall, r*/
 'use strict'
 
 let currentFrame = -1
@@ -10,17 +11,17 @@ let carsLoading = []
 let actorData = {}
 let teamData = {}
 
-function loadGameData(url) {
+function loadGameData (url) {
   init()
 
-  var request = new XMLHttpRequest();
+  const request = new XMLHttpRequest()
 
-  request.open('GET', url, true);
+  request.open('GET', url, true)
 
-  request.onload = function() {
+  request.onload = function () {
     if (request.status >= 200 && request.status < 400) {
       const response_data = JSON.parse(request.responseText)
-      frameData = response_data.frame_data;
+      frameData = response_data.frame_data
       goalData = response_data.goals
       boostData = response_data.boost
       secondsData = response_data.seconds_mapping
@@ -30,12 +31,12 @@ function loadGameData(url) {
       maxFrame = Object.keys(frameData).length
       currentFrame = 0
     }
-  };
+  }
 
-  request.send();
+  request.send()
 }
 
-function positionReplayObjects() {
+function positionReplayObjects () {
   if (carsLoading.length > 0) {
     console.warn(`Still rendering ${carsLoading}`)
   }
@@ -45,7 +46,7 @@ function positionReplayObjects() {
   }
 
   // Is there any boost data for this frame?
-  Object.keys(boostData.values).forEach(function(item) {
+  Object.keys(boostData.values).forEach(function (item) {
     if (boostData.values[item][currentFrame] !== undefined) {
       // Which player is this?
       const player_id = boostData.cars[boostData.actors[item]]
@@ -66,11 +67,11 @@ function positionReplayObjects() {
   let team_0_score = 0
   let team_1_score = 0
 
-  goalData.forEach(function(item) {
+  goalData.forEach(function (item) {
     if (currentFrame >= item.frame) {
-      if (item.PlayerTeam == 0) {
+      if (item.PlayerTeam === 0) {
         team_0_score++
-      } else if (item.PlayerTeam == 1) {
+      } else if (item.PlayerTeam === 1) {
         team_1_score++
       }
     }
@@ -82,7 +83,7 @@ function positionReplayObjects() {
   document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`
 
   // Do any actors get removed in this frame?
-  Object.keys(actorData).forEach(function(item) {
+  Object.keys(actorData).forEach(function (item) {
     if (actorData[item].left <= currentFrame) {
       const objectName = `car-${item}`
       const carObject = scene.getObjectByName(objectName)
@@ -99,7 +100,7 @@ function positionReplayObjects() {
     }
   })
 
-  frameData[currentFrame].actors.forEach(function(actor, index) {
+  frameData[currentFrame].actors.forEach(function (actor, index) {
     // Does this car already exist in the scene.
     const objectName = `car-${actor.id}`
     const carObject = scene.getObjectByName(objectName)
@@ -126,7 +127,7 @@ function positionReplayObjects() {
         actor.x * -1,
         actor.y,
         1
-      )
+        )
 
       // If actor.z is 18, we want scaleFactor to be 1
       // if actor.z is 2048 we want scaleFactor to be 2
@@ -142,14 +143,14 @@ function positionReplayObjects() {
         scaleFactor,
         scaleFactor,
         scaleFactor
-      )
+        )
 
       // Looks close.
       carObject.rotation.set(
         0,
         0,
         r(90) + actor.pitch * Math.PI * -1
-      )
+        )
     }
-  });
+  })
 }
