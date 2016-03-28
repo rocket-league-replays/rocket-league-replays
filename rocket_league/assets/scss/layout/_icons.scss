@@ -1,4 +1,4 @@
-img[src*="img/tiers/icons/"] {
+img[src*='img/tiers/icons/'] {
   width: 19px;
   height: 19px;
   margin: -3px 5px 0 0;
@@ -10,6 +10,6 @@ img[src*="img/tiers/icons/"] {
   }
 }
 
-img[src$="orig/15.png"] {
-    padding: 12.5px 0;
+img[src$='orig/15.png'] {
+  padding: 12.5px 0;
 }

@@ -1,126 +1,149 @@
 .sim-Outer {
-    padding-top: 110px;
-    padding-bottom: 110px;
+  padding-top: 110px;
+  padding-bottom: 110px;
 }
 
 .sim-Timer_Score {
-    position: absolute;
-    width: 81px;
-    height: 80px;
-    top: 0;
+  position: absolute;
+  top: 0;
 
-    color: #fff;
-    text-align: center;
-    font-size: 30px;
-    line-height: 75px;
+  width: 81px;
+  height: 80px;
 
-    &.sim-Timer_Score-0 {
-        left: calc(50% - 96px);
-        background-color: #6086e5;
+  font-size: 30px;
+  line-height: 75px;
+  text-align: center;
 
-        transform: translateX(-100%);
-    }
+  color: #fff;
 
-    &.sim-Timer_Score-1 {
-        left: calc(50% + 96px);
-        background-color: #ffae7f;
-    }
+  &.sim-Timer_Score-0 {
+    left: calc(50% - 96px);
+
+    background-color: #6086e5;
+
+    transform: translateX(-100%);
+  }
+
+  &.sim-Timer_Score-1 {
+    left: calc(50% + 96px);
+
+    background-color: #ffae7f;
+  }
 }
 
 .sim-Timer {
-    background: url(/static/img/2d-rendering/MatchTimer_Background.png);
-    width: 192px;
-    height: 80px;
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    color: #fff;
-    text-align: center;
-    font-size: 30px;
-    line-height: 75px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+
+  width: 192px;
+  height: 80px;
+
+  font-size: 30px;
+  line-height: 75px;
+  text-align: center;
+
+  background: url(/static/img/2d-rendering/MatchTimer_Background.png);
+
+  color: #fff;
+
+  transform: translateX(-50%);
 }
 
 .sim-Timeline {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    height: 6px;
-    width: 80%;
-    background-color: #0b4566;
-    border-radius: 3px;
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+
+  width: 80%;
+  height: 6px;
+
+  background-color: #0b4566;
+  border-radius: 3px;
+
+  transform: translateX(-50%);
 }
 
 .sim-Timeline_Inner {
-    border-radius: 3px;
-    background: -webkit-linear-gradient(left, #0b85d9, #95fbfc);
-    height: 6px;
-    width: 0%;
+  width: 0%;
+  height: 6px;
+
+  background: linear-gradient(to right, #0b85d9, #95fbfc);
+
+  border-radius: 3px;
+}
+
+.sim-Timeline_Cursor {
+  width: 22px;
+  height: 30px;
+
+  background: url(/static/img/2d-rendering/OptionsSlider_Thumb_Up.png);
 }
 
 .sim-Timeline_Marker {
-    position: absolute;
-    bottom: 5px;
+  position: absolute;
+  bottom: 5px;
 
-    width: 32px;
-    height: 40px;
-    transform: translateX(calc(-50% + 2px));
+  width: 32px;
+  height: 40px;
 
-    &.sim-Timeline_Marker-0 {
-        background-image: url(/static/img/2d-rendering/Marker_Goal_0.png);
-    }
+  transform: translateX(calc(-50% + 2px));
 
-    &.sim-Timeline_Marker-1 {
-        background-image: url(/static/img/2d-rendering/Marker_Goal_1.png);
-    }
+  &.sim-Timeline_Marker-0 {
+    background-image: url(/static/img/2d-rendering/Marker_Goal_0.png);
+  }
+
+  &.sim-Timeline_Marker-1 {
+    background-image: url(/static/img/2d-rendering/Marker_Goal_1.png);
+  }
 }
 
 .sim-Boost {
-    position: absolute;
-    top: 0;
-    right: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
 
-    width: 150px;
+  width: 150px;
 
-    &.sim-Boost-team0 {
-        right: auto;
-        left: 0;
-    }
+  &.sim-Boost-team0 {
+    right: auto;
+    left: 0;
+  }
 
-    &.sim-Boost-team1 {
-        text-align: right;
-    }
-
+  &.sim-Boost-team1 {
+    text-align: right;
+  }
 }
 
 .sim-Boost_Outer {
-    width: 100%;
+  width: 100%;
 }
 
 .sim-Boost_Text {
-    display: block;
+  display: block;
 }
 
 .sim-Boost_Inner {
-    width: 100%;
-    background-size: 34% 100%;
+  width: 100%;
 
-    margin-bottom: 15px;
+  margin-bottom: 15px;
 
-    transition: background-size 0.25s linear;
-    background-repeat: no-repeat;
+  background-repeat: no-repeat;
+  background-size: 34% 100%;
 
-    &.sim-Boost_Inner-team0 {
-        // 1x1 blue image
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNMaHv6HwAF5QLMRSdeSgAAAABJRU5ErkJggg==);
-    }
+  transition: background-size 0.25s linear;
 
-    &.sim-Boost_Inner-team1 {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8v67+PwAIDQMtnSQatAAAAABJRU5ErkJggg==);
-        background-position: right;
-        float: right;
-        text-align: right;
-    }
+  &.sim-Boost_Inner-team0 {
+    // 1x1 blue image
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNMaHv6HwAF5QLMRSdeSgAAAABJRU5ErkJggg==);
+  }
+
+  &.sim-Boost_Inner-team1 {
+    float: right;
+
+    text-align: right;
+
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8v67+PwAIDQMtnSQatAAAAABJRU5ErkJggg==);
+    background-position: right;
+  }
 }
-

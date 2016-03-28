@@ -1,31 +1,33 @@
 /* Overrides for pagination. */
 ul.pagination {
-    display: inline-block;
-    line-height: 32px;
+  display: inline-block;
 
-    li {
-        min-width: 32px;
-        margin-left: 0px;
-        font-weight: $font-weight-bold;
-    }
+  line-height: 32px;
 
-    li a, li span {
-        font-weight: $font-weight-bold;
-    }
+  li {
+    min-width: 32px;
+    margin-left: 0;
 
-    li.next {
-        margin-left: 10px;
-    }
+    font-weight: $font-weight-bold;
+  }
 
-    li.previous {
-        margin-right: 10px;
-    }
+  li a, li span {
+    font-weight: $font-weight-bold;
+  }
 
-    .unavailable {
-        color: $pagination-link-unavailable-font-color;
-    }
+  li.next {
+    margin-left: 10px;
+  }
+
+  li.previous {
+    margin-right: 10px;
+  }
+
+  .unavailable {
+    color: $pagination-link-unavailable-font-color;
+  }
 }
 
 .pagination-outer {
-	text-align: center;
+  text-align: center;
 }

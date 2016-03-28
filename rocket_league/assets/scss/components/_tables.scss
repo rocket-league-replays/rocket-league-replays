@@ -1,16 +1,16 @@
 table input[type=checkbox], table input[type=text] {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 tr[data-href] {
-    cursor: pointer;
+  cursor: pointer;
 
-    &:hover td {
-        background-color: #efefef;
-    }
+  &:hover td {
+    background-color: #efefef;
+  }
 }
 
 tr.is-current-user,
 tr.is-current-user:nth-of-type(even) {
-    background-color: #BEB;
+  background-color: #beb;
 }

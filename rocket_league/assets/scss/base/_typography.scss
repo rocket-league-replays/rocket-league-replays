@@ -1,36 +1,36 @@
 .primary {
-    color: $primary-color;
+  color: $primary-color;
 }
 
 .secondary {
-    color: $secondary-color;
+  color: $secondary-color;
 }
 
 .alert {
-    color: $alert-color;
+  color: $alert-color;
 }
 
 th {
-    font-size: 16px !important;
+  font-size: 16px !important;
 }
 
 .alert-box a {
-    color: #fff;
-    border-bottom: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  color: #fff;
 }
 
 .alert-box.info {
-    color: #000;
+  color: #000;
 
-    a {
-        color: #333;
-        border-bottom-color: #333;
-    }
+  a {
+    border-bottom-color: #333;
+    color: #333;
+  }
 }
 
 h3 a,
 h3 a:hover,
 h3 a:active,
 h3 a:visited {
-    color: $body-font-color;
+  color: $body-font-color;
 }

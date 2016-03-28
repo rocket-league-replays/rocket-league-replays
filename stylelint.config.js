@@ -49,7 +49,7 @@ module.exports = {
     'declaration-bang-space-before': 'always',
     'declaration-colon-space-after': 'always',
     'declaration-colon-space-before': 'never',
-    'declaration-no-important': true,
+    'declaration-no-important': false, /* for now.. */
     'declaration-block-no-duplicate-properties': true,
     'declaration-block-properties-order': [
       {
@@ -192,8 +192,8 @@ module.exports = {
     // Selector
     'selector-combinator-space-after': 'always',
     'selector-combinator-space-before': 'always',
-    'selector-no-id': true,
-    'selector-no-type': true,
+    'selector-no-id': false, /* for now.. */
+    'selector-no-type': false, /* for now.. */
     'selector-no-universal': true,
     'selector-no-vendor-prefix': true,
     'selector-pseudo-element-colon-notation': 'double',
