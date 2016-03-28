@@ -221,7 +221,8 @@
                     <div class="timeline-goal-marker" data-frame="{{ goal.frame }}" data-team="{{ goal.player.team }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
                 {% endfor %}
             </div>
-            <div class="boost"></div>
+            <div class="boost boost-0"></div>
+            <div class="boost boost-1"></div>
         </div>
 
         <script>
@@ -318,8 +319,26 @@
             width: 150px;
         }
 
+        .boost-0 {
+            right: auto;
+            left: 0;
+        }
+
+        .boost-1 {
+            text-align: right;
+
+        }
+
+        .boost-1 .boost-outer {
+            float: right;
+        }
+
         .boost-outer {
             width: 100%;
+        }
+
+        .boost-outer span {
+            display: block;
         }
 
         .boost-inner {
@@ -336,6 +355,8 @@
 
         .boost-inner[data-team="1"] {
             background-color: #ffae7f;
+            float: right;
+            text-align: right;
         }
         </style>
 

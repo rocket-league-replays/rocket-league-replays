@@ -98,6 +98,7 @@ function addCar(name, actor) {
       <div class="boost-inner" data-team="{{ player.team }}">34</div>
   </div>
   */
+  const team = teamData[actorData[actor.id].team]
 
   const outerElement = document.createElement('div')
   outerElement.classList.add('boost-outer')
@@ -110,10 +111,10 @@ function addCar(name, actor) {
   const innerElement = document.createElement('div')
   innerElement.innerHTML = '34'
   innerElement.classList.add('boost-inner')
-  innerElement.setAttribute('data-team', teamData[actorData[actor.id].team])
+  innerElement.setAttribute('data-team', team)
   outerElement.appendChild(innerElement)
 
-  document.querySelector('.boost').appendChild(outerElement)
+  document.querySelector(`.boost-${team}`).appendChild(outerElement)
 
   console.log(`[${name}] Render complete`)
   carsLoading = carsLoading.filter(function(e){ return e !== name })
@@ -133,6 +134,7 @@ function addBall(name, actor) {
   mesh.matrixAutoUpdate = true;
   mesh.castShadow = true;
   mesh.receiveShadow = true;
+  mesh.renderOrder = 1
 
   console.log(`[${name}] Adding to scene`)
 
