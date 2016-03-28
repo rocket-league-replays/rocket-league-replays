@@ -216,11 +216,14 @@
                 <div class="sim-Timer_Score sim-Timer_Score-1">0</div>
             </div>
 
-            <div class="sim-Timeline">
-                <div class="sim-Timeline_Inner"></div>
-                {% for goal in object.goal_set.all %}
-                    <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
-                {% endfor %}
+            <div class="sim-Timeline_Outer">
+                <div class="sim-Timeline">
+                    <div class="sim-Timeline_Inner"></div>
+                    <div class="sim-Timeline_Cursor"></div>
+                    {% for goal in object.goal_set.all %}
+                        <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
+                    {% endfor %}
+                </div>
             </div>
             <div class="sim-Boost sim-Boost-team0"></div>
             <div class="sim-Boost sim-Boost-team1"></div>

@@ -1,3 +1,5 @@
+"use strict";
+
 if (!Detector.webgl) Detector.addGetWebGLMessage();
 var clock = new THREE.Clock();
 
@@ -35,7 +37,7 @@ function init() {
   container.appendChild(stats.domElement);
 
   // Add lighting.
-  light = new THREE.DirectionalLight(0xffffff);
+  const light = new THREE.DirectionalLight(0xffffff);
   light.castShadow = true;
   light.shadow.camera.left = -5000;
   light.shadow.camera.right = 5000;
@@ -43,6 +45,25 @@ function init() {
   light.shadow.camera.bottom = -5000;
   light.position.set(0, 0, 5000);
   scene.add(light);
+
+  document.querySelector('.sim-Timeline_Outer').addEventListener('mousemove', function(e) {
+    if (document.querySelector('.sim-Timeline_Outer') !== e.target) {
+      return;
+    }
+
+    document.querySelector('.sim-Timeline_Cursor').style.left = `${e.offsetX}px`
+  })
+
+  document.querySelector('.sim-Timeline_Outer').addEventListener('mousedown', function(e) {
+    if (document.querySelector('.sim-Timeline_Outer') !== e.target) {
+      return;
+    }
+
+    // Convert the current position into a frame.
+    const percentage = e.offsetX / e.target.offsetWidth
+
+    currentFrame = Math.floor(maxFrame * percentage)
+  })
 
   addStadium()
   animate()
@@ -67,9 +88,12 @@ function animate() {
 
   render();
 
+  let fpsLimit = 30 // Cap at 30 FPS.
+  let timeoutDelay = 1000 / fpsLimit
+
   setTimeout(function() {
     requestAnimationFrame(animate);
-  }, 1000 / 30) // Cap at 30 FPS.
+  }, timeoutDelay)
 }
 
 function render() {

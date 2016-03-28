@@ -50,18 +50,26 @@
   transform: translateX(-50%);
 }
 
-.sim-Timeline {
+.sim-Timeline_Outer {
   position: absolute;
-  bottom: 30px;
+  bottom: 0;
   left: 50%;
 
   width: 80%;
   height: 6px;
 
+  padding: 30px 0;
+
+  cursor: pointer;
+
+  transform: translateX(-50%);
+}
+
+.sim-Timeline {
   background-color: #0b4566;
   border-radius: 3px;
 
-  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .sim-Timeline_Inner {
@@ -70,22 +78,39 @@
 
   background: linear-gradient(to right, #0b85d9, #95fbfc);
 
+  pointer-events: none;
+
   border-radius: 3px;
 }
 
 .sim-Timeline_Cursor {
+  position: absolute;
+  top: 5px;
+
+  display: none;
+
   width: 22px;
   height: 30px;
 
-  background: url(/static/img/2d-rendering/OptionsSlider_Thumb_Up.png);
+  pointer-events: none;
+
+  background: url(/static/img/2d-rendering/Marker_User.png);
+
+  transform: translateX(-50%);
+
+  .sim-Timeline_Outer:hover & {
+    display: block;
+  }
 }
 
 .sim-Timeline_Marker {
   position: absolute;
-  bottom: 5px;
+  bottom: 30px;
 
   width: 32px;
   height: 40px;
+
+  pointer-events: none;
 
   transform: translateX(calc(-50% + 2px));
 
