@@ -86,6 +86,7 @@
 .icon-reddit-squared::before { content: '\e807'; } /* '' */
 .icon-youtube-squared::before { content: '\e808'; } /* '' */
 .icon-crown::before { content: '\e809'; } /* '' */
+.icon-crown-plus::before { content: '\e80a'; } /* '' */
 
 .icon-crown {
   position: relative;
@@ -106,4 +107,8 @@ a.crowned > .icon-crown {
   text-shadow: rgba(150, 150, 150, 0.9) 1px 1px 3px;
 
   transform: rotate(-20deg);
+}
+
+.icon-crown-plus {
+  color: #ffd700;
 }
