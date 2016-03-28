@@ -27,13 +27,6 @@ function init () {
   camera.position.set(0, 0, 5000)
   camera.rotation.set(0, 0, r(90))
 
-  // Add stats module.
-  stats = new Stats()
-  stats.domElement.style.position = 'absolute'
-  stats.domElement.style.bottom = '0px'
-  stats.domElement.style.zIndex = 100
-  container.appendChild(stats.domElement)
-
   // Add lighting.
   const light = new THREE.DirectionalLight(0xffffff)
   light.castShadow = true
@@ -71,8 +64,6 @@ function animate () {
   if (typeof scene === 'undefined') {
     return
   }
-
-  stats.update()
 
   if (typeof currentFrame !== 'undefined' && currentFrame >= 0) {
     positionReplayObjects()
