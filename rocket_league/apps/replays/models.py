@@ -598,10 +598,17 @@ class Replay(models.Model):
                             unique_id = '-'.join(id_parts)
 
                     else:
-                        unique_id = '-'.join([
+                        id_parts = [
                             '-1',
-                            data['Engine.PlayerReplicationInfo:PlayerName']
-                        ])
+                            data['Engine.PlayerReplicationInfo:PlayerName'],
+                            '0'
+                        ]
+
+                        unique_id = '-'.join(id_parts)
+
+                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
+                            id_parts[2] = str(int(id_parts[2]) + 1)
+                            unique_id = '-'.join(id_parts)
 
                 if 'TAGame.PRI_TA:TotalXP' in data:
                     if data['TAGame.PRI_TA:TotalXP'] >= 0:
