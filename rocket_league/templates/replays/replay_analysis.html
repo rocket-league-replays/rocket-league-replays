@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load cache replays site static %}
+
+{% block content_primary %}
+    {% include "replays/includes/tabs.html" %}
+
+    {% if replay.title %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h2>{{ replay.title }}</h2>
+            <hr>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Fancy new visualisations for Patreon people #}
+    {% if replay.show_analysis %}
+        <script src="http://threejs.org/build/three.min.js"></script>
+        <script src="http://threejs.org/examples/js/Detector.js"></script>
+        <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+        <script src="http://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+
+        <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
+        <script src="{% static 'js/2d-rendering/main.js' %}"></script>
+        <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
+        <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
+
+        <div class="sim-Outer">
+            <div class="sim-Timer">
+                <div class="sim-Timer_Score sim-Timer_Score-0">0</div>
+                <div class="sim-Timer_Value">0:00</div>
+                <div class="sim-Timer_Score sim-Timer_Score-1">0</div>
+            </div>
+
+            <div class="sim-Timeline_Outer">
+                <div class="sim-Timeline">
+                    <div class="sim-Timeline_Inner"></div>
+                    <div class="sim-Timeline_Cursor"></div>
+                    {% for goal in object.goal_set.all %}
+                        <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="sim-Boost sim-Boost-team0"></div>
+            <div class="sim-Boost sim-Boost-team1"></div>
+        </div>
+
+        <script>
+        loadGameData("{{ replay.location_json_file.url }}");
+        </script>
+    {% else %}
+    <p></p>
+    {% endif %}
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <div id="disqus_thread"></div>
+
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http{% if request.is_secure %}s{% endif %}://{{ settings.SITE_DOMAIN }}{% url 'replay:detail' pk=object.pk %}';
+                    this.page.identifier = 'replay_{{ replay.pk }}';
+                };
+                (function() { // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+
+                    s.src = '//rlr.disqus.com/embed.js';
+
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+    {% if replay.heatmap_json_file %}
+    <script>
+    "use strict"
+    var replay_file_url = '{{ replay.heatmap_json_file.url }}'
+    </script>
+    {% endif %}
+{% endblock %}
+
+{% block additional_css %}
+    <style>
+
+</style>
+{% endblock %}
+
+{% block additional_js %}
+{% if replay.heatmap_json_file %}
+<script src="{% static 'js/vendor/heatmap.js' %}"></script>
+<script>
+</script>
+{% endif %}
+{% endblock %}

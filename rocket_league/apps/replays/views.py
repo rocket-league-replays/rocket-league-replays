@@ -71,6 +71,11 @@ class ReplayDetailView(DetailView):
     model = Replay
 
 
+class ReplayAnalysisView(DetailView):
+    model = Replay
+    template_name_suffix = '_analysis'
+
+
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     fields = ['file']
