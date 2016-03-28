@@ -46,19 +46,13 @@ function addStadium() {
   scene.add(mesh);
 }
 
-// Cached meshes to improve load speed.
-let carMesh;
-let wheelMesh;
-
 function addCar(name, actor) {
   console.log(`[${name}] Adding car`)
   let color = 0xff0000
 
   if (actor.y < 0) {
-    console.log('Team 0')
     color = 0x6086e5
   } else {
-    console.log('Team 1')
     color = 0xffae7f
   }
 
@@ -95,6 +89,31 @@ function addCar(name, actor) {
     0,
     r(90) + actor.pitch * Math.PI * -1
   )
+
+  // Add the boost gauge.
+  /*
+  <div class="boost-outer boost-player-{{ player.actor_id }}">
+      {{ player.player_name }}
+
+      <div class="boost-inner" data-team="{{ player.team }}">34</div>
+  </div>
+  */
+
+  const outerElement = document.createElement('div')
+  outerElement.classList.add('boost-outer')
+  outerElement.classList.add(`boost-player-${actor.id}`)
+
+  const playerName = document.createElement('span')
+  playerName.innerHTML = actorData[actor.id].name
+  outerElement.appendChild(playerName)
+
+  const innerElement = document.createElement('div')
+  innerElement.innerHTML = '34'
+  innerElement.classList.add('boost-inner')
+  innerElement.setAttribute('data-team', teamData[actorData[actor.id].team])
+  outerElement.appendChild(innerElement)
+
+  document.querySelector('.boost').appendChild(outerElement)
 
   console.log(`[${name}] Render complete`)
   carsLoading = carsLoading.filter(function(e){ return e !== name })
@@ -138,14 +157,6 @@ function addBall(name, actor) {
     0,
     actor.yaw * Math.PI
   )
-
-  // mesh.rotation.set(
-  //   (actor.roll * Math.PI * - 1) + r(-90),
-  //   actor.pitch * Math.PI * -1,
-  //   (actor.yaw * Math.PI * - 1) + r(180)
-  // )
-
-  // XYZ XZY YXZ YZX ZXY ZYX
 
   console.log(`[${name}] Render complete`)
   carsLoading = carsLoading.filter(function(e){ return e !== name })
