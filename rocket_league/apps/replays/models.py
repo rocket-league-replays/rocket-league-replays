@@ -620,7 +620,11 @@ class Replay(models.Model):
 
                 # Try to work out the player's team.
                 if 'Engine.PlayerReplicationInfo:Team' in data:
-                    team = parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]]
+                    team_id = data['Engine.PlayerReplicationInfo:Team'][1]
+                    if team_id in parser.team_metadata:
+                        team = parser.team_metadata[team_id]
+                    else:
+                        team = -1
                 else:
                     team = -1
 
