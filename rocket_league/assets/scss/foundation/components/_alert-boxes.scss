@@ -118,7 +118,7 @@ $alert-transition-ease: ease-out !default;
       &.round     { @include radius($global-rounded); }
 
       &.success   { @include alert-style($success-color); }
-      &.alert     { @include alert-style($alert-color); }
+      &.alert, &.error { @include alert-style($alert-color); }
       &.secondary { @include alert-style($secondary-color); }
       &.warning { @include alert-style($warning-color); }
       &.info { @include alert-style($info-color); }

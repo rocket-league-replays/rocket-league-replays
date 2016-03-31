@@ -92,7 +92,7 @@ def patreon_pledge_amount(context, user=None, steam_id=None):
                 expiry_date__gte=now().date,
             )
 
-            return 2500  # Highest tier
+            return 99999
         except PatronTrial.DoesNotExist:
             return 0
 
