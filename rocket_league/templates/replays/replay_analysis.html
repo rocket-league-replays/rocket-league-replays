@@ -13,6 +13,14 @@
     </div>
     {% endif %}
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert-box {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
     {# Fancy new visualisations for Patreon people #}
     {% if replay.show_analysis %}
         <script src="http://threejs.org/build/three.min.js"></script>
@@ -56,7 +64,7 @@
 
             <h5>7 day trial</h5>
             {% if user.is_authenticated and not user.profile.has_had_trial %}
-            <p>Not sure whether you want to become a patron just yet?  You can try out the features and benefits with a 7 day trial. <a href="#">Click here to start your trial.</a> (Limited to one trial per account)</p>
+            <p>Not sure whether you want to become a patron just yet?  You can try out the features and benefits with a 7 day trial. <a href="{% url 'site:start-trial' pk=object.pk %}">Click here to start your trial.</a> (Limited to one trial per account)</p>
             {% elif user.is_authenticated and user.profile.has_had_trial %}
             <p>Unfortunately you have already experienced a free trial, so you are no longer eligible to experience these benefits for free.</p>
             {% elif not user.is_authenticated %}
