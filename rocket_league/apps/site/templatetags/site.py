@@ -1,8 +1,9 @@
 from django import template
+from django.utils.timezone import now
 from social.apps.django_app.default.models import UserSocialAuth
 
 from ...replays.models import Player
-from ..models import Patron
+from ..models import Patron, PatronTrial
 
 register = template.Library()
 
@@ -84,6 +85,17 @@ def patreon_pledge_amount(context, user=None, steam_id=None):
         return obj.pledge_amount
 
     except Patron.DoesNotExist:
+        # Does an active trial for this user exist?
+        try:
+            PatronTrial.objects.get(
+                user=user,
+                expiry_date__gte=now().date,
+            )
+
+            return 2500  # Highest tier
+        except PatronTrial.DoesNotExist:
+            return 0
+
         return 0
 
 
