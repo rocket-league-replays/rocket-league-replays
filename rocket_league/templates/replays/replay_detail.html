@@ -340,16 +340,8 @@
     {% endif %}
 {% endblock %}
 
-{% block additional_css %}
-    <style>
-
-</style>
-{% endblock %}
-
 {% block additional_js %}
-{% if replay.heatmap_json_file %}
-<script src="{% static 'js/vendor/heatmap.js' %}"></script>
-<script>
-</script>
-{% endif %}
+    {% if replay.heatmap_json_file %}
+    <script src="{% static 'js/vendor/heatmap.js' %}"></script>
+    {% endif %}
 {% endblock %}

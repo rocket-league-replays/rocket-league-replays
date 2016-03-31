@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache replays site static %}
+{% load cache compress replays site static %}
 
 {% block content_primary %}
     {% include "replays/includes/tabs.html" %}
@@ -22,7 +22,9 @@
     {% endif %}
 
     {# Fancy new visualisations for Patreon people #}
+    {# TODO: Show a different message if the replay is eligible, but hasn't been processed yet. #}
     {% if replay.show_analysis %}
+        {% compress js %}
         <script src="http://threejs.org/build/three.min.js"></script>
         <script src="http://threejs.org/examples/js/Detector.js"></script>
         <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
@@ -32,6 +34,7 @@
         <script src="{% static 'js/2d-rendering/main.js' %}"></script>
         <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
         <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
+        {% endcompress %}
 
         <div class="sim-Outer">
             <div class="sim-Timer">
@@ -52,10 +55,6 @@
             <div class="sim-Boost sim-Boost-team0"></div>
             <div class="sim-Boost sim-Boost-team1"></div>
         </div>
-
-        <script>
-        loadGameData("{{ replay.location_json_file.url }}");
-        </script>
     {% else %}
     <div class="row">
         <div class="medium-8 medium-centered columns mb-50">
@@ -98,13 +97,6 @@
             <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
         </div>
     </div>
-
-    {% if replay.heatmap_json_file %}
-    <script>
-    "use strict"
-    var replay_file_url = '{{ replay.heatmap_json_file.url }}'
-    </script>
-    {% endif %}
 {% endblock %}
 
 {% block additional_css %}
@@ -114,9 +106,9 @@
 {% endblock %}
 
 {% block additional_js %}
-{% if replay.heatmap_json_file %}
-<script src="{% static 'js/vendor/heatmap.js' %}"></script>
-<script>
-</script>
-{% endif %}
+    {% if replay.show_analysis %}
+    <script>
+    loadGameData("{{ replay.location_json_file.url }}");
+    </script>
+    {% endif %}
 {% endblock %}
