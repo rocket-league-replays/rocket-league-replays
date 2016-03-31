@@ -161,6 +161,13 @@ class Profile(models.Model):
 
         return steam.extra_data['player']
 
+    def has_had_trial(self):
+        from ..site.models import PatronTrial
+
+        return PatronTrial.objects.filter(
+            user=self.user,
+        ).count() > 0
+
     def get_absolute_url(self):
         if self.has_steam_connected():
             return reverse('users:steam', kwargs={
