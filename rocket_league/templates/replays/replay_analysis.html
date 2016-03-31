@@ -23,38 +23,47 @@
 
     {# Fancy new visualisations for Patreon people #}
     {# TODO: Show a different message if the replay is eligible, but hasn't been processed yet. #}
-    {% if replay.show_analysis %}
-        {% compress js %}
-        <script src="http://threejs.org/build/three.min.js"></script>
-        <script src="http://threejs.org/examples/js/Detector.js"></script>
-        <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
-        <script src="http://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+    {% if replay.eligble_for_analysis %}
+        {% if replay.show_analysis %}
+            {% compress js %}
+            <script src="http://threejs.org/build/three.min.js"></script>
+            <script src="http://threejs.org/examples/js/Detector.js"></script>
+            <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
+            <script src="http://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
 
-        <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
-        <script src="{% static 'js/2d-rendering/main.js' %}"></script>
-        <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
-        <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
-        {% endcompress %}
+            <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/main.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
+            {% endcompress %}
 
-        <div class="sim-Outer">
-            <div class="sim-Timer">
-                <div class="sim-Timer_Score sim-Timer_Score-0">0</div>
-                <div class="sim-Timer_Value">0:00</div>
-                <div class="sim-Timer_Score sim-Timer_Score-1">0</div>
-            </div>
-
-            <div class="sim-Timeline_Outer">
-                <div class="sim-Timeline">
-                    <div class="sim-Timeline_Inner"></div>
-                    <div class="sim-Timeline_Cursor"></div>
-                    {% for goal in object.goal_set.all %}
-                        <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
-                    {% endfor %}
+            <div class="sim-Outer">
+                <div class="sim-Timer">
+                    <div class="sim-Timer_Score sim-Timer_Score-0">0</div>
+                    <div class="sim-Timer_Value">0:00</div>
+                    <div class="sim-Timer_Score sim-Timer_Score-1">0</div>
                 </div>
+
+                <div class="sim-Timeline_Outer">
+                    <div class="sim-Timeline">
+                        <div class="sim-Timeline_Inner"></div>
+                        <div class="sim-Timeline_Cursor"></div>
+                        {% for goal in object.goal_set.all %}
+                            <div class="sim-Timeline_Marker sim-Timeline_Marker-{{ goal.player.team }}" data-frame="{{ goal.frame }}" style="left: {% widthratio goal.frame replay.num_frames 100 %}%"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="sim-Boost sim-Boost-team0"></div>
+                <div class="sim-Boost sim-Boost-team1"></div>
             </div>
-            <div class="sim-Boost sim-Boost-team0"></div>
-            <div class="sim-Boost sim-Boost-team1"></div>
+        {% else %}
+        <div class="row">
+            <div class="medium-8 medium-centered columns mb-50">
+                <h4>Awaiting processing</h4>
+                <p>This replay is eligible for additional analysis, we just haven't got round to processing it yet. Please hang on and we'll have it done as soon as possible. Thank you for your patience.</p>
+            </div>
         </div>
+        {% endif %}
     {% else %}
     <div class="row">
         <div class="medium-8 medium-centered columns mb-50">
