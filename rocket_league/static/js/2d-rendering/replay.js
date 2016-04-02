@@ -165,7 +165,7 @@ function positionReplayObjects () {
   // Do any actors get removed in this frame?
   Object.keys(actorData).forEach(function (item) {
     if (actorData[item].left <= currentFrame) {
-      const objectName = `car-${item}`
+      const objectName = `car-${item}`;
       const carObject = scene.getObjectByName(objectName)
 
       if (carObject !== undefined) {
@@ -182,7 +182,7 @@ function positionReplayObjects () {
 
   frameData[currentFrame].actors.forEach(function (actor, index) {
     // Does this car already exist in the scene.
-    const objectName = `car-${actor.id}`
+    const objectName = `car-${actor.id}`;
     const carObject = scene.getObjectByName(objectName)
 
     if (carObject === undefined) {
