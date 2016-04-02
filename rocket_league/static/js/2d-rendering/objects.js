@@ -22,7 +22,7 @@ function addStadium () {
       color: 0xffffff
     }),
     new THREE.MeshLambertMaterial({
-      map: textureLoader.load('/static/img/2d-rendering/arena_overlay2.png'),
+      map: textureLoader.load('/static/img/2d-rendering/arena_overlay.png'),
       transparent: true,
       opacity: 0.7,
       color: 0xffffff
@@ -49,18 +49,23 @@ function addStadium () {
 
 function addCar (name, actor) {
   console.log(`[${name}] Adding car`)
-  let color = 0xff0000
+  let texture
 
   if (actor.y < 0) {
-    color = 0x6086e5
+    texture = textureLoader.load('/static/img/2d-rendering/Car_Body_0.png')
   } else {
-    color = 0xffae7f
+    texture = textureLoader.load('/static/img/2d-rendering/Car_Body_1.png')
   }
 
   const mesh = new THREE.Mesh(
-    renderRect(74, 144),
-    new THREE.MeshBasicMaterial({ color })
-    )
+    // renderRect(74, 144),
+    new THREE.BoxGeometry(90, 175, 1),
+    new THREE.MeshLambertMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1
+    })
+  )
 
   mesh.name = name
   mesh.matrixAutoUpdate = true
