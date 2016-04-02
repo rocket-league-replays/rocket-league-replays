@@ -149,19 +149,32 @@
 }
 
 .sim-Boost {
-  position: absolute;
-  top: 0;
-  right: 0;
-
-  width: 150px;
+  width: 50%;
+  margin-bottom: 20px;
 
   &.sim-Boost-team0 {
-    right: auto;
-    left: 0;
+    float: left;
   }
 
   &.sim-Boost-team1 {
-    text-align: right;
+    float: right;
+  }
+
+  @media #{$large-up} {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 150px;
+
+    &.sim-Boost-team0 {
+      right: auto;
+      left: 0;
+    }
+
+    &.sim-Boost-team1 {
+      text-align: right;
+    }
   }
 }
 
