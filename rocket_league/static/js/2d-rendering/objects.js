@@ -16,19 +16,19 @@ function renderRect (width, height) {
 function addStadium () {
   const materials = [
     new THREE.MeshLambertMaterial({
-      map: textureLoader.load('/static/img/2d-rendering/arena_fieldlines.png'),
+      map: textureLoader.load(resource__arena_fieldlines),
       transparent: true,
       opacity: 0.5,
       color: 0xffffff
     }),
     new THREE.MeshLambertMaterial({
-      map: textureLoader.load('/static/img/2d-rendering/arena_overlay.png'),
+      map: textureLoader.load(resource__arena_overlay),
       transparent: true,
       opacity: 0.7,
       color: 0xffffff
     }),
     new THREE.MeshLambertMaterial({
-      map: textureLoader.load('/static/img/2d-rendering/arena_boost.png'),
+      map: textureLoader.load(resource__arena_boost),
       transparent: true,
       color: 0xffffff,
       opacity: 0.5
@@ -52,9 +52,9 @@ function addCar (name, actor) {
   let texture
 
   if (actor.y < 0) {
-    texture = textureLoader.load('/static/img/2d-rendering/Car_Body_0.png')
+    texture = textureLoader.load(resource__Car_Body_0)
   } else {
-    texture = textureLoader.load('/static/img/2d-rendering/Car_Body_1.png')
+    texture = textureLoader.load(resource__Car_Body_1)
   }
 
   const mesh = new THREE.Mesh(
@@ -128,7 +128,7 @@ function addBall (name, actor) {
   const mesh = new THREE.Mesh(
     new THREE.CircleGeometry(91, 32),
     new THREE.MeshLambertMaterial({
-      map: textureLoader.load('/static/img/2d-rendering/ball.png')
+      map: textureLoader.load(resource__ball)
     })
   )
 

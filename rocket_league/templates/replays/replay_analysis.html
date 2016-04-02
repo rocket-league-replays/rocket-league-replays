@@ -27,6 +27,15 @@
     {% if replay.eligble_for_analysis %}
         {% if replay.show_analysis %}
             {% compress js %}
+            <script>
+            var resource__arena_fieldlines = "{% static 'img/2d-rendering/arena_fieldlines.png' %}";
+            var resource__arena_overlay = "{% static 'img/2d-rendering/arena_overlay.png' %}";
+            var resource__arena_boost = "{% static 'img/2d-rendering/arena_boost.png' %}";
+            var resource__Car_Body_0 = "{% static 'img/2d-rendering/Car_Body_0.png' %}";
+            var resource__Car_Body_1 = "{% static 'img/2d-rendering/Car_Body_1.png' %}";
+            var resource__ball = "{% static 'img/2d-rendering/ball.png' %}";
+            </script>
+
             <script src="{% static 'js/vendor/2d-rendering/three.min.js' %}"></script>
             <script src="{% static 'js/vendor/2d-rendering/Detector.js' %}"></script>
 
