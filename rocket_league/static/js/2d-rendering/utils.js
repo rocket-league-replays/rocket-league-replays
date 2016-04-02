@@ -1,10 +1,9 @@
 /*global THREE*/
 'use strict'
 
-THREE.ImageUtils.crossOrigin = '';
-
 const loader = new THREE.JSONLoader()
 const textureLoader = new THREE.TextureLoader()
+textureLoader.crossOrigin = '';
 
 // Convert degrees to radians
 function r (d) {
