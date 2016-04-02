@@ -75,7 +75,7 @@ function positionReplayObjects () {
       const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
 
       if (boostEl) {
-        boostEl.style.backgroundSize = `${value}% 100%`
+        boostEl.style.backgroundSize = `${value}% 100%`;
         boostEl.innerHTML = value
 
         if (value < 15) {
@@ -126,7 +126,7 @@ function positionReplayObjects () {
 
               const value = Math.ceil(rawValue * (100 / 255))
 
-              boostEl.style.backgroundSize = `${value}% 100%`
+              boostEl.style.backgroundSize = `${value}% 100%`;
               boostEl.innerHTML = value
 
               if (value < 15) {
@@ -160,7 +160,7 @@ function positionReplayObjects () {
   document.querySelector('.sim-Timer_Score-0').innerHTML = team_0_score
   document.querySelector('.sim-Timer_Score-1').innerHTML = team_1_score
 
-  document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`
+  document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`;
 
   // Do any actors get removed in this frame?
   Object.keys(actorData).forEach(function (item) {
