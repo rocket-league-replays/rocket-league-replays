@@ -11,10 +11,11 @@ from rest_framework import mixins, viewsets
 from ...utils.forms import AjaxableResponseMixin
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
+from .models import (Goal, Map, Player, Replay, ReplayPack, Season,
+                     get_default_season)
 from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
-                          ReplayCreateSerializer, ReplayListSerializer,
-                          ReplaySerializer)
+                          ReplayCreateSerializer, ReplaySerializer,
+                          SeasonSerializer)
 
 
 class ReplayListView(FilterView):
@@ -232,7 +233,7 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
     serializer_class = ReplaySerializer
 
     serializer_action_classes = {
-        'list': ReplayListSerializer,
+        'list': ReplaySerializer,
         'create': ReplayCreateSerializer,
     }
 
@@ -289,6 +290,16 @@ class MapViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Map.objects.all()
     serializer_class = MapSerializer
+
+
+class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all seasons in the system.
+    """
+
+    queryset = Season.objects.all()
+    serializer_class = SeasonSerializer
 
 
 class PlayerViewSet(viewsets.ReadOnlyModelViewSet):

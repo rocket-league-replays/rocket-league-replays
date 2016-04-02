@@ -1,23 +1,37 @@
-from .models import Goal, Map, Player, Replay
+from .models import Goal, Map, Player, Replay, Season
 
-from rest_framework.serializers import HyperlinkedModelSerializer
+from rest_framework.serializers import HyperlinkedModelSerializer, ReadOnlyField
 
 
 class GoalSerializer(HyperlinkedModelSerializer):
+
+    goal_time = ReadOnlyField()
+
+    player_id = ReadOnlyField()
+
     class Meta:
         model = Goal
-        fields = ['url', 'replay', 'player', 'number', 'frame', 'goal_time']
 
 
 class PlayerSerializer(HyperlinkedModelSerializer):
+
+    id = ReadOnlyField()
+
     class Meta:
         model = Player
-        fields = ['url', 'replay', 'player_name', 'team']
+        exclude = ['replay']
 
 
 class MapSerializer(HyperlinkedModelSerializer):
+
     class Meta:
         model = Map
+
+
+class SeasonSerializer(HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Season
 
 
 class ReplaySerializer(HyperlinkedModelSerializer):
@@ -37,24 +51,15 @@ class ReplaySerializer(HyperlinkedModelSerializer):
         read_only=True,
     )
 
+    season = SeasonSerializer(
+        many=False,
+        read_only=True,
+    )
+
     class Meta:
         model = Replay
-        fields = ["url", "file", "replay_id", "player_name", "player_team",
-                  "server_name", "timestamp", "team_sizes", "team_0_score",
-                  "team_1_score", "match_type", "keyframe_delay",
-                  "max_channels", "max_replay_size_mb", "num_frames",
-                  "record_fps", "processed", "map", "player_set", "goal_set",
-                  "lag_report_url", "match_length", "get_absolute_url"]
-
+        exclude = ['user', 'crashed_heatmap_parser']
         depth = 1
-
-
-class ReplayListSerializer(HyperlinkedModelSerializer):
-
-    class Meta:
-        model = Replay
-        fields = ['url']
-        depth = 0
 
 
 class ReplayCreateSerializer(HyperlinkedModelSerializer):

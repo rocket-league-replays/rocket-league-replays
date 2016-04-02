@@ -11,7 +11,7 @@ from django.views import generic
 from rest_framework import routers
 
 from .apps.replays.views import (GoalViewSet, MapViewSet, PlayerViewSet,
-                                 ReplayViewSet)
+                                 ReplayViewSet, SeasonViewSet)
 
 admin.autodiscover()
 
@@ -21,6 +21,7 @@ router.register(r'maps', MapViewSet)
 router.register(r'replays', ReplayViewSet)
 router.register(r'players', PlayerViewSet)
 router.register(r'goals', GoalViewSet)
+router.register(r'seasons', SeasonViewSet)
 
 
 urlpatterns = patterns(
