@@ -12,7 +12,7 @@ from pyrope.exceptions import FrameParsingError
 
 class Parser(object):
 
-    def __init__(self, file_path, parse_netstream=False):
+    def __init__(self, file_path, parse_netstream=False, obj=None):
         self.replay = Replay(file_path)
         self.replay_id = self.replay.header['Id']
 
@@ -149,53 +149,54 @@ class Parser(object):
 
         self.heatmap_json_filename = heatmap_json_filename
 
-        # Advanced replay parsing.
-        # Restructure the data so that it's chunkable.
-        frame_data = []
+        if obj.eligble_for_analysis():
+            # Advanced replay parsing.
+            # Restructure the data so that it's chunkable.
+            frame_data = []
 
-        for frame in range(self.replay.header['NumFrames']):
-            frame_dict = {
-                'time': self.replay.netstream[frame].current,
-                'actors': []
+            for frame in range(self.replay.header['NumFrames']):
+                frame_dict = {
+                    'time': self.replay.netstream[frame].current,
+                    'actors': []
+                }
+
+                for player in self.actors:
+                    position_data = self.actors[player]['position_data']
+
+                    if frame in position_data:
+                        frame_dict['actors'].append({
+                            'id': player,
+                            'type': self.actors[player].get('type', 'ball'),
+                            **position_data[frame]
+                        })
+
+                frame_data.append(frame_dict)
+
+            if default_storage.exists(location_json_filename):
+                default_storage.delete(location_json_filename)
+
+            self._get_boost_data()
+            self._get_seconds_remaining()
+            # pprint(self.boost_data)
+
+            small_actors = {}
+
+            for key, value in self.actors.items():
+                small_actors[key] = value
+
+                del small_actors[key]['position_data']
+
+            final_data = {
+                'frame_data': frame_data,
+                'goals': self.replay.header.get('Goals', []),
+                'boost': self.boost_data,
+                'seconds_mapping': self.seconds_mapping,
+                'actors': self.actors,
+                'teams': self.team_metadata
             }
 
-            for player in self.actors:
-                position_data = self.actors[player]['position_data']
-
-                if frame in position_data:
-                    frame_dict['actors'].append({
-                        'id': player,
-                        'type': self.actors[player].get('type', 'ball'),
-                        **position_data[frame]
-                    })
-
-            frame_data.append(frame_dict)
-
-        if default_storage.exists(location_json_filename):
-            default_storage.delete(location_json_filename)
-
-        self._get_boost_data()
-        self._get_seconds_remaining()
-        # pprint(self.boost_data)
-
-        small_actors = {}
-
-        for key, value in self.actors.items():
-            small_actors[key] = value
-
-            del small_actors[key]['position_data']
-
-        final_data = {
-            'frame_data': frame_data,
-            'goals': self.replay.header.get('Goals', []),
-            'boost': self.boost_data,
-            'seconds_mapping': self.seconds_mapping,
-            'actors': self.actors,
-            'teams': self.team_metadata
-        }
-
-        location_json_filename = default_storage.save(location_json_filename, ContentFile(json.dumps(final_data, separators=(',', ':'))))
-        self.location_json_filename = location_json_filename
+            location_json_filename = default_storage.save(location_json_filename, ContentFile(json.dumps(final_data, separators=(',', ':'))))
+            self.location_json_filename = location_json_filename
 
     def _get_match_metadata(self, frame):
         # Search through the frames looking for some game replication info.

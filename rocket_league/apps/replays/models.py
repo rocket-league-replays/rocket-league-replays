@@ -497,7 +497,7 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(self.file.read())
+                self.parser = Parser(self.file.read(), obj=self)
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
@@ -524,14 +524,16 @@ class Replay(models.Model):
         if self.file and not self.processed:
             self.file.seek(0)
 
-            parser = Parser(self.file.read(), parse_netstream=parse_netstream)
+            parser = Parser(self.file.read(), parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
 
             if parse_netstream:
                 self.heatmap_json_file = parser.heatmap_json_filename
-                self.location_json_file = parser.location_json_filename
+
+                if hasattr(parser, 'location_json_filename'):
+                    self.location_json_file = parser.location_json_filename
 
             if 'playlist' in parser.match_metadata:
                 self.playlist = parser.match_metadata['playlist']
