@@ -297,3 +297,28 @@ def steam_stats(uid):
     ))
 
     return data
+
+
+@register.assignment_tag(takes_context=True)
+def user_in_replay(context):
+    replay = context['replay']
+    user = context['user']
+
+    if not user.is_authenticated():
+        return False
+
+    # Is this user the uploader?
+    if user == replay.user:
+        return True
+
+    # Is this user one of the players in the game?
+    if user.profile.has_steam_connected():
+        players = replay.player_set.filter(
+            platform__in=['OnlinePlatform_Steam', '1'],
+            online_id=user.social_auth.get(provider='steam').uid
+        )
+
+        if players.count() > 0:
+            return True
+
+    return False
