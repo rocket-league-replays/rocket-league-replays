@@ -59,6 +59,68 @@ function positionReplayObjects () {
       if (boostEl) {
         boostEl.style.backgroundSize = `${value}% 100%`
         boostEl.innerHTML = value
+
+        if (value < 15) {
+          boostEl.style.color = '#000'
+        } else {
+          boostEl.style.color = ''
+        }
+      }
+    } else {
+      // Search for boost values within the next 74 frames.
+      let searchLength = 1
+
+      for (let i=currentFrame; i<currentFrame+74; i++) {
+        if (boostData.values[item][i] !== undefined) {
+          // Which player is this?
+          const player_id = boostData.cars[boostData.actors[item]]
+          const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
+
+          if (boostEl) {
+            const frameDiff = i - currentFrame
+            // Boost decreases at a rate of ~255/74 per frame.
+            const currentValue = boostEl.innerText / (100 / 255)
+            const nextValue = boostData.values[item][i]
+
+            // We only care about boost values going down.
+            if (nextValue < currentValue) {
+
+              // Is this the right time to start moving this boost value? We don't to use
+              // a full 74 frames for a tiny burst of boost, only for a full range, so ensure
+              // we're not being premature.
+              //
+              // Diff | Frame lookahead
+              // 255  | 74
+              //
+              // Take the diff and check how many frames before we should start to move the gauge.
+
+              const frameDiffRequired = (currentValue - nextValue) / (255 / 74)
+
+              if (frameDiff > frameDiffRequired) {
+                continue
+              }
+
+              const rawValue = boostData.values[item][i] + (frameDiff * (255/74))
+
+              if (rawValue < 0 || rawValue > 255) {
+                throw new Error("BoostRangeError")
+              }
+
+              const value = Math.ceil(rawValue * (100 / 255))
+
+              boostEl.style.backgroundSize = `${value}% 100%`
+              boostEl.innerHTML = value
+
+              if (value < 15) {
+                boostEl.style.color = '#000'
+              } else {
+                boostEl.style.color = ''
+              }
+
+              break
+            }
+          }
+        }
       }
     }
   })
