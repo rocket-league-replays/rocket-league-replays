@@ -48,6 +48,37 @@ class Parser(object):
 
         self._get_actors()
 
+        # If the number of goals in the header doesn't match the number of goals
+        # in the game, try to get the missing goal data from the netstream.
+
+        """
+         ('3e_Team1',
+          {'actor_id': 3,
+           'actor_type': 'Archetypes.Teams.Team1',
+           'data': {'Engine.TeamInfo:Score': 1},
+           'new': False,
+           'startpos': 2053839}),
+               """
+        if len(self.replay.header.get('Goals', [])) < self.replay.header.get('Team0Score', 0) + self.replay.header.get('Team1Score', 0):
+            for index, frame in self.replay.netstream.items():
+                for _, actor in frame.actors.items():
+                    if 'data' not in actor:
+                        continue
+
+                    if (
+                        'Engine.TeamInfo:Score' in actor['data'] and
+                        'TAGame.Team_TA:GameEvent' not in actor['data'] and
+                        actor['actor_type'].startswith('Archetypes.Teams.Team')
+                    ):
+                        if 'Goals' not in self.replay.header:
+                            self.replay.header['Goals'] = []
+
+                        self.replay.header['Goals'].append({
+                            'PlayerName': 'Unknown player (own goal?)',
+                            'PlayerTeam': actor['actor_type'].replace('Archetypes.Teams.Team', ''),
+                            'frame': index
+                        })
+
         # Extract the goal information.
         if 'Goals' in self.replay.header:
             for goal in self.replay.header['Goals']:
