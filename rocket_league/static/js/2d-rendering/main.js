@@ -9,6 +9,7 @@ let camera
 let scene
 let renderer
 let stats
+let playState = 1
 
 function init () {
   scene = new THREE.Scene()
@@ -56,6 +57,19 @@ function init () {
     currentFrame = Math.floor(maxFrame * percentage)
   })
 
+  // Add Play / Pause controls.
+  document.querySelector('.sim-Timeline_Controls').addEventListener('mousedown', function (e) {
+    const pausedClass = 'sim-Timeline_Controls-paused'
+
+    if (e.target.classList.contains(pausedClass)) {
+      e.target.classList.remove(pausedClass)
+      playState = 1
+    } else {
+      e.target.classList.add(pausedClass)
+      playState = 0
+    }
+  })
+
   addStadium()
   animate()
 }
@@ -68,10 +82,12 @@ function animate () {
   if (typeof currentFrame !== 'undefined' && currentFrame >= 0) {
     positionReplayObjects()
 
-    if (currentFrame === maxFrame - 1) {
-      currentFrame = 0
-    } else {
-      currentFrame += 1
+    if (playState === 1) {
+      if (currentFrame === maxFrame - 1) {
+        currentFrame = 0
+      } else {
+        currentFrame += 1
+      }
     }
   }
 
