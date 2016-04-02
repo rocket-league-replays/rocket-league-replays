@@ -301,6 +301,13 @@
                         <td>{{ replay.match_type }}</td>
                     </tr>
 
+                    {% if replay.playlist %}
+                    <tr>
+                        <td>Playlist:</td>
+                        <td>{{ replay.get_human_playlist }}</td>
+                    </tr>
+                    {% endif %}
+
                     <tr>
                         <td>Match length:</td>
                         <td>{{ replay.match_length }}</td>

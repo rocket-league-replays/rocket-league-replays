@@ -469,6 +469,12 @@ class Replay(models.Model):
 
         return self.eligble_for_analysis()
 
+    def get_human_playlist(self):
+        if not self.playlist:
+            return None
+
+        return settings.HUMAN_PLAYLISTS.get(self.playlist, self.get_playlist_display())
+
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
             'pk': self.pk,

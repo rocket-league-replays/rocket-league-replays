@@ -375,6 +375,19 @@ PLAYLISTS = {
     'RocketLabs': 16,  # TODO: Check this is correct.
 }
 
+HUMAN_PLAYLISTS = {
+    1: 'Unranked Duels',
+    2: 'Unranked Doubles',
+    3: 'Unranked Standard',
+    4: 'Unranked Chaos',
+    10: 'Ranked Duels',
+    11: 'Ranked Doubles',
+    12: 'Ranked Solo Standard',
+    13: 'Ranked Standard',
+    15: 'Snow Day',
+    16: 'Rocket Labs',
+}
+
 TIERS = {
     0: 'Unranked',
     1: 'Prospect I',
