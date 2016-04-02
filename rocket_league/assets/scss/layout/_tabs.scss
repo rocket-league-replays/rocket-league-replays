@@ -1,0 +1,27 @@
+.lyt-Tabs {
+  margin: -25px -15px 20px;
+
+  background-color: #efefef;
+}
+
+.lyt-Tabs_Items {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.lyt-Tabs_Item {
+  padding: 12px 20px;
+
+  &.lyt-Tabs_Item-active {
+    border-bottom: 3px solid #333;
+    padding-top: 15px;
+  }
+}
+
+.lyt-Tabs_Action {
+  color: #333;
+
+  font-size: 14px;
+}

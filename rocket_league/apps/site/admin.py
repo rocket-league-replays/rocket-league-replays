@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Content, ContentColumn, Patron
+from .models import Content, ContentColumn, Patron, PatronTrial
 
 from cms.apps.pages.admin import page_admin
 
@@ -27,3 +27,5 @@ class PatronAdmin(admin.ModelAdmin):
             'fields': ['patron_id', 'patron_email']
         }),
     )
+
+admin.site.register(PatronTrial)

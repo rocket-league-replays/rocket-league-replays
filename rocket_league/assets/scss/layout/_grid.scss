@@ -1,95 +1,128 @@
 @media only screen and (max-width: #{rem-calc(728) + $column-gutter * 1.5}) {
-    .hide-below-banner-width {
-        display: none;
-    }
+  .hide-below-banner-width {
+    display: none;
+  }
 }
 
 .page-wrapper {
-    @include grid-row();
-    padding: 0 $column-gutter / 2;
-    min-height: 100%;
-    background-color: #FFF;
-    border-left: 1px solid $layout-border-color;
-    border-right: 1px solid $layout-border-color;
+  @include grid-row();
+
+  min-height: 100%;
+
+  padding: 0 $column-gutter / 2;
+
+  background-color: #fff;
+  border-right: 1px solid $layout-border-color;
+  border-left: 1px solid $layout-border-color;
 }
 
 .panel {
-    border-left: none;
-    border-right: none;
-    margin-bottom: 0;
-    margin-top: 20px;
+  margin-top: 20px;
+  margin-bottom: 0;
+
+  border-right: none;
+  border-left: none;
 }
 
 table.expand {
-    border-left: none;
-    border-right: none;
-    margin: 0 #{-$column-gutter / 2} $column-gutter / 2;
-    width: calc(100% - -#{$column-gutter});
+  width: calc(100% + #{$column-gutter});
+
+  margin: 0 #{-$column-gutter / 2} $column-gutter / 2;
+
+  border-right: none;
+  border-left: none;
 }
 
 p {
-    margin: 10px 0;
+  margin: 10px 0;
 }
 
 .news-article-list {
-    list-style: none;
-    margin: 0;
+  list-style: none;
 
-    .date-circle {
-        border-radius: 50%;
-        width: 60px;
-        height: 60px;
-        background-color: $primary-color;
-        color: #fff;
-        line-height: 1.1;
-        font-size: 16px;
-        padding-top: 11px;
-        margin-right: 16px;
+  margin: 0;
+
+  .date-circle {
+    width: 60px;
+    height: 60px;
+
+    margin-right: 16px;
+    padding-top: 11px;
+
+    font-size: 16px;
+    line-height: 1.1;
+
+    background-color: $primary-color;
+    border-radius: 50%;
+
+    color: #fff;
+  }
+
+  h4 {
+    padding-top: 10px;
+
+    a {
+      color: $body-font-color;
     }
+  }
 
-    h4 {
-        padding-top: 10px;
+  li {
+    @include clearfix;
+    display: block;
 
-        a {
-            color: $body-font-color;
-        }
+    + li {
+      margin-top: 18px;
     }
-
-    li {
-        @include clearfix;
-        display: block;
-
-        + li {
-            margin-top: 18px;
-        }
-    }
+  }
 }
 
 hr {
-    width: calc(100% - -#{$column-gutter});
-    margin: 20px #{-$column-gutter / 2};
+  width: calc(100% - -#{$column-gutter});
+  margin: 20px #{-$column-gutter / 2};
 }
 
 .flex-row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-left: -#{$column-gutter / 2};
-    margin-right: -#{$column-gutter / 2};
+  flex-wrap: wrap;
 
-    .flex-3, .flex-6 {
-        margin-left: #{$column-gutter / 2};
-        margin-right: #{$column-gutter / 2};
+  display: flex;
+
+  margin-right: -#{$column-gutter / 2};
+  margin-left: -#{$column-gutter / 2};
+
+  .flex-3, .flex-6 {
+    margin-right: #{$column-gutter / 2};
+    margin-left: #{$column-gutter / 2};
+  }
+
+  // 25%
+  .flex-3 {
+    flex-basis: calc(50% - #{$column-gutter});
+
+    width: calc(50% - #{$column-gutter});
+
+    @media #{$medium-up} {
+      flex-basis: calc(25% - #{$column-gutter});
+
+      width: calc(25% - #{$column-gutter});
     }
+  }
 
-    // 25%
-    .flex-3 {
-        width: calc(25% - #{$column-gutter});
-        flex-basis: calc(25% - #{$column-gutter});
-    }
+  // 50%
+  .flex-6 {
+    flex-basis: calc(100% - #{$column-gutter});
 
-    // 50%
-    .flex-6 {
-        width: calc(50% - #{$column-gutter});
+    width: calc(100% - #{$column-gutter});
+
+    @media #{$medium-up} {
+      flex-basis: calc(50% - #{$column-gutter});
+
+      width: calc(50% - #{$column-gutter});
+
+      & & {
         flex-basis: calc(50% - #{$column-gutter});
+
+        width: calc(50% - #{$column-gutter});
+      }
     }
+  }
 }

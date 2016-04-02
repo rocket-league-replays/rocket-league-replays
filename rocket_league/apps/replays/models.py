@@ -103,8 +103,14 @@ class Replay(models.Model):
         upload_to='uploads/replay_files',
     )
 
-    location_json_file = models.FileField(
+    heatmap_json_file = models.FileField(
         upload_to='uploads/replay_json_files',
+        blank=True,
+        null=True,
+    )
+
+    location_json_file = models.FileField(
+        upload_to='uploads/replay_location_json_files',
         blank=True,
         null=True,
     )
@@ -430,6 +436,39 @@ class Replay(models.Model):
             return total_player_ratings / num_player_ratings
         return 0
 
+    def eligble_for_analysis(self):
+        patreon_amount = 300
+
+        # Import here to avoid circular imports.
+        from ..site.templatetags.site import patreon_pledge_amount
+
+        # Is the uploader a patron?
+        if self.user:
+            pledge_amount = patreon_pledge_amount({}, user=self.user)
+
+            if pledge_amount >= patreon_amount:
+                return True
+
+        # Are any of the players patron?
+        players = self.player_set.filter(
+            platform__in=['OnlinePlatform_Steam', '1'],
+        )
+
+        for player in players:
+            pledge_amount = patreon_pledge_amount({}, steam_id=player.online_id)
+
+            if pledge_amount >= patreon_amount:
+                return True
+
+        return False
+
+    def show_analysis(self):
+        # First of all, is there even a JSON file?
+        if not self.location_json_file:
+            return False
+
+        return self.eligble_for_analysis()
+
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
             'pk': self.pk,
@@ -458,7 +497,7 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(self.file.read())
+                self.parser = Parser(self.file.read(), obj=self)
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
@@ -485,13 +524,16 @@ class Replay(models.Model):
         if self.file and not self.processed:
             self.file.seek(0)
 
-            parser = Parser(self.file.read(), parse_netstream=parse_netstream)
+            parser = Parser(self.file.read(), parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
 
             if parse_netstream:
-                self.location_json_file = parser.json_filename
+                self.heatmap_json_file = parser.heatmap_json_filename
+
+                if hasattr(parser, 'location_json_filename'):
+                    self.location_json_file = parser.location_json_filename
 
             if 'playlist' in parser.match_metadata:
                 self.playlist = parser.match_metadata['playlist']
@@ -591,10 +633,17 @@ class Replay(models.Model):
                             unique_id = '-'.join(id_parts)
 
                     else:
-                        unique_id = '-'.join([
+                        id_parts = [
                             '-1',
-                            data['Engine.PlayerReplicationInfo:PlayerName']
-                        ])
+                            data['Engine.PlayerReplicationInfo:PlayerName'],
+                            '0'
+                        ]
+
+                        unique_id = '-'.join(id_parts)
+
+                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
+                            id_parts[2] = str(int(id_parts[2]) + 1)
+                            unique_id = '-'.join(id_parts)
 
                 if 'TAGame.PRI_TA:TotalXP' in data:
                     if data['TAGame.PRI_TA:TotalXP'] >= 0:
@@ -606,7 +655,11 @@ class Replay(models.Model):
 
                 # Try to work out the player's team.
                 if 'Engine.PlayerReplicationInfo:Team' in data:
-                    team = parser.team_metadata[data['Engine.PlayerReplicationInfo:Team'][1]]
+                    team_id = data['Engine.PlayerReplicationInfo:Team'][1]
+                    if team_id in parser.team_metadata:
+                        team = parser.team_metadata[team_id]
+                    else:
+                        team = -1
                 else:
                     team = -1
 

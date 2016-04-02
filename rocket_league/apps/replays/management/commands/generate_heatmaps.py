@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 replays = Replay.objects.filter(pk=options['replay_id'])
             else:
                 replays = Replay.objects.filter(
-                    location_json_file='',
+                    heatmap_json_file='',
                 ).exclude(
                     crashed_heatmap_parser=True,
                 ).extra(select={
@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
                         replay.refresh_from_db()
 
-                        if not replay.location_json_file:
+                        if not replay.heatmap_json_file:
                             replay.crashed_heatmap_parser = True
                             replay.save()
 

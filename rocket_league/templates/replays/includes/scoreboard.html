@@ -19,6 +19,7 @@
         <th>Shots</th>
     </tr>
     {% for player in players %}
+    {% if player.player_name != 'Unknown player (own goal?)' %}
     <tr>
         {% if players.0.player_name %}
         <td>
@@ -69,5 +70,6 @@
         <td>{{ player.saves|intcomma }}</td>
         <td>{{ player.shots|intcomma }}</td>
     </tr>
+    {% endif %}
     {% endfor %}
 </table>

@@ -1,12 +1,9 @@
 import json
 import pickle
-import sys
 import traceback
 from pprint import pprint
 
-from bitstring import Bits
 from boto.exception import S3ResponseError
-from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from pyrope import Replay
@@ -15,13 +12,7 @@ from pyrope.exceptions import FrameParsingError
 
 class Parser(object):
 
-    actor_metadata = {}
-    goal_metadata = {}
-    match_metadata = {}
-    team_metadata = {}
-    actors = {}
-
-    def __init__(self, file_path, parse_netstream=False):
+    def __init__(self, file_path, parse_netstream=False, obj=None):
         self.replay = Replay(file_path)
         self.replay_id = self.replay.header['Id']
 
@@ -30,12 +21,15 @@ class Parser(object):
         self.match_metadata = {}
         self.team_metadata = {}
         self.actors = {}
-        self.json_filename = None
+        self.cars = {}
+        self.boost_data = {}
+        self.heatmap_json_filename = None
 
         assert len(self.team_metadata) == 0
 
         pickle_filename = 'uploads/pickle_files/{}.pickle'.format(self.replay_id)
-        json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
+        heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
+        location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(self.replay_id)
 
         if parse_netstream:
             try:
@@ -53,6 +47,37 @@ class Parser(object):
             return
 
         self._get_actors()
+
+        # If the number of goals in the header doesn't match the number of goals
+        # in the game, try to get the missing goal data from the netstream.
+
+        """
+         ('3e_Team1',
+          {'actor_id': 3,
+           'actor_type': 'Archetypes.Teams.Team1',
+           'data': {'Engine.TeamInfo:Score': 1},
+           'new': False,
+           'startpos': 2053839}),
+               """
+        if len(self.replay.header.get('Goals', [])) < self.replay.header.get('Team0Score', 0) + self.replay.header.get('Team1Score', 0):
+            for index, frame in self.replay.netstream.items():
+                for _, actor in frame.actors.items():
+                    if 'data' not in actor:
+                        continue
+
+                    if (
+                        'Engine.TeamInfo:Score' in actor['data'] and
+                        'TAGame.Team_TA:GameEvent' not in actor['data'] and
+                        actor['actor_type'].startswith('Archetypes.Teams.Team')
+                    ):
+                        if 'Goals' not in self.replay.header:
+                            self.replay.header['Goals'] = []
+
+                        self.replay.header['Goals'].append({
+                            'PlayerName': 'Unknown player (own goal?)',
+                            'PlayerTeam': actor['actor_type'].replace('Archetypes.Teams.Team', ''),
+                            'frame': index
+                        })
 
         # Extract the goal information.
         if 'Goals' in self.replay.header:
@@ -117,12 +142,61 @@ class Parser(object):
 
                 assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
 
-        if default_storage.exists(json_filename):
-            default_storage.delete(json_filename)
+        if default_storage.exists(heatmap_json_filename):
+            default_storage.delete(heatmap_json_filename)
 
-        json_filename = default_storage.save(json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
+        heatmap_json_filename = default_storage.save(heatmap_json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
 
-        self.json_filename = json_filename
+        self.heatmap_json_filename = heatmap_json_filename
+
+        if obj.eligble_for_analysis():
+            # Advanced replay parsing.
+            # Restructure the data so that it's chunkable.
+            frame_data = []
+
+            for frame in range(self.replay.header['NumFrames']):
+                frame_dict = {
+                    'time': self.replay.netstream[frame].current,
+                    'actors': []
+                }
+
+                for player in self.actors:
+                    position_data = self.actors[player]['position_data']
+
+                    if frame in position_data:
+                        frame_dict['actors'].append({
+                            'id': player,
+                            'type': self.actors[player].get('type', 'ball'),
+                            **position_data[frame]
+                        })
+
+                frame_data.append(frame_dict)
+
+            if default_storage.exists(location_json_filename):
+                default_storage.delete(location_json_filename)
+
+            self._get_boost_data()
+            self._get_seconds_remaining()
+            # pprint(self.boost_data)
+
+            small_actors = {}
+
+            for key, value in self.actors.items():
+                small_actors[key] = value
+
+                del small_actors[key]['position_data']
+
+            final_data = {
+                'frame_data': frame_data,
+                'goals': self.replay.header.get('Goals', []),
+                'boost': self.boost_data,
+                'seconds_mapping': self.seconds_mapping,
+                'actors': self.actors,
+                'teams': self.team_metadata
+            }
+
+            location_json_filename = default_storage.save(location_json_filename, ContentFile(json.dumps(final_data, separators=(',', ':'))))
+            self.location_json_filename = location_json_filename
 
     def _get_match_metadata(self, frame):
         # Search through the frames looking for some game replication info.
@@ -141,14 +215,14 @@ class Parser(object):
 
         self.match_metadata = {
             'server_name': game_info['Engine.GameReplicationInfo:ServerName'],
-            'playlist': game_info['ProjectX.GRI_X:ReplicatedGamePlaylist']
+            'playlist': game_info.get('ProjectX.GRI_X:ReplicatedGamePlaylist', 0)
         }
 
     def _get_team_metadata(self, frame):
         # Search through the frame looking for team info.
         team_info = [
             value for name, value in frame.actors.items()
-            if 'Archetypes.Teams.Team' in value['actor_type'] and value['new']
+            if 'Archetypes.Teams.Team' in value.get('actor_type', '') and value['new']
         ]
 
         if not team_info:
@@ -158,8 +232,6 @@ class Parser(object):
             self.team_metadata[team['actor_id']] = team['actor_type'].replace('Archetypes.Teams.Team', '')
 
     def _extract_goal_data(self, base_index, search_index=None):
-        first_run = False
-
         # If the player name is unique within the actor set, then don't bother
         # searching through frames for the data.
         for goal in self.replay.header['Goals']:
@@ -179,7 +251,6 @@ class Parser(object):
                 break
 
         if not search_index:
-            first_run = True
             search_index = base_index
 
             if base_index not in self.replay.netstream:
@@ -277,9 +348,6 @@ class Parser(object):
                 if 'data' not in value:
                     continue
 
-                if 'Engine.PlayerReplicationInfo:PlayerName' not in value['data']:
-                    continue
-
                 if 'Engine.PlayerReplicationInfo:bWaitingPlayer' in value['data']:
                     continue
 
@@ -295,10 +363,12 @@ class Parser(object):
                             if actor_id in self.actor_metadata:
                                 self.actor_metadata[actor_id]['Engine.PlayerReplicationInfo:Team'] = value['data']['Engine.PlayerReplicationInfo:Team']
 
-                            self.actors[actor_id]['team'] = team_id
+                            if team_id != -1:
+                                self.actors[actor_id]['team'] = team_id
 
                         if not self.actors[actor_id]['team'] or team_id == -1:
-                            self.actors[actor_id]['team'] = team_id
+                            # self.actors[actor_id]['team'] = team_id
+                            self.actors[actor_id]['left'] = index
 
                 elif 'TAGame.PRI_TA:ClientLoadout' in value['data']:
                     player_name = value['data']['Engine.PlayerReplicationInfo:PlayerName']
@@ -333,12 +403,103 @@ class Parser(object):
             ]
 
             if ball:
+                # pprint(ball)
                 ball = ball[0]
 
                 if ball['actor_id'] not in self.actors and 'TAGame.RBActor_TA:ReplicatedRBState' in ball['data']:
                     self.actors[ball['actor_id']] = {
                         'type': 'ball'
                     }
+
+    def _get_boost_data(self):
+        # 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount'
+
+        # Do we have a new car object? Assign it to the user.
+        """
+        {'actor_id': 7,
+         'actor_type': 'Archetypes.Car.Car_Default',
+         'data': {'Engine.Pawn:PlayerReplicationInfo': (True, 4),
+                  'TAGame.Car_TA:TeamPaint': {'CustomColorID': 90,
+                                              'CustomFinishID': 270,
+                                              'Team': 0,
+                                              'TeamColorID': 3,
+                                              'TeamFinishID': 270},
+                  'TAGame.RBActor_TA:ReplicatedRBState': {'flag': False,
+                                                          'pos': (0, -4608, 43),
+                                                          'rot': (-1.000030518509476,
+                                                                  -0.500015259254738,
+                                                                  -1.000030518509476),
+                                                          'vec1': (0, 0, -162),
+                                                          'vec2': (0, 0, 0)},
+                  'TAGame.Vehicle_TA:ReplicatedThrottle': 255},
+         'new': False,
+         'startpos': 4230}
+        {'actor_id': 8,
+         'actor_type': 'Archetypes.CarComponents.CarComponent_Boost',
+         'data': {'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount': 85,
+                  'TAGame.CarComponent_TA:Vehicle': (True, 7)},
+         'new': False,
+         'startpos': 4537}
+         """
+
+        self.boost_actors = {}
+        self.cars = {}
+
+        for index, frame in self.replay.netstream.items():
+            # pprint(frame.actors.items())
+
+            for name, value in frame.actors.items():
+                actor_id = value['actor_id']
+
+                # Get any cars.
+                if value['actor_type'] == 'Archetypes.Car.Car_Default':
+                    if 'data' not in value:
+                        continue
+
+                    if 'Engine.Pawn:PlayerReplicationInfo' in value['data']:
+                        player_id = value['data']['Engine.Pawn:PlayerReplicationInfo'][1]
+                        self.cars[actor_id] = player_id
+
+                # Get any boost objects.
+                if value['actor_type'] == 'Archetypes.CarComponents.CarComponent_Boost':
+                    if actor_id not in self.boost_actors:
+                        self.boost_actors[actor_id] = {}
+
+                    if 'data' not in value:
+                        continue
+
+                    if 'TAGame.CarComponent_TA:Vehicle' in value['data']:
+                        car_id = value['data']['TAGame.CarComponent_TA:Vehicle'][1]
+                        self.boost_actors[actor_id] = car_id
+
+                    if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value['data']:
+                        if actor_id not in self.boost_data:
+                            self.boost_data[actor_id] = {}
+
+                        self.boost_data[actor_id][index] = value['data']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']
+
+        # Data structure:
+        #
+        # value key = booster id (in values)
+        # booster id maps to a car (in actors)
+        # cars map to players (in card)
+
+        self.boost_data = {
+            'values': self.boost_data,
+            'actors': self.boost_actors,
+            'cars': self.cars,
+        }
+
+    def _get_seconds_remaining(self):
+        self.seconds_mapping = {}
+
+        for index, frame in self.replay.netstream.items():
+            for name, value in frame.actors.items():
+                if 'data' not in value:
+                    continue
+
+                if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value['data']:
+                    self.seconds_mapping[index] = value['data']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']
 
     def _get_player_position_data(self, player_id):
         player = self.actors[player_id]
@@ -399,6 +560,9 @@ class Parser(object):
                         continue
 
                     if 'TAGame.RBActor_TA:ReplicatedRBState' not in actor_obj['data']:
+                        continue
+
+                    if actor_obj['actor_type'] != 'Archetypes.Ball.Ball_Default':
                         continue
 
                     state_data = actor_obj['data']['TAGame.RBActor_TA:ReplicatedRBState']

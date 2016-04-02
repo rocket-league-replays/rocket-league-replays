@@ -2,6 +2,8 @@
 {% load cache replays site static %}
 
 {% block content_primary %}
+    {% include "replays/includes/tabs.html" %}
+
     {% if replay.title %}
     <div class="row">
         <div class="medium-12 columns">
@@ -12,7 +14,7 @@
     {% endif %}
 
     <div class="row">
-        <div class="medium-6 columns">
+        <div class="large-6 columns">
         {% if replay.show_leaderboard %}
             {% scoreboard 0 %}
             {% scoreboard 1 %}
@@ -52,7 +54,7 @@
             {% endif %}
         {% endif %}
         </div>
-        <div class="medium-6 columns">
+        <div class="large-6 columns">
             <table width="100%">
                 <thead>
                     <tr>
@@ -96,7 +98,7 @@
         </div>
     </div>
 
-    {% if not replay.location_json_file %}
+    {% if not replay.heatmap_json_file %}
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
@@ -135,7 +137,7 @@
     {% endif %}
 
     {# JSON powered heatmaps #}
-    {% if replay.location_json_file %}
+    {% if replay.heatmap_json_file %}
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
@@ -330,263 +332,16 @@
         </div>
     </div>
 
-    {% if replay.location_json_file %}
+    {% if replay.heatmap_json_file %}
     <script>
     "use strict"
-    var replay_file_url = '{{ replay.location_json_file.url }}'
+    var replay_file_url = '{{ replay.heatmap_json_file.url }}'
     </script>
     {% endif %}
 {% endblock %}
 
-{% block additional_css %}
-    <style>
-    .heatmap {
-        position: relative;
-
-        width: 100%;
-        margin-bottom: 30px;
-    }
-
-    .heatmap p {
-        position: absolute;
-
-        top: 50%;
-        right: 0;
-        left: 0;
-
-        margin: 0 auto;
-        text-align: center;
-
-        transform: translateY(-50%);
-    }
-
-    .heatmap canvas {
-      z-index: 1;
-  }
-
-  .heatmap::before {
-        content: '';
-
-        display: block;
-        padding-bottom: calc(100% / (1003 / 709));
-    }
-
-    .heatmap::after {
-        content: '';
-
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-
-        background-image: url({% static 'img/arena_overlay2.png' %});
-        background-size: 100%;
-        background-repeat: no-repeat;
-
-        z-index: 2;
-    }
-
-    .heatmap:hover .quadrants {
-        opacity: 1;
-    }
-
-    .thirds {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-
-        z-index: 4;
-
-        display: flex;
-        pointer-events: none;
-    }
-
-    .third-value, .quadrant-value {
-        opacity: 0;
-
-        position: absolute;
-        text-align: center;
-
-        color: #fff;
-        text-shadow: #000 1px 1px 2px;
-        font-size: 24px;
-
-        background-color: rgba(0, 0, 0, 0.6);
-        background-image: url({% static 'img/arena_quadrants4.png' %});
-        background-size: 200%;
-        background-repeat: no-repeat;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        transition: opacity 0.25s ease-in-out;
-
-        cursor: default;
-    }
-
-    .third-value {
-        height: 33%;
-        top: 33%;
-        background-size: 300%;
-
-        font-size: 16px;
-
-        background-image: url({% static 'img/arena_quadrants5.png' %});
-        pointer-events: all;
-    }
-
-    .third-value:hover {
-        opacity: 1;
-    }
-
-    .third-value::before, .third-value::after {
-        content: '';
-        position: absolute;
-        z-index: 1;
-
-        width: 100%;
-        height: calc(100% + 2px);
-
-        background-color: rgba(0, 0, 0, 0.6);
-        pointer-events: none;
-
-        background-image: url({% static 'img/arena_quadrants5.png' %});
-        background-size: 300%;
-        background-repeat: no-repeat;
-    }
-
-    .third-value::before {
-        top: calc(-100% - 2px);
-        left: 0;
-    }
-
-    .third-value::after {
-        bottom: calc(-100% - 2px);
-        left: 0;
-    }
-
-    .third-value.left {
-        left: 0;
-        right: calc(100% / 3 * 2);
-
-        padding-left: 17px;
-
-        background-position: center left;
-    }
-
-    .third-value.left::before {
-        background-position: top left;
-    }
-
-    .third-value.left::after {
-        background-position: bottom left;
-    }
-
-    .third-value.middle {
-        left: calc(100% / 3);
-        right: calc(100% / 3);
-
-        background-position: center center;
-    }
-
-    .third-value.middle::before {
-        background-position: top center;
-    }
-
-    .third-value.middle::after {
-        background-position: bottom center;
-    }
-
-    .third-value.right {
-        left: calc(100% / 3 * 2);
-        right: 0;
-
-        padding-right: 17px;
-
-        background-position: center right;
-    }
-
-    .third-value.right::before {
-        background-position: top right;
-    }
-
-    .third-value.right::after {
-        background-position: bottom right;
-    }
-
-    .quadrants {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-
-        z-index: 3;
-    }
-
-    .quadrant-value {
-
-    }
-
-    .quadrant-value:hover {
-        opacity: 1;
-    }
-
-    .quadrant-value.top-left {
-        top: 0;
-        right: 50%;
-        bottom: 50%;
-        left: 0;
-
-        padding-left: 17px;
-
-        background-position: top left;
-    }
-
-    .quadrant-value.top-right {
-        top: 0;
-        right: 0;
-        bottom: 50%;
-        left: 50%;
-
-        padding-right: 17px;
-
-        background-position: top right;
-    }
-
-    .quadrant-value.bottom-left {
-        top: 50%;
-        right: 50%;
-        bottom: 0;
-        left: 0;
-
-        padding-left: 17px;
-
-        background-position: bottom left;
-    }
-
-    .quadrant-value.bottom-right {
-        top: 50%;
-        right: 0;
-        bottom: 0;
-        left: 50%;
-
-        padding-right: 17px;
-
-        background-position: bottom right;
-    }
-
-</style>
-{% endblock %}
-
 {% block additional_js %}
-{% if replay.location_json_file %}
-<script src="{% static 'js/vendor/heatmap.js' %}"></script>
-<script>
-</script>
-{% endif %}
+    {% if replay.heatmap_json_file %}
+    <script src="{% static 'js/vendor/heatmap.js' %}"></script>
+    {% endif %}
 {% endblock %}

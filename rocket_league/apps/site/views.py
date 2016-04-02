@@ -1,12 +1,15 @@
+from datetime import timedelta
+
+from braces.views import LoginRequiredMixin
+from django.contrib import messages
+from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.utils.timezone import now
-from django.views.generic import TemplateView
-
-from ..replays.models import Goal, Replay, Player
-
+from django.views.generic import RedirectView, TemplateView
 from social.apps.django_app.default.models import UserSocialAuth
 
-from datetime import timedelta
+from ..replays.models import Goal, Player, Replay
+from .models import PatronTrial
 
 
 class StatsView(TemplateView):
@@ -72,3 +75,23 @@ class StatsView(TemplateView):
         context = self.get_stats(context, 1)
 
         return context
+
+
+class StartTrialView(LoginRequiredMixin, RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        # Check the eligibility.
+        has_had_trial = self.request.user.profile.has_had_trial()
+
+        if has_had_trial:
+            # This user is not eligible for another trial.
+            messages.error(self.request, "Unfortunately you are not currently eligible for a free trial.")
+        else:
+            # Activate a trial for this user.
+            PatronTrial.objects.create(
+                user=self.request.user
+            )
+            messages.success(self.request, "Your free trial has been activated. You can make full use of all patron benefits for the next 7 days.")
+
+        return reverse('replay:analysis', kwargs=kwargs)

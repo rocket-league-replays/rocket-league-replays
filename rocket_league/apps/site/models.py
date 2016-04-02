@@ -1,11 +1,15 @@
-from django.db import models
+from datetime import timedelta
 
-from cms.models import HtmlField
 from cms.apps.media.models import ImageRefField
 from cms.apps.pages.models import ContentBase, Page
+from cms.models import HtmlField
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils.timezone import now
 
 
 class Content(ContentBase):
+
     class Meta:
         verbose_name = 'homepage'
 
@@ -64,3 +68,15 @@ class Patron(models.Model):
 
     def __str__(self):
         return self.patron_email
+
+
+class PatronTrial(models.Model):
+
+    user = models.ForeignKey(User)
+
+    expiry_date = models.DateField(
+        default=now() + timedelta(days=7)
+    )
+
+    def __str__(self):
+        return str(self.user)

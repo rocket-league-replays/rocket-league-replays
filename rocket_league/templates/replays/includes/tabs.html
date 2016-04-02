@@ -1,0 +1,17 @@
+<div class="lyt-Tabs">
+    <div class="lyt-Tabs_Items">
+        {% url 'replay:detail' pk=object.pk as url %}
+        <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
+            <a href="{{ url }}" class="lyt-Tabs_Action">
+                Statistics
+            </a>
+        </div>
+
+        {% url 'replay:analysis' pk=object.pk as url %}
+        <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
+            <a href="{{ url }}" class="lyt-Tabs_Action">
+                Analysis <em class="icon-crown-plus"></em>
+            </a>
+        </div>
+    </div>
+</div>

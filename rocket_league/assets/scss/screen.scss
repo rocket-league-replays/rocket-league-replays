@@ -45,6 +45,7 @@
 @import 'foundation/components/visibility';
 
 @import 'base/typography';
+@import 'base/helpers';
 
 @import 'components/columns';
 @import 'components/charts';
@@ -53,7 +54,11 @@
 @import 'components/pagination';
 @import 'components/tables';
 
+@import 'components/heatmaps';
+@import 'components/simulation';
+
 @import 'layout/header';
 @import 'layout/grid';
 @import 'layout/icons';
 @import 'layout/footer';
+@import 'layout/tabs';
