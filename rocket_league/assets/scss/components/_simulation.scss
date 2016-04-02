@@ -68,6 +68,24 @@
   transform: translateX(-50%);
 }
 
+.sim-Timeline_Controls {
+  position: absolute;
+  top: 50%;
+  left: -40px;
+
+  width: 25px;
+  height: 27px;
+
+  background-image: url(/static/img/2d-rendering/Icon_Pause.png);
+  background-size: 100%;
+
+  transform: translateY(-37.5%);
+
+  &.sim-Timeline_Controls-paused {
+    background-image: url(/static/img/2d-rendering/Icon_Play.png);
+  }
+}
+
 .sim-Timeline {
   background-color: #0b4566;
   border-radius: 3px;
@@ -103,6 +121,10 @@
 
   .sim-Timeline_Outer:hover & {
     display: block;
+  }
+
+  .sim-Timeline_Controls:hover + .sim-Timeline & {
+    display: none;
   }
 }
 
