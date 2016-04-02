@@ -46,7 +46,7 @@
   line-height: 75px;
   text-align: center;
 
-  background: url(/static/img/2d-rendering/MatchTimer_Background.png);
+  background: url(../../img/2d-rendering/MatchTimer_Background.png);
 
   color: #fff;
 
@@ -76,13 +76,13 @@
   width: 25px;
   height: 27px;
 
-  background-image: url(/static/img/2d-rendering/Icon_Pause.png);
+  background-image: url(../../img/2d-rendering/Icon_Pause.png);
   background-size: 100%;
 
   transform: translateY(-37.5%);
 
   &.sim-Timeline_Controls-paused {
-    background-image: url(/static/img/2d-rendering/Icon_Play.png);
+    background-image: url(../../img/2d-rendering/Icon_Play.png);
   }
 }
 
@@ -115,7 +115,7 @@
 
   pointer-events: none;
 
-  background: url(/static/img/2d-rendering/Marker_User.png);
+  background: url(../../img/2d-rendering/Marker_User.png);
 
   transform: translateX(-50%);
 
@@ -140,11 +140,11 @@
   transform: translateX(calc(-50% + 2px));
 
   &.sim-Timeline_Marker-0 {
-    background-image: url(/static/img/2d-rendering/Marker_Goal_0.png);
+    background-image: url(../../img/2d-rendering/Marker_Goal_0.png);
   }
 
   &.sim-Timeline_Marker-1 {
-    background-image: url(/static/img/2d-rendering/Marker_Goal_1.png);
+    background-image: url(../../img/2d-rendering/Marker_Goal_1.png);
   }
 }
 
