@@ -222,7 +222,7 @@ class Parser(object):
         # Search through the frame looking for team info.
         team_info = [
             value for name, value in frame.actors.items()
-            if 'Archetypes.Teams.Team' in value['actor_type'] and value['new']
+            if 'Archetypes.Teams.Team' in value.get('actor_type', '') and value['new']
         ]
 
         if not team_info:
