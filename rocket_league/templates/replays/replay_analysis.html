@@ -27,10 +27,8 @@
     {% if replay.eligble_for_analysis %}
         {% if replay.show_analysis %}
             {% compress js %}
-            <script src="http://threejs.org/build/three.min.js"></script>
-            <script src="http://threejs.org/examples/js/Detector.js"></script>
-            <script src="http://threejs.org/examples/js/controls/OrbitControls.js"></script>
-            <script src="http://rawgit.com/mrdoob/stats.js/master/build/stats.min.js"></script>
+            <script src="{% static 'js/vendor/2d-rendering/three.min.js' %}"></script>
+            <script src="{% static 'js/vendor/2d-rendering/Detector.js' %}"></script>
 
             <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
             <script src="{% static 'js/2d-rendering/main.js' %}"></script>
