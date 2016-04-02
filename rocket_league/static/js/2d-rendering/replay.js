@@ -21,12 +21,30 @@ function loadGameData (url) {
   request.onload = function () {
     if (request.status >= 200 && request.status < 400) {
       const response_data = JSON.parse(request.responseText)
-      frameData = response_data.frame_data
-      goalData = response_data.goals
-      boostData = response_data.boost
-      secondsData = response_data.seconds_mapping
-      actorData = response_data.actors
-      teamData = response_data.teams
+
+      if (response_data.frame_data !== undefined) {
+        frameData = response_data.frame_data
+      }
+
+      if (response_data.goals !== undefined) {
+        goalData = response_data.goals
+      }
+
+      if (response_data.boost !== undefined) {
+        boostData = response_data.boost
+      }
+
+      if (response_data.seconds_mapping !== undefined) {
+        secondsData = response_data.seconds_mapping
+      }
+
+      if (response_data.actors !== undefined) {
+        actorData = response_data.actors
+      }
+
+      if (response_data.teams !== undefined) {
+        teamData = response_data.teams
+      }
 
       maxFrame = Object.keys(frameData).length
       currentFrame = 0

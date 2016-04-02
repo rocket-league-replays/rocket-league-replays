@@ -95,25 +95,28 @@ function addCar (name, actor) {
       <div class="boost-inner" data-team="{{ player.team }}">34</div>
   </div>
   */
-  const team = teamData[actorData[actor.id].team]
 
-  const outerElement = document.createElement('div')
-  outerElement.classList.add('sim-Boost_Outer')
-  outerElement.classList.add(`sim-Boost_Outer-actor${actor.id}`)
+  if (actorData[actor.id] !== undefined) {
+    const team = teamData[actorData[actor.id].team]
 
-  const playerName = document.createElement('span')
-  playerName.innerHTML = actorData[actor.id].name
-  playerName.classList.add('sim-Boost_Text')
-  outerElement.appendChild(playerName)
+    const outerElement = document.createElement('div')
+    outerElement.classList.add('sim-Boost_Outer')
+    outerElement.classList.add(`sim-Boost_Outer-actor${actor.id}`)
 
-  const innerElement = document.createElement('div')
-  innerElement.innerHTML = '34'
-  innerElement.classList.add('sim-Boost_Inner')
-  innerElement.classList.add(`sim-Boost_Inner-team${team}`)
-  innerElement.classList.add(`sim-Boost_Inner-player${actor.id}`)
-  outerElement.appendChild(innerElement)
+    const playerName = document.createElement('span')
+    playerName.innerHTML = actorData[actor.id].name
+    playerName.classList.add('sim-Boost_Text')
+    outerElement.appendChild(playerName)
 
-  document.querySelector(`.sim-Boost-team${team}`).appendChild(outerElement)
+    const innerElement = document.createElement('div')
+    innerElement.innerHTML = '34'
+    innerElement.classList.add('sim-Boost_Inner')
+    innerElement.classList.add(`sim-Boost_Inner-team${team}`)
+    innerElement.classList.add(`sim-Boost_Inner-player${actor.id}`)
+    outerElement.appendChild(innerElement)
+
+    document.querySelector(`.sim-Boost-team${team}`).appendChild(outerElement)
+  }
 
   console.log(`[${name}] Render complete`)
   carsLoading = carsLoading.filter(function (e) { return e !== name })
