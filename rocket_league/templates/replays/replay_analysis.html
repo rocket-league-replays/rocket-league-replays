@@ -26,7 +26,6 @@
     {# Fancy new visualisations for Patreon people #}
     {% if replay.eligble_for_analysis %}
         {% if replay.show_analysis %}
-            {% compress js %}
             <script>
             var resource__arena_fieldlines = "{% static 'img/2d-rendering/arena_fieldlines.png' %}";
             var resource__arena_overlay = "{% static 'img/2d-rendering/arena_overlay.png' %}";
@@ -43,7 +42,10 @@
             <script src="{% static 'js/2d-rendering/main.js' %}"></script>
             <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
             <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
-            {% endcompress %}
+
+            <script>
+            loadGameData("{{ replay.location_json_file.url }}");
+            </script>
 
             <div class="sim-Outer">
                 <div class="sim-Timer">
@@ -118,18 +120,4 @@
             <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
         </div>
     </div>
-{% endblock %}
-
-{% block additional_css %}
-    <style>
-
-</style>
-{% endblock %}
-
-{% block additional_js %}
-    {% if replay.show_analysis %}
-    <script>
-    loadGameData("{{ replay.location_json_file.url }}");
-    </script>
-    {% endif %}
 {% endblock %}
