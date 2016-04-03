@@ -2,7 +2,9 @@
 'use strict'
 
 if (!Detector.webgl) {
-  Detector.addGetWebGLMessage()
+  Detector.addGetWebGLMessage({
+    parent: document.querySelector('.sim-Outer')
+  })
 }
 
 let camera
