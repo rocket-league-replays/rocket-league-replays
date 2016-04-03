@@ -17,6 +17,7 @@
         <th>Assists</th>
         <th>Saves</th>
         <th>Shots</th>
+        <th></th>
     </tr>
     {% for player in players %}
     {% if player.player_name != 'Unknown player (own goal?)' %}
@@ -69,6 +70,41 @@
         <td>{{ player.assists|intcomma }}</td>
         <td>{{ player.saves|intcomma }}</td>
         <td>{{ player.shots|intcomma }}</td>
+        <td>{% if player.camera_settings %}
+            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
+                {% if player.camera_settings.fov %}
+                    Field of View: {{ player.camera_settings.fov }}<br>
+                {% endif %}
+
+                {% if player.camera_settings.height %}
+                    Height: {{ player.camera_settings.height }}<br>
+                {% endif %}
+
+                {% if player.camera_settings.pitch %}
+                    Angle: {{ player.camera_settings.pitch }}<br>
+                {% endif %}
+
+                {% if player.camera_settings.dist %}
+                    Distance: {{ player.camera_settings.dist }}<br>
+                {% endif %}
+
+                {% if player.camera_settings.stiff %}
+                    Stiffness: {{ player.camera_settings.stiff }}<br>
+                {% endif %}
+
+                {% if player.camera_settings.swiv %}
+                    Swivel Speed: {{ player.camera_settings.swiv }}<br>
+                {% endif %}
+
+                {% for k, v in player.camera_settings.items %}
+                    {% if k != 'fov' and k != 'height' and k != 'pitch' and k != 'dist' and k != 'stiff' and k != 'swiv' %}
+                        {{ k }}: {{ v }}<br>
+                    {% endif %}
+                {% endfor %}">
+                <em class="icon-videocam"></em>
+            </span>
+
+        {% endif %}</td>
     </tr>
     {% endif %}
     {% endfor %}
