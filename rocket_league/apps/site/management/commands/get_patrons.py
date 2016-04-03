@@ -23,13 +23,13 @@ class Command(BaseCommand):
             patron = patrons[patron_id]
 
             Patron.objects.get_or_create(
-                pledge_id=pledge['id'],
+                patron_email=patron['email'],
                 defaults={
                     'pledge_amount': pledge['attributes']['amount_cents'],
                     'pledge_created': pledge['attributes']['created_at'],
                     'pledge_declined_since': pledge['attributes']['declined_since'],
                     'patron_id': patron_id,
-                    'patron_email': patron['email']
+                    'pledge_id': pledge['id'],
                 }
             )
 
