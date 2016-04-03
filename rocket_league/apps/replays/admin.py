@@ -2,7 +2,7 @@ from django.core.management import call_command
 from django.contrib import admin
 from django.db.models import Q
 
-from .models import Replay, Player, Goal, Map, ReplayPack, Season
+from .models import Replay, Player, Goal, Map, ReplayPack, Season, BoostData
 
 
 def reprocess_matches(modeladmin, request, queryset):
@@ -44,6 +44,19 @@ class GoalInlineAdmin(admin.TabularInline):
         return False
 
 
+class BoostDataInlineAdmin(admin.TabularInline):
+    model = BoostData
+    raw_id_fields = ['replay', 'player']
+    readonly_fields = [field.name for field in BoostData._meta.fields]
+    extra = 0
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj):
+        return False
+
+
 class ReplayAdmin(admin.ModelAdmin):
 
     def has_heatmaps(self, obj):
@@ -55,7 +68,7 @@ class ReplayAdmin(admin.ModelAdmin):
     list_display = ['replay_id', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
     list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'crashed_heatmap_parser']
     search_fields = ['replay_id']
-    inlines = [PlayerInlineAdmin, GoalInlineAdmin]
+    inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
     actions = [reprocess_matches, recalculate_average_rating]
 
 admin.site.register(Replay, ReplayAdmin)

@@ -2,6 +2,7 @@ import re
 import time
 from datetime import datetime
 
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -541,6 +542,9 @@ class Replay(models.Model):
                 if hasattr(parser, 'location_json_filename'):
                     self.location_json_file = parser.location_json_filename
 
+                if hasattr(parser, 'boost_data'):
+                    BoostData.objects.filter(replay=self).delete()
+
             if 'playlist' in parser.match_metadata:
                 self.playlist = parser.match_metadata['playlist']
 
@@ -669,7 +673,7 @@ class Replay(models.Model):
                 else:
                     team = -1
 
-                Player.objects.create(
+                obj = Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
                     player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
@@ -682,6 +686,26 @@ class Replay(models.Model):
                     online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
                 )
+
+                # If this player had any boost data, then lets store that too.
+                if hasattr(parser, 'boost_data'):
+                    boost_objects = []
+
+                    for key, boost_data in parser.boost_data['values'].items():
+                        boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
+
+                        if boost_actor_id != actor_id:
+                            continue
+
+                        for frame, value in boost_data.items():
+                            boost_objects.append(BoostData(
+                                replay=self,
+                                player=obj,
+                                frame=frame,
+                                value=value,
+                            ))
+
+                    BoostData.objects.bulk_create(boost_objects)
 
             # If any players had a party leader, try to link them up.
             for player in parser.actor_metadata:
@@ -1059,3 +1083,25 @@ class ReplayPack(models.Model):
 
     class Meta:
         ordering = ['-last_updated', '-date_created']
+
+
+class BoostData(models.Model):
+
+    replay = models.ForeignKey(
+        Replay,
+        db_index=True,
+    )
+
+    player = models.ForeignKey(
+        Player,
+    )
+
+    frame = models.PositiveIntegerField()
+
+    value = models.PositiveIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(255)]
+    )
+
+    class Meta:
+        ordering = ['player', 'frame']
+        # unique_together = [('player', 'frame', 'value')]
