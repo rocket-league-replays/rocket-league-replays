@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load cache humanize ratings replays site static %}
+
+{% block content_primary %}
+    {% include "replays/includes/tabs.html" %}
+
+    {% if replay.title %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h2>{{ replay.title }}</h2>
+            <hr>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="large-8 columns">
+            <h3>Boost management</h3>
+
+            <table width="100%">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Large Boost Pickups</th>
+                        <th>Small Boost Pickups</th>
+                        {# <th>Unknown Boost Pickups</th> #}
+                        <th>Boost Consumption</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for player in replay.player_set.all %}
+                    {% process_boost_data as boost_data %}
+                    <tr>
+                        <td class="{% if player.team == 0 %}primary{% else %}secondary{% endif %}">
+                            {# Try to get the latest rating for this player in this size. #}
+                            {% with steam_id=player.online_id %}
+                                {% latest_ratings as ratings %}
+
+                                {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
+                                    {% with ratings.10|string as rating_string %}
+                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
+                                    {% with ratings.11|string as rating_string %}
+                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
+                                    {% with ratings.12|string as rating_string %}
+                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% else %}
+                                    <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                                {% endif %}
+                            {% endwith %}
+
+                            {{ player.player_name }}
+                        </td>
+                        <td>{{ boost_data.large_pickups|intcomma }}</td>
+                        <td>{{ boost_data.small_pickups|intcomma }}</td>
+                        {# <td>{{ boost_data.unknown_pickups|intcomma }}</td> #}
+                        <td>{{ boost_data.boost_consumption|intcomma }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <div id="disqus_thread"></div>
+
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http{% if request.is_secure %}s{% endif %}://{{ settings.SITE_DOMAIN }}{{ request.path }}';
+                    this.page.identifier = 'replay_{{ replay.pk }}';
+                };
+                (function() { // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+
+                    s.src = '//rlr.disqus.com/embed.js';
+
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+    {% if replay.heatmap_json_file %}
+    <script>
+    "use strict"
+    var replay_file_url = '{{ replay.heatmap_json_file.url }}'
+    </script>
+    {% endif %}
+{% endblock %}
+
+{% block additional_js %}
+    {% if replay.heatmap_json_file %}
+    <script src="{% static 'js/vendor/heatmap.js' %}"></script>
+    {% endif %}
+{% endblock %}

@@ -322,3 +322,58 @@ def user_in_replay(context):
             return True
 
     return False
+
+
+@register.assignment_tag(takes_context=True)
+def process_boost_data(context):
+    import math
+
+    small_pickups = 0
+    large_pickups = 0
+    unknown_pickups = 0
+    boost_consumption = 0
+
+    data_set = context['player'].boostdata_set.all()
+
+    previous_value = 85
+    previous_percentage_value = 85
+
+    for data_point in data_set:
+        current_value = data_point.value
+        current_percentage_value = math.ceil(data_point.value * (100 / 255))
+        value_diff = current_value - previous_value
+
+        if value_diff > 0:
+            if current_value == 255:
+                large_pickups += 1
+            elif 28 <= value_diff <= 30:
+                small_pickups += 1
+            elif current_value == 85:  # Goal reset
+                pass
+            else:
+                print("Frame {}\t{} => {} {}{}\t {} => {} {}{}%".format(
+                    data_point.frame,
+                    previous_value,
+                    current_value,
+                    '+' if current_value > previous_value else '',
+                    current_value - previous_value,
+                    previous_percentage_value,
+                    current_percentage_value,
+                    '+' if current_value > previous_value else '',
+                    current_percentage_value - previous_percentage_value
+                ))
+                print('Unknown')
+                print('')
+                unknown_pickups += 1
+        elif value_diff < 0:
+            boost_consumption += abs(value_diff)
+
+        previous_value = current_value
+        previous_percentage_value = current_percentage_value
+
+    return {
+        'small_pickups': small_pickups,
+        'large_pickups': large_pickups,
+        'boost_consumption': boost_consumption,
+        'unknown_pickups': unknown_pickups,
+    }
