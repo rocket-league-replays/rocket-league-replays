@@ -26,27 +26,6 @@
     {# Fancy new visualisations for Patreon people #}
     {% if replay.eligble_for_analysis %}
         {% if replay.show_analysis %}
-            <script>
-            var resource__arena_fieldlines = "{% static 'img/2d-rendering/arena_fieldlines.png' %}";
-            var resource__arena_overlay = "{% static 'img/2d-rendering/arena_overlay.png' %}";
-            var resource__arena_boost = "{% static 'img/2d-rendering/arena_boost.png' %}";
-            var resource__Car_Body_0 = "{% static 'img/2d-rendering/Car_Body_0.png' %}";
-            var resource__Car_Body_1 = "{% static 'img/2d-rendering/Car_Body_1.png' %}";
-            var resource__ball = "{% static 'img/2d-rendering/ball.png' %}";
-            </script>
-
-            <script src="{% static 'js/vendor/2d-rendering/three.min.js' %}"></script>
-            <script src="{% static 'js/vendor/2d-rendering/Detector.js' %}"></script>
-
-            <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/main.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
-
-            <script>
-            loadGameData("{{ replay.location_json_file.url }}");
-            </script>
-
             <div class="sim-Outer">
                 <div class="sim-Timer">
                     <div class="sim-Timer_Score sim-Timer_Score-0">0</div>
@@ -67,6 +46,27 @@
                 <div class="sim-Boost sim-Boost-team0"></div>
                 <div class="sim-Boost sim-Boost-team1"></div>
             </div>
+
+            <script>
+            var resource__arena_fieldlines = "{% static 'img/2d-rendering/arena_fieldlines.png' %}";
+            var resource__arena_overlay = "{% static 'img/2d-rendering/arena_overlay.png' %}";
+            var resource__arena_boost = "{% static 'img/2d-rendering/arena_boost.png' %}";
+            var resource__Car_Body_0 = "{% static 'img/2d-rendering/Car_Body_0.png' %}";
+            var resource__Car_Body_1 = "{% static 'img/2d-rendering/Car_Body_1.png' %}";
+            var resource__ball = "{% static 'img/2d-rendering/ball.png' %}";
+            </script>
+
+            <script src="{% static 'js/vendor/2d-rendering/three.min.js' %}"></script>
+            <script src="{% static 'js/vendor/2d-rendering/Detector.js' %}"></script>
+
+            <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/main.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
+            <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
+
+            <script>
+            loadGameData("{{ replay.location_json_file.url }}");
+            </script>
         {% else %}
         <div class="row">
             <div class="medium-8 medium-centered columns mb-50">
