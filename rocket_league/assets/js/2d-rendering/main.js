@@ -1,5 +1,13 @@
-/*global Detector, THREE, r, Stats, currentFrame:true, maxFrame, positionReplayObjects, addStadium*/
-'use strict'
+import {maxFrame, currentFrame, scene, setCurrentFrame, setScene} from './variables'
+import {positionReplayObjects} from './replay'
+import {addStadium} from './objects'
+import {r} from './utils'
+import THREE from 'three'
+import Detector from './Detector'
+
+let camera
+let renderer
+let playState = 1
 
 if (!Detector.webgl) {
   Detector.addGetWebGLMessage({
@@ -7,14 +15,8 @@ if (!Detector.webgl) {
   })
 }
 
-let camera
-let scene
-let renderer
-let stats
-let playState = 1
-
-function init () {
-  scene = new THREE.Scene()
+export function init () {
+  setScene(new THREE.Scene())
 
   renderer = new THREE.WebGLRenderer()
   renderer.setClearColor(0xffffff)
@@ -56,7 +58,7 @@ function init () {
     // Convert the current position into a frame.
     const percentage = e.offsetX / e.target.offsetWidth
 
-    currentFrame = Math.floor(maxFrame * percentage)
+    setCurrentFrame(Math.floor(maxFrame * percentage))
   })
 
   // Add Play / Pause controls.
@@ -86,9 +88,9 @@ function animate () {
 
     if (playState === 1) {
       if (currentFrame === maxFrame - 1) {
-        currentFrame = 0
+        setCurrentFrame(0)
       } else {
-        currentFrame += 1
+        setCurrentFrame(currentFrame + 1)
       }
     }
   }

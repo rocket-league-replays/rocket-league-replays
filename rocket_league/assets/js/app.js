@@ -1,5 +1,4 @@
 /*global h337 replay_file_url*/
-
 'use strict'
 
 if ($('#chartContainer').length === 1 && (

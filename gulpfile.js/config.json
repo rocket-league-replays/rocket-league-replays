@@ -18,9 +18,15 @@
       "dest": "js",
       "extractSharedJs": true,
       "entries": {
-        "app": ["./app.js"]
+        "app": ["./app.js"],
+        "2d-rendering": ["./2d-rendering/main.js"]
       },
-      "extensions": ["js"]
+      "extensions": ["js"],
+      "output": {
+        "library": "2DRendering",
+        "path": "./rocket_league/assets",
+        "filename": "./2d-rendering/main.js"
+      }
     },
 
     "css": {

@@ -56,13 +56,8 @@
             var resource__ball = "{% static 'img/2d-rendering/ball.png' %}";
             </script>
 
-            <script src="{% static 'js/vendor/2d-rendering/three.min.js' %}"></script>
-            <script src="{% static 'js/vendor/2d-rendering/Detector.js' %}"></script>
-
-            <script src="{% static 'js/2d-rendering/utils.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/main.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/objects.js' %}"></script>
-            <script src="{% static 'js/2d-rendering/replay.js' %}"></script>
+            <script src="{% static 'build/js/shared.js' %}"></script>
+            <script src="{% static 'build/js/2d-rendering.js' %}"></script>
 
             <script>
             loadGameData("{{ replay.location_json_file.url }}");

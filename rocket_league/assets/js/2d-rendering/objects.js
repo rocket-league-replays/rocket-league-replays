@@ -1,19 +1,10 @@
-/*global THREE, textureLoader, scene, r, teamData, actorData, carsLoading:true*/
-'use strict'
-
-function renderRect (width, height) {
-  const rectShape = new THREE.Shape()
-  rectShape.moveTo(-(width / 2), -(height / 2))
-  rectShape.lineTo(width / 2, -(height / 2))
-  rectShape.lineTo(width / 2, height / 2)
-  rectShape.lineTo(-(width / 2), height / 2)
-  rectShape.lineTo(-(width / 2), -(height / 2))
-
-  return new THREE.ShapeGeometry(rectShape)
-}
+/*global resource__arena_fieldlines, resource__arena_overlay, resource__arena_boost, resource__Car_Body_0, resource__Car_Body_1, resource__ball*/
+import THREE from 'three'
+import {textureLoader, scene, actorData, teamData} from './variables'
+import {r} from './utils'
 
 // Load the stadium outline.
-function addStadium () {
+export function addStadium () {
   const materials = [
     new THREE.MeshLambertMaterial({
       map: textureLoader.load(resource__arena_fieldlines),
@@ -35,7 +26,7 @@ function addStadium () {
     })
   ]
 
-  const mesh = new THREE.SceneUtils.createMultiMaterialObject(
+  const mesh = new THREE.SceneUtils.createMultiMaterialObject(  // eslint-disable-line new-cap
     new THREE.PlaneGeometry(8240, 12000),
     materials
   )
@@ -47,7 +38,7 @@ function addStadium () {
   scene.add(mesh)
 }
 
-function addCar (name, actor) {
+export function addCar (name, actor) {
   console.log(`[${name}] Adding car`)
   let texture
 
@@ -119,10 +110,9 @@ function addCar (name, actor) {
   }
 
   console.log(`[${name}] Render complete`)
-  carsLoading = carsLoading.filter(function (e) { return e !== name })
 }
 
-function addBall (name, actor) {
+export function addBall (name, actor) {
   console.log(`[${name}] Adding ball`)
 
   const mesh = new THREE.Mesh(
@@ -154,5 +144,4 @@ function addBall (name, actor) {
   mesh.rotation.set(0, 0, actor.yaw * Math.PI)
 
   console.log(`[${name}] Render complete`)
-  carsLoading = carsLoading.filter(function (e) { return e !== name })
 }

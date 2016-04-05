@@ -3,6 +3,7 @@
  * @author mr.doob / http://mrdoob.com/
  */
 
+/*eslint-disable */
 var Detector = {
 
 	canvas: !! window.CanvasRenderingContext2D,
@@ -76,3 +77,4 @@ if ( typeof module === 'object' ) {
 	module.exports = Detector;
 
 }
+/*eslint-enable */

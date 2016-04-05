@@ -1,17 +1,30 @@
-/*global init, formatTime, scene, addCar, addBall, r*/
-'use strict'
+import {init} from './main'
+import {
+  // Helper functions
+  setFrameData,
+  setGoalData,
+  setBoostData,
+  setSecondsData,
+  setActorData,
+  setTeamData,
+  setMaxFrame,
+  setCurrentFrame,
 
-let currentFrame = -1
-let maxFrame = -1
-let frameData = {}
-let goalData = []
-let boostData = {}
-let secondsData = {}
-let carsLoading = []
-let actorData = {}
-let teamData = {}
+  // Actual variables
+  frameData,
+  goalData,
+  boostData,
+  secondsData,
+  actorData,
+  maxFrame,
+  currentFrame,
+  scene
+} from './variables'
 
-function loadGameData (url) {
+import {addBall, addCar} from './objects'
+import {formatTime, r} from './utils'
+
+function loadGameData (url) {  // eslint-disable-line no-unused-vars
   init()
 
   const request = new XMLHttpRequest()
@@ -23,42 +36,38 @@ function loadGameData (url) {
       const response_data = JSON.parse(request.responseText)
 
       if (response_data.frame_data !== undefined) {
-        frameData = response_data.frame_data
+        setFrameData(response_data.frame_data)
       }
 
       if (response_data.goals !== undefined) {
-        goalData = response_data.goals
+        setGoalData(response_data.goals)
       }
 
       if (response_data.boost !== undefined) {
-        boostData = response_data.boost
+        setBoostData(response_data.boost)
       }
 
       if (response_data.seconds_mapping !== undefined) {
-        secondsData = response_data.seconds_mapping
+        setSecondsData(response_data.seconds_mapping)
       }
 
       if (response_data.actors !== undefined) {
-        actorData = response_data.actors
+        setActorData(response_data.actors)
       }
 
       if (response_data.teams !== undefined) {
-        teamData = response_data.teams
+        setTeamData(response_data.teams)
       }
 
-      maxFrame = Object.keys(frameData).length
-      currentFrame = 0
+      setMaxFrame(Object.keys(frameData).length)
+      setCurrentFrame(0)
     }
   }
 
   request.send()
 }
 
-function positionReplayObjects () {
-  if (carsLoading.length > 0) {
-    console.warn(`Still rendering ${carsLoading}`)
-  }
-
+export function positionReplayObjects () {
   if (secondsData[currentFrame] !== undefined) {
     document.querySelector('.sim-Timer_Value').innerHTML = formatTime(secondsData[currentFrame])
   }
@@ -75,7 +84,7 @@ function positionReplayObjects () {
       const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
 
       if (boostEl) {
-        boostEl.style.backgroundSize = `${value}% 100%`;
+        boostEl.style.backgroundSize = `${value}% 100%`
         boostEl.innerHTML = value
 
         if (value < 15) {
@@ -86,9 +95,7 @@ function positionReplayObjects () {
       }
     } else {
       // Search for boost values within the next 74 frames.
-      let searchLength = 1
-
-      for (let i=currentFrame; i<currentFrame+74; i++) {
+      for (let i = currentFrame; i < currentFrame + 74; i++) {
         if (boostData.values[item][i] !== undefined) {
           // Which player is this?
           const player_id = boostData.cars[boostData.actors[item]]
@@ -102,7 +109,6 @@ function positionReplayObjects () {
 
             // We only care about boost values going down.
             if (nextValue < currentValue) {
-
               // Is this the right time to start moving this boost value? We don't to use
               // a full 74 frames for a tiny burst of boost, only for a full range, so ensure
               // we're not being premature.
@@ -118,15 +124,15 @@ function positionReplayObjects () {
                 continue
               }
 
-              const rawValue = boostData.values[item][i] + (frameDiff * (255/74))
+              const rawValue = boostData.values[item][i] + (frameDiff * (255 / 74))
 
               if (rawValue < 0 || rawValue > 255) {
-                throw new Error("BoostRangeError")
+                throw new Error('BoostRangeError')
               }
 
               const value = Math.ceil(rawValue * (100 / 255))
 
-              boostEl.style.backgroundSize = `${value}% 100%`;
+              boostEl.style.backgroundSize = `${value}% 100%`
               boostEl.innerHTML = value
 
               if (value < 15) {
@@ -160,12 +166,12 @@ function positionReplayObjects () {
   document.querySelector('.sim-Timer_Score-0').innerHTML = team_0_score
   document.querySelector('.sim-Timer_Score-1').innerHTML = team_1_score
 
-  document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`;
+  document.querySelector('.sim-Timeline_Inner').style.width = `${currentFrame / maxFrame * 100}%`
 
   // Do any actors get removed in this frame?
   Object.keys(actorData).forEach(function (item) {
     if (actorData[item].left <= currentFrame) {
-      const objectName = `car-${item}`;
+      const objectName = `car-${item}`
       const carObject = scene.getObjectByName(objectName)
 
       if (carObject !== undefined) {
@@ -182,20 +188,16 @@ function positionReplayObjects () {
 
   frameData[currentFrame].actors.forEach(function (actor, index) {
     // Does this car already exist in the scene.
-    const objectName = `car-${actor.id}`;
+    const objectName = `car-${actor.id}`
     const carObject = scene.getObjectByName(objectName)
 
     if (carObject === undefined) {
       // Add the car.
-      if (carsLoading.indexOf(objectName) === -1) {
-        carsLoading.push(objectName)
-
-        console.log(`[${objectName}] Calling addCar`)
-        if (actor.type === 'player') {
-          addCar(objectName, actor)
-        } else if (actor.type === 'ball') {
-          addBall(objectName, actor)
-        }
+      console.log(`[${objectName}] Calling addCar`)
+      if (actor.type === 'player') {
+        addCar(objectName, actor)
+      } else if (actor.type === 'ball') {
+        addBall(objectName, actor)
       }
     } else {
       // Reposition the car based on the latest data.
@@ -207,7 +209,7 @@ function positionReplayObjects () {
         actor.x * -1,
         actor.y,
         1
-        )
+      )
 
       // If actor.z is 18, we want scaleFactor to be 1
       // if actor.z is 2048 we want scaleFactor to be 2
@@ -223,14 +225,14 @@ function positionReplayObjects () {
         scaleFactor,
         scaleFactor,
         scaleFactor
-        )
+      )
 
       // Looks close.
       carObject.rotation.set(
         0,
         0,
         r(90) + actor.pitch * Math.PI * -1
-        )
+      )
     }
   })
 }

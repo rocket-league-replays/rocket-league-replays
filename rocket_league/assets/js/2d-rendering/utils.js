@@ -1,21 +1,14 @@
-/*global THREE*/
-'use strict'
-
-const loader = new THREE.JSONLoader()
-const textureLoader = new THREE.TextureLoader()
-textureLoader.crossOrigin = '';
-
 // Convert degrees to radians
-function r (d) {
+export function r (d) {
   return d * (Math.PI / 180)
 }
 
 // Convert radians to degrees
-function d (r) {
+export function d (r) {
   return r * (180 / Math.PI)
 }
 
-function formatTime (time) {
+export function formatTime (time) {
   time = Math.ceil(time)
 
   // Minutes and seconds
@@ -31,10 +24,10 @@ function formatTime (time) {
   let ret = ''
 
   if (hrs > 0) {
-    ret += `${hrs}:${(mins < 10 ? '0' : '')}`;
+    ret += `${hrs}:${(mins < 10 ? '0' : '')}`
   }
 
-  ret += `${mins}:${(secs < 10 ? '0' : '')}`;
-  ret += `${secs.toFixed(0)}`;
+  ret += `${mins}:${(secs < 10 ? '0' : '')}`
+  ret += `${secs.toFixed(0)}`
   return ret
 }
