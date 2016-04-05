@@ -438,6 +438,9 @@ class Replay(models.Model):
         return 0
 
     def eligble_for_analysis(self):
+        if settings.DEBUG:
+            return True
+
         patreon_amount = 300
 
         # Import here to avoid circular imports.
