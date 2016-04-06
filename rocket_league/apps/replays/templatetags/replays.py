@@ -1,8 +1,10 @@
+import math
+
 from django import template
-from django.db.models import Count, F, Sum, Max
+from django.db.models import F, Count, Max, Sum
 from django.utils.safestring import mark_safe
 
-from ..models import Replay, Goal, Player, get_default_season
+from ..models import Goal, Player, Replay, get_default_season
 
 register = template.Library()
 
@@ -325,22 +327,21 @@ def user_in_replay(context):
 
 
 @register.assignment_tag(takes_context=True)
-def process_boost_data(context):
-    import math
+def process_boost_data(context, obj=None):
+    if not obj:
+        obj = context['player']
 
     small_pickups = 0
     large_pickups = 0
     unknown_pickups = 0
     boost_consumption = 0
 
-    data_set = context['player'].boostdata_set.all()
+    data_set = obj.boostdata_set.all()
 
     previous_value = 85
-    previous_percentage_value = 85
 
     for data_point in data_set:
         current_value = data_point.value
-        current_percentage_value = math.ceil(data_point.value * (100 / 255))
         value_diff = current_value - previous_value
 
         if value_diff > 0:
@@ -351,29 +352,115 @@ def process_boost_data(context):
             elif current_value == 85:  # Goal reset
                 pass
             else:
-                print("Frame {}\t{} => {} {}{}\t {} => {} {}{}%".format(
-                    data_point.frame,
-                    previous_value,
-                    current_value,
-                    '+' if current_value > previous_value else '',
-                    current_value - previous_value,
-                    previous_percentage_value,
-                    current_percentage_value,
-                    '+' if current_value > previous_value else '',
-                    current_percentage_value - previous_percentage_value
-                ))
-                print('Unknown')
-                print('')
                 unknown_pickups += 1
         elif value_diff < 0:
-            boost_consumption += abs(value_diff)
+            boost_consumption += math.ceil(abs(value_diff) * (100 / 255))
 
         previous_value = current_value
-        previous_percentage_value = current_percentage_value
 
     return {
         'small_pickups': small_pickups,
         'large_pickups': large_pickups,
         'boost_consumption': boost_consumption,
         'unknown_pickups': unknown_pickups,
+    }
+
+
+@register.assignment_tag(takes_context=True)
+def boost_chart_data(context, obj=None):
+    if not obj:
+        obj = context['replay']
+
+    players = obj.player_set.all()
+
+    boost_values = {}
+    boost_consumption = {}
+    player_names = {}
+
+    current_values = {}
+    last_full_values = {}
+    boost_consumed_values = {}
+    boost_data_values = {}
+
+    for frame in range(obj.num_frames):
+        for player in players:
+            print(frame, player)
+
+            actor_id = player.actor_id
+
+            if actor_id not in current_values:
+                current_values[actor_id] = 85
+
+            if actor_id not in last_full_values:
+                last_full_values[actor_id] = 85
+
+            if actor_id not in boost_values:
+                boost_values[actor_id] = {}
+
+            if actor_id not in boost_consumption:
+                boost_consumption[actor_id] = {}
+
+            if actor_id not in boost_consumed_values:
+                boost_consumed_values[actor_id] = 0
+
+            if actor_id not in player_names:
+                player_names[actor_id] = player.player_name
+
+            if actor_id not in boost_data_values:
+                boost_data_values[actor_id] = player.boostdata_set.all().values('frame', 'value')
+                boost_data_values[actor_id] = {value['frame']: value['value'] for value in boost_data_values[actor_id]}
+
+            # Now get all the current data.
+            current_value = current_values[actor_id]
+            last_full_value = last_full_values[actor_id]
+            boost_data = boost_data_values[actor_id]
+
+            # Does this player have any boost data in this frame?
+            if frame in boost_data:
+                boost_values[actor_id][frame] = math.ceil(boost_data[frame] * (100 / 255))
+
+                if boost_data[frame] < last_full_value:
+                    value_diff = last_full_value - boost_data[frame]
+                    boost_consumed_values[actor_id] += math.ceil(value_diff * (100 / 255))
+
+                current_values[actor_id] = boost_data[frame]
+                last_full_value = boost_data[frame]
+            else:
+                # Search for boost values within the next 74 frames.
+                for future_frame in range(74):
+                    # Is there any boost data at this frame?
+                    sum_frame = frame + future_frame
+
+                    if sum_frame in boost_data:
+                        if boost_data[sum_frame] < current_value:
+                            # Check to see whether we can start moving towards this boost value yet.
+                            frame_diff_required = (current_value - boost_data[sum_frame]) / (255 / 74)
+
+                            # This frame is too far in the future.
+                            if future_frame > frame_diff_required:
+                                continue
+
+                            # Ensure the value is valid.
+                            tween_value = boost_data[sum_frame] + (future_frame * (255 / 74))
+
+                            assert 0 <= tween_value <= 255, "{} is not in the range of 0-255.".format(tween_value)
+
+                            parsed_value = tween_value * (100 / 255)
+                            assert 0 <= parsed_value <= 100, "{} is not in the range of 0-100.".format(parsed_value)
+
+                            boost_values[actor_id][frame] = math.ceil(parsed_value)
+                            current_values[actor_id] = tween_value
+
+                            # We've got what we wanted, make out like a bandit.
+                            break
+
+            if frame not in boost_values[actor_id]:
+                boost_values[actor_id][frame] = math.ceil(current_values[actor_id] * (100 / 255))
+
+            boost_consumption[actor_id][frame] = boost_consumed_values[actor_id]
+
+    return {
+        'boost_values': boost_values,
+        'boost_consumption': boost_consumption,
+        'player_names': player_names,
     }
