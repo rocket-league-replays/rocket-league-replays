@@ -60,7 +60,7 @@
             <script src="{% static 'build/js/2d-rendering.js' %}"></script>
 
             <script>
-            loadGameData("{{ replay.location_json_file.url }}");
+            ReplayPlayback.loadGameData("{{ replay.location_json_file.url }}");
             </script>
         {% else %}
         <div class="row">

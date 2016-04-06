@@ -1,3 +1,5 @@
+require('expose?ReplayPlayback!./replay.js')
+
 import {init} from './main'
 import {
   // Helper functions
@@ -24,7 +26,7 @@ import {
 import {addBall, addCar} from './objects'
 import {formatTime, r} from './utils'
 
-function loadGameData (url) {  // eslint-disable-line no-unused-vars
+export function loadGameData (url) {  // eslint-disable-line no-unused-vars
   init()
 
   const request = new XMLHttpRequest()
