@@ -691,11 +691,12 @@ class Replay(models.Model):
                 )
 
                 # If this player had any boost data, then lets store that too.
-                if hasattr(parser, 'boost_data'):
+                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data:
                     boost_objects = []
 
                     for key, boost_data in parser.boost_data['values'].items():
-                        boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
+                        if parser.boost_data['actors'][key] != {}:
+                            boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
 
                         if boost_actor_id != actor_id:
                             continue
