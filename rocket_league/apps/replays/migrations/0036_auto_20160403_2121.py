@@ -24,14 +24,4 @@ class Migration(migrations.Migration):
                 'ordering': ['player', 'frame'],
             },
         ),
-        migrations.AlterField(
-            model_name='replay',
-            name='playlist',
-            field=models.PositiveIntegerField(null=True, default=0, blank=True, choices=[(13, 'RankedStandard'), (16, 'RocketLabs'), (11, 'RankedDoubles'), (4, 'UnrankedChaos'), (10, 'RankedDuels'), (12, 'RankedSoloStandard'), (2, 'UnrankedDoubles'), (3, 'UnrankedStandard'), (15, 'SnowDay'), (1, 'UnrankedDuels')]),
-        ),
-        migrations.AddField(
-            model_name='boostdata',
-            name='replay',
-            field=models.ForeignKey(to='replays.Replay'),
-        ),
     ]

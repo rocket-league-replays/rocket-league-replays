@@ -961,6 +961,12 @@ class Player(models.Model):
         null=True,
     )
 
+    # Other stuff.
+    boost_data = JSONField(
+        blank=True,
+        null=True,
+    )
+
     def __str__(self):
         return '{} on Team {}'.format(
             self.player_name,
