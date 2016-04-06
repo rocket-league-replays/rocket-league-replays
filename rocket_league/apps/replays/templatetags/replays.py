@@ -382,34 +382,38 @@ def boost_chart_data(context, obj=None):
     boost_consumed_values = {}
     boost_data_values = {}
 
+    for player in players:
+        actor_id = player.actor_id
+
+        if actor_id not in current_values:
+            current_values[actor_id] = 85
+
+        if actor_id not in last_full_values:
+            last_full_values[actor_id] = 85
+
+        if actor_id not in boost_values:
+            boost_values[actor_id] = {}
+
+        if actor_id not in boost_consumption:
+            boost_consumption[actor_id] = {}
+
+        if actor_id not in boost_consumed_values:
+            boost_consumed_values[actor_id] = 0
+
+        if actor_id not in player_names:
+            player_names[actor_id] = player.player_name
+
+        if actor_id not in boost_data_values:
+            boost_data_values[actor_id] = player.boostdata_set.all().values('frame', 'value')
+            boost_data_values[actor_id] = {value['frame']: value['value'] for value in boost_data_values[actor_id]}
+
+    # TODO: Optimise this loop so we only iterate over values which are equal to
+    #       or 74 less than each of the distinct values in the boost_data dict.
+    #       The data for the other frames would then be "filled in" after the
+    #       loop has completed. This would give the same result in far less time.
+
     for frame in range(obj.num_frames):
         for player in players:
-            print(frame, player)
-
-            actor_id = player.actor_id
-
-            if actor_id not in current_values:
-                current_values[actor_id] = 85
-
-            if actor_id not in last_full_values:
-                last_full_values[actor_id] = 85
-
-            if actor_id not in boost_values:
-                boost_values[actor_id] = {}
-
-            if actor_id not in boost_consumption:
-                boost_consumption[actor_id] = {}
-
-            if actor_id not in boost_consumed_values:
-                boost_consumed_values[actor_id] = 0
-
-            if actor_id not in player_names:
-                player_names[actor_id] = player.player_name
-
-            if actor_id not in boost_data_values:
-                boost_data_values[actor_id] = player.boostdata_set.all().values('frame', 'value')
-                boost_data_values[actor_id] = {value['frame']: value['value'] for value in boost_data_values[actor_id]}
-
             # Now get all the current data.
             current_value = current_values[actor_id]
             last_full_value = last_full_values[actor_id]
