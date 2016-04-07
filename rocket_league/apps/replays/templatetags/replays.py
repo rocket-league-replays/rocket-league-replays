@@ -378,19 +378,11 @@ def boost_chart_data(context, obj=None):
     boost_consumption = {}
     player_names = {}
 
-    current_values = {}
-    last_full_values = {}
     boost_consumed_values = {}
     boost_data_values = {}
 
     for player in players:
         actor_id = player.actor_id
-
-        if actor_id not in current_values:
-            current_values[actor_id] = 85
-
-        if actor_id not in last_full_values:
-            last_full_values[actor_id] = 85
 
         if actor_id not in boost_values:
             boost_values[actor_id] = OrderedDict()
@@ -398,11 +390,11 @@ def boost_chart_data(context, obj=None):
         if actor_id not in boost_consumption:
             boost_consumption[actor_id] = {}
 
-        if actor_id not in boost_consumed_values:
-            boost_consumed_values[actor_id] = 0
-
         if actor_id not in player_names:
             player_names[actor_id] = player.player_name
+
+        if actor_id not in boost_consumed_values:
+            boost_consumed_values[actor_id] = 0
 
         if actor_id not in boost_data_values:
             boost_data_values[actor_id] = player.boostdata_set.all().values('frame', 'value')
