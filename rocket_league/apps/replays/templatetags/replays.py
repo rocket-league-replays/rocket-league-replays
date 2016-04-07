@@ -412,6 +412,10 @@ def boost_chart_data(context, obj=None):
         previous_value = 85
         for key, value in boost_data_values[actor_id].items():
             if value < previous_value:
+                # Store the diff.
+                boost_consumed_values[actor_id] += math.ceil((previous_value - value) * (100 / 255))
+                boost_consumption[actor_id][key] = boost_consumed_values[actor_id]
+
                 # Determine how many frames of tweening this change required.
                 frame_diff_required = math.floor((previous_value - value) / (255 / 74))
 
@@ -428,6 +432,13 @@ def boost_chart_data(context, obj=None):
             boost_values[actor_id][key] = math.ceil(value * (100 / 255))
 
             previous_value = value
+
+    for key in boost_consumption:
+        boost_consumption[key] = OrderedDict(sorted(boost_consumption[key].items()))
+
+        # Ensure the last frame is present for each dict.
+        if obj.num_frames not in boost_values[key]:
+            boost_consumption[key][obj.num_frames] = boost_consumption[key][next(reversed(boost_consumption[key]))]
 
     for key in boost_values:
         boost_values[key] = OrderedDict(sorted(boost_values[key].items()))
