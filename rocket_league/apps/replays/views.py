@@ -16,6 +16,7 @@ from .models import (Goal, Map, Player, Replay, ReplayPack, Season,
 from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
                           ReplayCreateSerializer, ReplaySerializer,
                           SeasonSerializer)
+from .templatetags.replays import boost_chart_data, process_boost_data
 
 
 class ReplayListView(FilterView):
@@ -75,6 +76,26 @@ class ReplayDetailView(DetailView):
 class ReplayAnalysisView(DetailView):
     model = Replay
     template_name_suffix = '_analysis'
+
+    def get_context_data(self, **kwargs):
+        context = super(ReplayAnalysisView, self).get_context_data(**kwargs)
+
+        context['team_0_boost_consumed'] = 0
+        context['team_1_boost_consumed'] = 0
+
+        # Get the tabular data.
+        for player in self.object.player_set.all():
+            if not player.boost_data:
+                player.boost_data = process_boost_data({}, obj=player)
+                player.save()
+
+            # Get the team boost data.
+            if player.team == 0:
+                context['team_0_boost_consumed'] += player.boost_data['boost_consumption']
+            elif player.team == 1:
+                context['team_1_boost_consumed'] += player.boost_data['boost_consumption']
+
+        return context
 
 
 class ReplayPlaybackView(DetailView):
