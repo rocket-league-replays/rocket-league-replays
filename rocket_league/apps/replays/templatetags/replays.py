@@ -3,6 +3,7 @@ import math
 from django import template
 from django.db.models import F, Count, Max, Sum
 from django.utils.safestring import mark_safe
+from collections import OrderedDict
 
 from ..models import Goal, Player, Replay, get_default_season
 
@@ -392,7 +393,7 @@ def boost_chart_data(context, obj=None):
             last_full_values[actor_id] = 85
 
         if actor_id not in boost_values:
-            boost_values[actor_id] = {}
+            boost_values[actor_id] = OrderedDict()
 
         if actor_id not in boost_consumption:
             boost_consumption[actor_id] = {}
@@ -405,63 +406,35 @@ def boost_chart_data(context, obj=None):
 
         if actor_id not in boost_data_values:
             boost_data_values[actor_id] = player.boostdata_set.all().values('frame', 'value')
-            boost_data_values[actor_id] = {value['frame']: value['value'] for value in boost_data_values[actor_id]}
+            boost_data_values[actor_id] = OrderedDict((value['frame'], value['value']) for value in boost_data_values[actor_id])
 
-    # TODO: Optimise this loop so we only iterate over values which are equal to
-    #       or 74 less than each of the distinct values in the boost_data dict.
-    #       The data for the other frames would then be "filled in" after the
-    #       loop has completed. This would give the same result in far less time.
+        # Calculate the tween values.
+        previous_value = 85
+        for key, value in boost_data_values[actor_id].items():
+            if value < previous_value:
+                # Determine how many frames of tweening this change required.
+                frame_diff_required = math.floor((previous_value - value) / (255 / 74))
 
-    for frame in range(obj.num_frames):
-        for player in players:
-            # Now get all the current data.
-            current_value = current_values[actor_id]
-            last_full_value = last_full_values[actor_id]
-            boost_data = boost_data_values[actor_id]
+                for frame in range(key - frame_diff_required + 1, key):
+                    tween_value = math.ceil(value + ((key - frame) * (255 / 74)))
 
-            # Does this player have any boost data in this frame?
-            if frame in boost_data:
-                boost_values[actor_id][frame] = math.ceil(boost_data[frame] * (100 / 255))
-
-                if boost_data[frame] < last_full_value:
-                    value_diff = last_full_value - boost_data[frame]
-                    boost_consumed_values[actor_id] += math.ceil(value_diff * (100 / 255))
-
-                current_values[actor_id] = boost_data[frame]
-                last_full_value = boost_data[frame]
+                    if frame not in boost_values[actor_id]:
+                        boost_values[actor_id][frame] = math.ceil(tween_value * (100 / 255))
+                        previous_value = tween_value
             else:
-                # Search for boost values within the next 74 frames.
-                for future_frame in range(74):
-                    # Is there any boost data at this frame?
-                    sum_frame = frame + future_frame
+                if key > 0:
+                    boost_values[actor_id][key - 1] = math.ceil(previous_value * (100 / 255))
 
-                    if sum_frame in boost_data:
-                        if boost_data[sum_frame] < current_value:
-                            # Check to see whether we can start moving towards this boost value yet.
-                            frame_diff_required = (current_value - boost_data[sum_frame]) / (255 / 74)
+            boost_values[actor_id][key] = math.ceil(value * (100 / 255))
 
-                            # This frame is too far in the future.
-                            if future_frame > frame_diff_required:
-                                continue
+            previous_value = value
 
-                            # Ensure the value is valid.
-                            tween_value = boost_data[sum_frame] + (future_frame * (255 / 74))
+    for key in boost_values:
+        boost_values[key] = OrderedDict(sorted(boost_values[key].items()))
 
-                            assert 0 <= tween_value <= 255, "{} is not in the range of 0-255.".format(tween_value)
-
-                            parsed_value = tween_value * (100 / 255)
-                            assert 0 <= parsed_value <= 100, "{} is not in the range of 0-100.".format(parsed_value)
-
-                            boost_values[actor_id][frame] = math.ceil(parsed_value)
-                            current_values[actor_id] = tween_value
-
-                            # We've got what we wanted, make out like a bandit.
-                            break
-
-            if frame not in boost_values[actor_id]:
-                boost_values[actor_id][frame] = math.ceil(current_values[actor_id] * (100 / 255))
-
-            boost_consumption[actor_id][frame] = boost_consumed_values[actor_id]
+        # Ensure the last frame is present for each dict.
+        if obj.num_frames not in boost_values[key]:
+            boost_values[key][obj.num_frames] = boost_values[key][next(reversed(boost_values[key]))]
 
     return {
         'boost_values': boost_values,
