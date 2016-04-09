@@ -14,6 +14,11 @@ def wrap(val, func):
 
 
 @register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
+@register.filter
 def order_by(qs, ordering):
     return qs.order_by(ordering)
 

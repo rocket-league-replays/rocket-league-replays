@@ -374,15 +374,24 @@ def boost_chart_data(context, obj=None):
 
     players = obj.player_set.all()
 
+    goal_frames = obj.goal_set.values_list('frame', flat=True)
+
     boost_values = {}
     boost_consumption = {}
     player_names = {}
+    team_boost_values = {
+        0: {},
+        1: {}
+    }
+
+    boost_distribution = {0: {}, 1: {}}
 
     boost_consumed_values = {}
     boost_data_values = {}
 
     for player in players:
         actor_id = player.actor_id
+        team = player.team
 
         if actor_id not in boost_values:
             boost_values[actor_id] = OrderedDict()
@@ -403,25 +412,75 @@ def boost_chart_data(context, obj=None):
         # Calculate the tween values.
         previous_value = 85
         for key, value in boost_data_values[actor_id].items():
+            # If the value is 85, we need to check if a goal was just scored
+            # as we don't want to tween or register boost as being consumed
+            # by the goal reset.
+            reset = False
+            if value == 85:
+                buffer_frames = set(range(key - 75, key))
+                reset = len(buffer_frames.intersection(goal_frames)) > 0
+
             if value < previous_value:
                 # Store the diff.
-                boost_consumed_values[actor_id] += math.ceil((previous_value - value) * (100 / 255))
-                boost_consumption[actor_id][key] = boost_consumed_values[actor_id]
-
                 # Determine how many frames of tweening this change required.
                 frame_diff_required = math.floor((previous_value - value) / (255 / 74))
 
-                for frame in range(key - frame_diff_required + 1, key):
-                    tween_value = math.ceil(value + ((key - frame) * (255 / 74)))
+                if reset:
+                    boost_values[actor_id][key - frame_diff_required] = math.ceil(previous_value * (100 / 255))
+                else:
+                    boost_consumed_values[actor_id] += math.ceil((previous_value - value) * (100 / 255))
+                    boost_consumption[actor_id][key] = boost_consumed_values[actor_id]
 
-                    if frame not in boost_values[actor_id]:
-                        boost_values[actor_id][frame] = math.ceil(tween_value * (100 / 255))
-                        previous_value = tween_value
+                    for frame in range(key - frame_diff_required + 1, key):
+                        tween_value = math.ceil(value + ((key - frame) * (255 / 74)))
+
+                        if frame not in boost_values[actor_id]:
+                            # Add data.
+                            rendered_value = math.ceil(tween_value * (100 / 255))
+
+                            boost_values[actor_id][frame] = rendered_value
+
+                            if frame not in team_boost_values[team]:
+                                team_boost_values[team][frame] = 0
+
+                            team_boost_values[team][frame] += rendered_value
+
+                            # Boost distribution
+                            if rendered_value not in boost_distribution[team]:
+                                boost_distribution[team][rendered_value] = 0
+                            boost_distribution[team][rendered_value] += 1
+
+                            previous_value = tween_value
             else:
                 if key > 0:
-                    boost_values[actor_id][key - 1] = math.ceil(previous_value * (100 / 255))
+                    # Add data.
+                    rendered_value = math.ceil(previous_value * (100 / 255))
 
-            boost_values[actor_id][key] = math.ceil(value * (100 / 255))
+                    boost_values[actor_id][key - 1] = rendered_value
+
+                    if key - 1 not in team_boost_values[team]:
+                        team_boost_values[team][key - 1] = 0
+
+                    team_boost_values[team][key - 1] += rendered_value
+
+                    # Boost distribution
+                    if rendered_value not in boost_distribution[team]:
+                        boost_distribution[team][rendered_value] = 0
+                    boost_distribution[team][rendered_value] += 1
+
+            # Add data.
+            rendered_value = math.ceil(value * (100 / 255))
+            boost_values[actor_id][key] = rendered_value
+
+            if key not in team_boost_values[team]:
+                team_boost_values[team][key] = 0
+
+            team_boost_values[team][key] += rendered_value
+
+            # Boost distribution
+            if rendered_value not in boost_distribution[team]:
+                boost_distribution[team][rendered_value] = 0
+            boost_distribution[team][rendered_value] += 1
 
             previous_value = value
 
@@ -429,7 +488,7 @@ def boost_chart_data(context, obj=None):
         boost_consumption[key] = OrderedDict(sorted(boost_consumption[key].items()))
 
         # Ensure the last frame is present for each dict.
-        if obj.num_frames not in boost_values[key]:
+        if obj.num_frames not in boost_values[key] and len(boost_consumption[key]) > 0:
             boost_consumption[key][obj.num_frames] = boost_consumption[key][next(reversed(boost_consumption[key]))]
 
     for key in boost_values:
@@ -439,8 +498,36 @@ def boost_chart_data(context, obj=None):
         if obj.num_frames not in boost_values[key]:
             boost_values[key][obj.num_frames] = boost_values[key][next(reversed(boost_values[key]))]
 
+    # Generate the team boost distribution charts.
+    team_boost_values_full = {0: OrderedDict(), 1: OrderedDict()}
+
+    for frame in range(obj.num_frames):
+        for team in range(2):
+            if frame in team_boost_values[team]:
+                team_boost_values_full[team][frame] = team_boost_values[team][frame]
+            else:
+                if len(team_boost_values_full[team]) > 0:
+                    value = team_boost_values_full[team][next(reversed(team_boost_values_full[team]))]
+                else:
+                    value = 0
+
+                team_boost_values_full[team][frame] = value
+
+    team_boost_values = team_boost_values_full
+
+    # Get the maximum value for both teams, in terms of boost value. Pad any empty values.
+    boost_distribution_full = {0: OrderedDict(), 1: OrderedDict()}
+    for value in range(max(list(boost_distribution[0].keys()) + list(boost_distribution[1].keys())) + 1):
+        for team in range(2):
+            if value not in boost_distribution[team]:
+                boost_distribution_full[team][value] = 0
+            else:
+                boost_distribution_full[team][value] = boost_distribution[team][value]
+
     return {
         'boost_values': boost_values,
+        'team_boost_values': team_boost_values,
         'boost_consumption': boost_consumption,
+        'boost_distribution': boost_distribution_full,
         'player_names': player_names,
     }

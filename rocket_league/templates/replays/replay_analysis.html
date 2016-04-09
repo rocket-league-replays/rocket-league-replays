@@ -79,8 +79,10 @@
 
     <div class="row">
         <div class="small-12 columns">
-            <div id="boostValuesChart" style="height: 350px; width: 100%;"></div>
+            <div id="boostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+            <div id="teamBoostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
             <div id="boostConsumptionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+            <div id="teamBoostDistributionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
         </div>
     </div>
 
@@ -110,160 +112,164 @@
 {% block additional_js %}
 {% boost_chart_data as data %}
 
+{% compress js %}
 <script>
+function getBaseSettings() {
+    return {
+        zoomEnabled: true,
+        title:{
+            fontSize: 14,
+        },
+        axisX: {
+            labelFontSize: 14,
+            titleFontSize: 14,
+        },
+        axisY: {
+            labelFontSize: 14,
+            titleFontSize: 14,
+        },
+        legend: {
+            cursor: "pointer",
+            itemclick: function (e) {
+                if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                    e.dataSeries.visible = false;
+                } else {
+                    e.dataSeries.visible = true;
+                }
+
+                e.chart.render();
+            }
+        },
+        toolTip: {
+            shared: true,
+        }
+    }
+}
+
 // Boost values per frame
-var boostValuesChart = new CanvasJS.Chart("boostValuesChart", {
-    zoomEnabled: false,
-    title:{
-        text: "Boost values over the course of the match",
-        fontSize: 14,
-    },
-    axisX: {
-        title: "Frame",
-        labelFontSize: 14,
-        titleFontSize: 14,
-    },
-    axisY: {
-        title: "Boost percentage",
-        labelFontSize: 14,
-        titleFontSize: 14,
-        maximum: 100,
-        minimum: 0,
-    },
-    legend: {
-        cursor: "pointer",
-        itemclick: function (e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
+var boostValuesChart = new CanvasJS.Chart("boostValuesChart", getBaseSettings())
+boostValuesChart.options.title.text = "Boost values over the course of the match"
+boostValuesChart.options.axisX.title = "Frame"
+boostValuesChart.options.axisY.title = "Boost percentage"
+boostValuesChart.options.axisY.minimum = 0
+boostValuesChart.options.axisY.maximum = 100
+boostValuesChart.options.data = [
+    {% for actor_id, values in data.boost_values.items %}
+    {
+        name: "{{ data.player_names|get_item:actor_id }}",
+        type: "line",
+        showInLegend: true,
+        dataPoints: [
+            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+        ],
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
 
-            e.chart.render();
-        }
-    },
-    data: [
-        {% for actor_id, values in data.boost_values.items %}
-        {
-            {# TODO: Refactor the shit out of this nonsense. #}
-            name: "{% for name_actor_id, player_name in data.player_names.items %}{% if name_actor_id == actor_id %}{{ player_name }}{% endif %}{% endfor %}",
-            type: "line",
-            showInLegend: true,
-            dataPoints: [
-                {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
-            ],
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
+]
+boostValuesChart.render();
 
-    ],
-    toolTip: {
-        shared: true,
-    }
-}).render();
+// Boost values per frame
+var teamBoostValuesChart = new CanvasJS.Chart("teamBoostValuesChart", getBaseSettings())
+teamBoostValuesChart.options.title.text = "Boost ownership per team"
+teamBoostValuesChart.options.axisX.title = "Frame"
+teamBoostValuesChart.options.axisY.title = "Boost percentage"
+teamBoostValuesChart.options.axisY.minimum = 0
+teamBoostValuesChart.options.axisY.maximum = 100
+teamBoostValuesChart.options.data = [
+    {% for team, values in data.team_boost_values.items %}
+    {
+        name: "{% if team == 0 %}Blue{% else %}Orange{% endif %} Team",
+        type: "stackedColumn100",
+        showInLegend: true,
+        color: "#{% if team == 0 %}6086e5{% else %}ffae7f{% endif %}",
+        dataPoints: [
+            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+        ],
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
 
-// Consumed boost over time
-var boostConsumptionChart = new CanvasJS.Chart("boostConsumptionChart", {
-    zoomEnabled: false,
-    title:{
-        text: "Total boost consumption over the course of the match",
-        fontSize: 14,
-    },
-    axisX: {
-        title: "Frame",
-        labelFontSize: 14,
-        titleFontSize: 14,
-    },
-    axisY: {
-        title: "Boost consumed",
-        labelFontSize: 14,
-        titleFontSize: 14,
-        minimum: 0,
-    },
-    legend: {
-        cursor: "pointer",
-        itemclick: function (e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
+]
+teamBoostValuesChart.render();
 
-            e.chart.render();
-        }
-    },
-    data: [
-        {% for actor_id, values in data.boost_consumption.items %}
-        {
-            {# TODO: Refactor the shit out of this nonsense. #}
-            name: "{% for name_actor_id, player_name in data.player_names.items %}{% if name_actor_id == actor_id %}{{ player_name }}{% endif %}{% endfor %}",
-            type: "line",
-            showInLegend: true,
-            dataPoints: [
-                {% for frame, value in values.items %}
-                    { x: {{ frame }}, y: {{ value }}},
-                {% endfor %}
-            ],
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
+// Boost consumption chart
+var boostConsumptionChart = new CanvasJS.Chart("boostConsumptionChart", getBaseSettings())
+boostConsumptionChart.options.title.text = "Total boost consumption over the course of the match"
+boostConsumptionChart.options.axisX.title = "Frame"
+boostConsumptionChart.options.axisY.title = "Boost consumed"
+boostConsumptionChart.options.minimum = 0
+boostConsumptionChart.options.data = [
+    {% for actor_id, values in data.boost_consumption.items %}
+    {
+        name: "{{ data.player_names|get_item:actor_id }}",
+        type: "line",
+        showInLegend: true,
+        dataPoints: [
+            {% for frame, value in values.items %}
+                { x: {{ frame }}, y: {{ value }}, markerType: 'none'},
+            {% endfor %}
+        ],
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
 
-    ],
-    toolTip: {
-        shared: true,
-    }
-}).render();
-
-// Consumed boost over time
-var teamBoostConsumptionChart = new CanvasJS.Chart("teamBoostConsumptionChart", {
-    zoomEnabled: false,
-    title:{
-        text: "Total boost consumed by each team",
-        fontSize: 14,
-    },
-    axisY: {
-        title: "Boost consumed",
-        labelFontSize: 14,
-        titleFontSize: 14,
-        minimum: 0,
-    },
-    legend: {
-        cursor: "pointer",
-        itemclick: function (e) {
-            if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                e.dataSeries.visible = false;
-            } else {
-                e.dataSeries.visible = true;
-            }
-
-            e.chart.render();
-        }
-    },
-    data: [
-        {
-            indexLabelFontFamily: "Lato",
-            indexLabelFontSize: 14,
-            startAngle: -90,
-            percentInnerRadius: "10%",
-            indexLabelFontColor: "#fff",
-            indexLabelPlacement: "inside",
-            toolTipContent: "{y} boost consumed",
-            indexLabel: "#percent%",
-            type: "pie",
-
-            horizontalAlign: "center",
-            padding: 10,
-
-            dataPoints: [
-                { y: {{ team_0_boost_consumed }}, color: '#6086e5', },
-                { y: {{ team_1_boost_consumed }}, color: '#ffae7f', },
-            ],
-        }
-    ],
-    toolTip: {
-        shared: true,
-    }
-}).render();
+]
+boostConsumptionChart.render();
 
 // Boost per team pie chart.
-</script>
-{% endblock %}
+var teamBoostConsumptionChart = new CanvasJS.Chart("teamBoostConsumptionChart", getBaseSettings())
+teamBoostConsumptionChart.options.title.text = "Total boost consumed by each team"
+teamBoostConsumptionChart.options.axisY.title = "Boost consumed",
+teamBoostConsumptionChart.options.axisY.minimum = 0
+teamBoostConsumptionChart.options.data = [
+    {
+        indexLabelFontFamily: "Lato",
+        indexLabelFontSize: 14,
+        startAngle: -90,
+        percentInnerRadius: "10%",
+        indexLabelFontColor: "#fff",
+        indexLabelPlacement: "inside",
+        toolTipContent: "{y} boost consumed",
+        indexLabel: "#percent%",
+        type: "pie",
 
+        horizontalAlign: "center",
+        padding: 10,
+
+        dataPoints: [
+            { y: {{ team_0_boost_consumed }}, color: '#6086e5', },
+            { y: {{ team_1_boost_consumed }}, color: '#ffae7f', },
+        ],
+    }
+]
+teamBoostConsumptionChart.render();
+
+// Moving average per player.
+
+// Boost distribution
+var teamBoostDistributionChart = new CanvasJS.Chart("teamBoostDistributionChart", getBaseSettings())
+teamBoostDistributionChart.options.title.text = "Boost distribution"
+teamBoostDistributionChart.options.axisX.title = "Boost amount"
+teamBoostDistributionChart.options.axisY.title = "Frames"
+teamBoostDistributionChart.options.data = [
+    {
+        name: "Blue Team",
+        type: "column",
+        showInLegend: true,
+        color: "#6086e5",
+        dataPoints: [
+            {% for frame, value in data.boost_distribution.0.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+        ]
+    },
+    {
+        name: "Orange Team",
+        type: "column",
+        showInLegend: true,
+        color: "#ffae7f",
+        dataPoints: [
+            {% for frame, value in data.boost_distribution.1.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+        ]
+    }
+]
+teamBoostDistributionChart.render();
+</script>
+{% endcompress %}
+{% endblock %}
