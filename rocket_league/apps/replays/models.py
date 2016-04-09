@@ -562,7 +562,7 @@ class Replay(models.Model):
                 if hasattr(parser, 'location_json_filename'):
                     self.location_json_file = parser.location_json_filename
 
-                if hasattr(parser, 'boost_data'):
+                if hasattr(parser, 'boost_data') and self.eligble_for_boost_analysis():
                     BoostData.objects.filter(replay=self).delete()
 
             if 'playlist' in parser.match_metadata:
@@ -708,7 +708,7 @@ class Replay(models.Model):
                 )
 
                 # If this player had any boost data, then lets store that too.
-                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data:
+                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data and self.eligble_for_boost_analysis():
                     boost_objects = []
 
                     for key, boost_data in parser.boost_data['values'].items():
