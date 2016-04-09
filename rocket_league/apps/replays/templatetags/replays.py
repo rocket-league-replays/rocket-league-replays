@@ -378,6 +378,10 @@ def boost_chart_data(context, obj=None):
 
     boost_values = {}
     boost_consumption = {}
+
+    team_boost_consumed_values = {0: 0, 1: 0}
+    team_boost_consumption = {0: {}, 1: {}}
+
     player_names = {}
     team_boost_values = {
         0: {},
@@ -430,6 +434,10 @@ def boost_chart_data(context, obj=None):
                 else:
                     boost_consumed_values[actor_id] += math.ceil((previous_value - value) * (100 / 255))
                     boost_consumption[actor_id][key] = boost_consumed_values[actor_id]
+
+                    if key not in team_boost_consumption[team]:
+                        team_boost_consumption[team][key] = 0
+                    team_boost_consumption[team][key] += math.ceil((previous_value - value) * (100 / 255))
 
                     for frame in range(key - frame_diff_required + 1, key):
                         tween_value = math.ceil(value + ((key - frame) * (255 / 74)))
@@ -488,8 +496,23 @@ def boost_chart_data(context, obj=None):
         boost_consumption[key] = OrderedDict(sorted(boost_consumption[key].items()))
 
         # Ensure the last frame is present for each dict.
-        if obj.num_frames not in boost_values[key] and len(boost_consumption[key]) > 0:
+        if obj.num_frames not in boost_consumption[key] and len(boost_consumption[key]) > 0:
             boost_consumption[key][obj.num_frames] = boost_consumption[key][next(reversed(boost_consumption[key]))]
+
+    team_boost_consumption_full = {0: OrderedDict(), 1: OrderedDict()}
+
+    for key in team_boost_consumption:
+        # team_boost_consumption[key] = OrderedDict(sorted(team_boost_consumption[key].items()))
+        current_value = 0
+
+        # Fix the values.
+        for frame in range(obj.num_frames + 1):
+            team_boost_consumption_full[key][frame] = current_value
+
+            if frame in team_boost_consumption[key]:
+                team_boost_consumption_full[key][frame] += team_boost_consumption[key][frame]
+
+            current_value = team_boost_consumption_full[key][frame]
 
     for key in boost_values:
         boost_values[key] = OrderedDict(sorted(boost_values[key].items()))
@@ -528,6 +551,7 @@ def boost_chart_data(context, obj=None):
         'boost_values': boost_values,
         'team_boost_values': team_boost_values,
         'boost_consumption': boost_consumption,
+        'team_boost_consumption': team_boost_consumption_full,
         'boost_distribution': boost_distribution_full,
         'player_names': player_names,
     }

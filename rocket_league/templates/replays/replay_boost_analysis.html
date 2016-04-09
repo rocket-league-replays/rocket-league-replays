@@ -78,6 +78,7 @@
     </div>
 
     <div class="row">
+            <div id="teamBoostConsumptionLineChart" style="height: 350px; width: 100%;"></div>
         <div class="small-12 columns">
             <div id="boostConsumptionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
             <div id="teamBoostDistributionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
@@ -221,6 +222,34 @@ boostConsumptionChart.options.data = [
 
 ]
 boostConsumptionChart.render();
+
+// Team boost consumption chart
+var teamBoostConsumptionLineChart = new CanvasJS.Chart("teamBoostConsumptionLineChart", getBaseSettings())
+teamBoostConsumptionLineChart.options.title.text = "Total boost consumption over the course of the match (by team)"
+teamBoostConsumptionLineChart.options.axisX.title = "Frame"
+teamBoostConsumptionLineChart.options.axisY.title = "Boost consumed"
+teamBoostConsumptionLineChart.options.minimum = 0
+teamBoostConsumptionLineChart.options.data = [
+    {
+        name: "Blue Team",
+        type: "line",
+        showInLegend: true,
+        color: '#6086e5',
+        dataPoints: [
+            {% for frame, value in data.team_boost_consumption.0.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
+        ],
+    },
+    {
+        name: "Orange Team",
+        type: "line",
+        showInLegend: true,
+        color: '#ffae7f',
+        dataPoints: [
+            {% for frame, value in data.team_boost_consumption.1.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
+        ],
+    }
+]
+teamBoostConsumptionLineChart.render();
 
 // Boost per team pie chart.
 var teamBoostConsumptionChart = new CanvasJS.Chart("teamBoostConsumptionChart", getBaseSettings())
