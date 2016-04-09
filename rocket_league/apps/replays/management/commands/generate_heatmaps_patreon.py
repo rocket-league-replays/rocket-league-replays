@@ -3,7 +3,6 @@ import sys
 import traceback
 from contextlib import contextmanager
 
-from django.db.models import Q
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
@@ -43,12 +42,21 @@ class Command(BaseCommand):
             if options['replay_id']:
                 replays = Replay.objects.filter(pk=options['replay_id'])
             else:
-                replays = Replay.objects.exclude(
-                    Q(crashed_heatmap_parser=True) |
-                    Q(location_json_file__isnull=False)
-                ).extra(select={
-                    'timestamp__date': 'DATE(timestamp)'
-                }).order_by('-timestamp__date', '-average_rating')
+                # Get any replays which don't have a location JSON file.
+                replays_0 = Replay.objects.filter(
+                    boostdata__isnull=True,
+                ).exclude(
+                    crashed_heatmap_parser=True
+                ).order_by('-timestamp', '-average_rating')
+
+                # Get any replays which don't have any boost data.
+                replays_1 = Replay.objects.filter(
+                    location_json_file__isnull=True,
+                ).exclude(
+                    crashed_heatmap_parser=True
+                ).order_by('-timestamp', '-average_rating')
+
+                replays = replays_0 | replays_1
 
             for replay in replays:
                 # To avoid the queue getting too backlogged, only process a few
@@ -56,7 +64,7 @@ class Command(BaseCommand):
                 if num_processed >= 10:
                     return
 
-                if replay.replay_id and replay.file and replay.eligble_for_feature('playback'):
+                if replay.replay_id and replay.file and replay.eligble_for_feature('boost_analysis'):
                     print('[{}] Processing {} - {}'.format(
                         now(),
                         replay.pk,
