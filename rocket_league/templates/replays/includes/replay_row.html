@@ -4,7 +4,7 @@
     <tr data-href="{{ replay.get_absolute_url }}">
         <td>
             <a href="{{ replay.get_absolute_url }}">{{ replay }}</a>
-            {% if replay.show_analysis %}
+            {% if replay.show_playback %}
             <a href="{% url 'replay:playback' pk=replay.pk %}" title="This replay has additional analysis because the uploader or a player within the match is supporting {{ settings.SITE_NAME }} on Patreon.">
                 <em class="icon-crown-plus"></em>
             </a>

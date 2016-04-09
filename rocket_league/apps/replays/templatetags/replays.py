@@ -372,6 +372,9 @@ def boost_chart_data(context, obj=None):
     if not obj:
         obj = context['replay']
 
+    if not obj.eligble_for_boost_analysis():
+        return {}
+
     players = obj.player_set.all()
 
     goal_frames = obj.goal_set.values_list('frame', flat=True)

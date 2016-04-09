@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 if num_processed >= 10:
                     return
 
-                if replay.replay_id and replay.file and replay.eligble_for_analysis():
+                if replay.replay_id and replay.file and replay.eligble_for_feature('playback'):
                     print('[{}] Processing {} - {}'.format(
                         now(),
                         replay.pk,

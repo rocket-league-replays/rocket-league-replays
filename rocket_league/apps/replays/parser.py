@@ -149,7 +149,7 @@ class Parser(object):
 
         self.heatmap_json_filename = heatmap_json_filename
 
-        if obj.eligble_for_analysis():
+        if obj.eligble_for_feature('playback'):
             # Advanced replay parsing.
             # Restructure the data so that it's chunkable.
             frame_data = []

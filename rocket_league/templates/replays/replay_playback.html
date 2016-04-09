@@ -23,9 +23,8 @@
 
     {% user_in_replay as user_in_replay %}
 
-    {# Fancy new visualisations for Patreon people #}
-    {% if replay.eligble_for_analysis %}
-        {% if replay.show_analysis %}
+    {% if replay.eligble_for_playback %}
+        {% if replay.show_playback %}
             <div class="sim-Outer">
                 <div class="sim-Timer">
                     <div class="sim-Timer_Score sim-Timer_Score-0">0</div>

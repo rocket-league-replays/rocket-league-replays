@@ -437,11 +437,16 @@ class Replay(models.Model):
             return total_player_ratings / num_player_ratings
         return 0
 
-    def eligble_for_analysis(self):
+    def eligble_for_feature(self, feature):
         if settings.DEBUG:
             return True
 
-        patreon_amount = 300
+        features = {
+            'playback': 300,
+            'boost_analysis': 1000,
+        }
+
+        patreon_amount = features[feature]
 
         # Import here to avoid circular imports.
         from ..site.templatetags.site import patreon_pledge_amount
@@ -466,13 +471,28 @@ class Replay(models.Model):
 
         return False
 
-    def show_analysis(self):
+    # Feature eligibility checks.
+    def eligble_for_playback(self):
+        return self.eligble_for_feature('playback')
+
+    def show_playback(self):
         # First of all, is there even a JSON file?
         if not self.location_json_file:
             return False
 
-        return self.eligble_for_analysis()
+        return self.eligble_for_feature('playback')
 
+    def eligble_for_boost_analysis(self):
+        return self.eligble_for_feature('boost_analysis')
+
+    def show_boost_analysis(self):
+        # Have we got any boost data yet?
+        if self.boostdata_set.count() == 0:
+            return False
+
+        return self.eligble_for_feature('boost_analysis')
+
+    # Other stuff
     def get_human_playlist(self):
         if not self.playlist:
             return None
