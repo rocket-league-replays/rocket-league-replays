@@ -10,19 +10,20 @@ from ...models import Replay
 
 
 @contextmanager
-def file_lock(lock_file):
-    if os.path.exists(lock_file):
-        print('[{}] Only one script can run at once. Script is locked with {}'.format(
-            now(),
-            lock_file
-        ))
-        sys.exit(-1)
-    else:
-        open(lock_file, 'w').write("1")
-        try:
-            yield
-        finally:
-            os.remove(lock_file)
+def file_lock(lock_file, options):
+    if 'replay_id' not in options:
+        if os.path.exists(lock_file):
+            print('[{}] Only one script can run at once. Script is locked with {}'.format(
+                now(),
+                lock_file
+            ))
+            sys.exit(-1)
+        else:
+            open(lock_file, 'w').write("1")
+            try:
+                yield
+            finally:
+                os.remove(lock_file)
 
 
 class Command(BaseCommand):
@@ -35,7 +36,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         num_processed = 0
 
-        with file_lock('/tmp/generate_heatmaps_patreon.lock'):
+        with file_lock('/tmp/generate_heatmaps_patreon.lock', options):
             # Get any replays which don't have a location JSON file. Check if
             # each replay is eligible to have one.
 
