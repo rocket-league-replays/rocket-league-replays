@@ -4,10 +4,8 @@ from django.core.cache import cache
 
 from ..apps.users.models import LeagueRating
 
-import os
 import re
 import requests
-import time
 
 register = template.Library()
 
@@ -16,43 +14,11 @@ API_VERSION = '105'
 CACHE_KEY = 'API_SESSION_ID'
 CACHE_TIMEOUT = 60 * 60 * 4  # 14,400 seconds = 4 hours
 
-
-def api_login():
-
-    HEADERS = {
-        'DBVersion': '00.03.0011-00.01.0011',
-        'LoginSecretKey': 'dUe3SE4YsR8B0c30E6r7F2KqpZSbGiVx',
-        'CallProcKey': 'pX9pn8F4JnBpoO8Aa219QC6N7g18FJ0F',
-        'DB': 'BattleCars_Prod',
-    }
-
-    login_data = {
-        'PlayerName': "RocketLeagueReplays.com",
-        'PlayerID': os.getenv('STEAM_ID'),
-        'Platform': 'Steam',
-        'BuildID': 64123161,
-        'AuthCode': os.getenv('AUTH_CODE'),
-    }
-
-    # Can we get a SessionID from the cache?
-    HEADERS['SessionID'] = cache.get(CACHE_KEY)
-
-    if not HEADERS['SessionID']:
-        r = requests.post(API_BASE + '/auth/'.format(API_VERSION), headers=HEADERS, data=login_data)
-
-        if r.text.strip() == 'SCRIPT ERROR PlatformAuthError:':
-            # Wait a few seconds and try again.
-            print('Hit PlatformAuthError, trying again in 5 seconds.')
-            time.sleep(5)
-            return api_login()
-
-        elif r.text != '1':
-            raise Exception("Unable to login.")
-
-        HEADERS['SessionID'] = r.headers['sessionid']
-        cache.set(CACHE_KEY, HEADERS['SessionID'], CACHE_TIMEOUT)
-
-    return HEADERS
+try:
+    from ..settings.secrets import api_login
+except ImportError:
+    print("You are missing the `api_login` function in your settings. This script cannot run without it.")
+    exit()
 
 
 def get_league_data(steam_ids):
