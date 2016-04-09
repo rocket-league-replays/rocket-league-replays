@@ -47,6 +47,7 @@
                 <div class="sim-Boost sim-Boost-team1"></div>
             </div>
 
+            {% compress js %}
             <script>
             var resource__arena_fieldlines = "{% static 'img/2d-rendering/arena_fieldlines.png' %}";
             var resource__arena_overlay = "{% static 'img/2d-rendering/arena_overlay.png' %}";
@@ -62,6 +63,7 @@
             <script>
             ReplayPlayback.loadGameData("{{ replay.location_json_file.url }}");
             </script>
+            {% endcompress %}
         {% else %}
         <div class="row">
             <div class="medium-8 medium-centered columns mb-50">
