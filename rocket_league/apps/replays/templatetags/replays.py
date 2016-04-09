@@ -375,7 +375,7 @@ def boost_chart_data(context, obj=None):
     if not obj.eligble_for_boost_analysis():
         return {}
 
-    players = obj.player_set.all()
+    players = obj.player_set.filter(spectator=False)
 
     goal_frames = obj.goal_set.values_list('frame', flat=True)
 
