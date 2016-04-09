@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load cache compress humanize ratings replays site static %}
+{% load cache humanize ratings replays site static %}
 
 {% block content_primary %}
     {% include "replays/includes/tabs.html" %}
@@ -156,7 +156,6 @@
 {% if replay.show_boost_analysis %}
     {% boost_chart_data as data %}
 
-    {% compress js %}
     <script>
     function parseHtmlEntities(str) {
         return str.replace(/&#([0-9]{1,3});/gi, function(match, numStr) {
@@ -352,6 +351,5 @@
     ]
     teamBoostDistributionChart.render();
     </script>
-    {% endcompress %}
 {% endif %}
 {% endblock %}
