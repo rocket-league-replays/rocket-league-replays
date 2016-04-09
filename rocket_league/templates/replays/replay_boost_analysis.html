@@ -114,6 +114,14 @@
 
 {% compress js %}
 <script>
+function parseHtmlEntities(str) {
+    return str.replace(/&#([0-9]{1,3});/gi, function(match, numStr) {
+        var num = parseInt(numStr, 10); // read num as normal number
+        return String.fromCharCode(num);
+    });
+}
+
+
 function getBaseSettings() {
     return {
         zoomEnabled: true,
@@ -138,6 +146,9 @@ function getBaseSettings() {
                 }
 
                 e.chart.render();
+            },
+            itemTextFormatter: function(e) {
+                return parseHtmlEntities(e.dataSeries.name)
             }
         },
         toolTip: {
@@ -160,7 +171,7 @@ boostValuesChart.options.data = [
         type: "line",
         showInLegend: true,
         dataPoints: [
-            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'}, {% endfor %}
         ],
     }{% if not forloop.last %},{% endif %}
     {% endfor %}
@@ -170,16 +181,15 @@ boostValuesChart.render();
 
 // Boost values per frame
 var teamBoostValuesChart = new CanvasJS.Chart("teamBoostValuesChart", getBaseSettings())
-teamBoostValuesChart.options.title.text = "Boost ownership per team"
+teamBoostValuesChart.options.title.text = "Boost ownership per team (which team has the most boost?)"
 teamBoostValuesChart.options.axisX.title = "Frame"
-teamBoostValuesChart.options.axisY.title = "Boost percentage"
-teamBoostValuesChart.options.axisY.minimum = 0
-teamBoostValuesChart.options.axisY.maximum = 100
+teamBoostValuesChart.options.axisY.title = ""
+teamBoostValuesChart.options.axisY.labelFontColor = "#fff"
 teamBoostValuesChart.options.data = [
     {% for team, values in data.team_boost_values.items %}
     {
         name: "{% if team == 0 %}Blue{% else %}Orange{% endif %} Team",
-        type: "stackedColumn100",
+        type: "stackedArea100",
         showInLegend: true,
         color: "#{% if team == 0 %}6086e5{% else %}ffae7f{% endif %}",
         dataPoints: [
@@ -204,9 +214,7 @@ boostConsumptionChart.options.data = [
         type: "line",
         showInLegend: true,
         dataPoints: [
-            {% for frame, value in values.items %}
-                { x: {{ frame }}, y: {{ value }}, markerType: 'none'},
-            {% endfor %}
+            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'},{% endfor %}
         ],
     }{% if not forloop.last %},{% endif %}
     {% endfor %}
