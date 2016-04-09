@@ -520,7 +520,7 @@ def boost_chart_data(context, obj=None):
         boost_values[key] = OrderedDict(sorted(boost_values[key].items()))
 
         # Ensure the last frame is present for each dict.
-        if obj.num_frames not in boost_values[key]:
+        if obj.num_frames not in boost_values[key] and len(boost_values[key]) > 0:
             boost_values[key][obj.num_frames] = boost_values[key][next(reversed(boost_values[key]))]
 
     # Generate the team boost distribution charts.
