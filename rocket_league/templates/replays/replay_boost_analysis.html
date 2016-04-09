@@ -13,86 +13,121 @@
     </div>
     {% endif %}
 
-    <div class="flex-row mb-40">
-        <div class="large-8 columns">
-            <h3>Boost management</h3>
+    {% user_in_replay as user_in_replay %}
 
-            <table width="100%">
-                <thead>
-                    <tr>
-                        <th>Player</th>
-                        <th>Large Boost Pickups</th>
-                        <th>Small Boost Pickups</th>
-                        {# <th>Unknown Boost Pickups</th> #}
-                        <th>Boost Consumption <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title='"Boost consumption" is calculated as the amount of boost a player uses during the game. If a player empties their boost from full they have consumed 100 boost.'><em class="icon-help-circled"></em></span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for player in replay.player_set.all %}
-                    {% if not player.spectator %}
-                    <tr>
-                        <td class="{% if player.team == 0 %}primary{% else %}secondary{% endif %}">
-                            {# Try to get the latest rating for this player in this size. #}
-                            {% with steam_id=player.online_id %}
-                                {% latest_ratings as ratings %}
+    {% if replay.eligble_for_boost_analysis %}
+        {% if replay.show_boost_analysis %}
+            <div class="flex-row mb-40">
+                <div class="large-8 columns">
+                    <h3>Boost management</h3>
 
-                                {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
-                                    {% with ratings.10|string as rating_string %}
-                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
-                                        {% endwith %}
-                                    {% endwith %}
-                                {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
-                                    {% with ratings.11|string as rating_string %}
-                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
-                                        {% endwith %}
-                                    {% endwith %}
-                                {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
-                                    {% with ratings.12|string as rating_string %}
-                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
-                                        {% endwith %}
-                                    {% endwith %}
-                                {% else %}
-                                    <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
-                                {% endif %}
-                            {% endwith %}
+                    <table width="100%">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Large Boost Pickups</th>
+                                <th>Small Boost Pickups</th>
+                                {# <th>Unknown Boost Pickups</th> #}
+                                <th>Boost Consumption <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title='"Boost consumption" is calculated as the amount of boost a player uses during the game. If a player empties their boost from full they have consumed 100 boost.'><em class="icon-help-circled"></em></span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for player in replay.player_set.all %}
+                            {% if not player.spectator %}
+                            <tr>
+                                <td class="{% if player.team == 0 %}primary{% else %}secondary{% endif %}">
+                                    {# Try to get the latest rating for this player in this size. #}
+                                    {% with steam_id=player.online_id %}
+                                        {% latest_ratings as ratings %}
 
-                            {% include 'site/patreon_crown.html' %}
-                            {{ player.player_name }}
-                        </td>
-                        <td>{{ player.boost_data.large_pickups|intcomma }}</td>
-                        <td>{{ player.boost_data.small_pickups|intcomma }}</td>
-                        {# <td>{{ player.boost_data.unknown_pickups|intcomma }}</td> #}
-                        <td>{{ player.boost_data.boost_consumption|intcomma }}</td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
-                </tbody>
-            </table>
+                                        {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
+                                            {% with ratings.10|string as rating_string %}
+                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                                    <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
+                                                {% endwith %}
+                                            {% endwith %}
+                                        {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
+                                            {% with ratings.11|string as rating_string %}
+                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                                    <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
+                                                {% endwith %}
+                                            {% endwith %}
+                                        {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
+                                            {% with ratings.12|string as rating_string %}
+                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                                    <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
+                                                {% endwith %}
+                                            {% endwith %}
+                                        {% else %}
+                                            <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                                        {% endif %}
+                                    {% endwith %}
+
+                                    {% include 'site/patreon_crown.html' %}
+                                    {{ player.player_name }}
+                                </td>
+                                <td>{{ player.boost_data.large_pickups|intcomma }}</td>
+                                <td>{{ player.boost_data.small_pickups|intcomma }}</td>
+                                {# <td>{{ player.boost_data.unknown_pickups|intcomma }}</td> #}
+                                <td>{{ player.boost_data.boost_consumption|intcomma }}</td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="large-4 columns">
+                    <div id="teamBoostConsumptionChart" style="height: 250px; width: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="medium-6 columns">
+                    <div id="boostConsumptionChart" style="height: 350px; width: 100%;"></div>
+                </div>
+                <div class="medium-6 columns">
+                    <div id="teamBoostConsumptionLineChart" style="height: 350px; width: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="small-12 columns">
+                    <div id="teamBoostDistributionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+                    <div id="teamBoostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+                    <div id="boostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+                </div>
+            </div>
+        {% else %}
+        <div class="row">
+            <div class="medium-8 medium-centered columns mb-50">
+                <h4>Awaiting processing</h4>
+                <p>This replay is eligible for playback, we just haven't got round to processing it yet. Please hang on and we'll have it done as soon as possible. Thank you for your patience.</p>
+            </div>
         </div>
-        <div class="large-4 columns">
-            <div id="teamBoostConsumptionChart" style="height: 250px; width: 100%;"></div>
-        </div>
-    </div>
-
+        {% endif %}
+    {% else %}
     <div class="row">
-        <div class="medium-6 columns">
-            <div id="boostConsumptionChart" style="height: 350px; width: 100%;"></div>
-        </div>
-        <div class="medium-6 columns">
-            <div id="teamBoostConsumptionLineChart" style="height: 350px; width: 100%;"></div>
-        </div>
-    </div>
+        <div class="medium-8 medium-centered columns mb-50">
+            <h4>Boost analysis is not currently available for this replay</h4>
+            <p>{% if not user_in_replay %}Unfortunately this replay is not currently eligible for boost analysis as none of the players in the game or the replay uploader are currently supporting {{ settings.SITE_NAME }} on Patreon.  Patreon{% else %}Boost analysis is only available to people who support {{ settings.SITE_NAME }} on Patreon.  This{% endif %} allows us to cover the additional costs generated by processing and storing the data required. If you would like playback on your replays, please consider <a href="https://www.patreon.com/danielsamuels?ty=h" target="_blank">becoming a Patron</a>. This feature is available from $10 per month.</p>
 
-    <div class="row">
-        <div class="small-12 columns">
-            <div id="teamBoostDistributionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
-            <div id="teamBoostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
-            <div id="boostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
+            {% if user_in_replay %}
+                <h5>7 day trial</h5>
+                {% if user.is_authenticated and not user.profile.has_had_trial %}
+                {# TODO: Only show this if the user becoming a patron would actually affect this replay. Think: was this user involved at all? #}
+                <p>Not sure whether you want to become a patron just yet?  You can try out the features and benefits with a 7 day trial. <a href="{% url 'site:start-trial' pk=object.pk %}">Click here to start your trial.</a> (Limited to one trial per account)</p>
+                {% elif user.is_authenticated and user.profile.has_had_trial %}
+                <p>Unfortunately you have already experienced a free trial, so you are no longer eligible to experience these benefits for free.</p>
+                {% elif not user.is_authenticated %}
+                <p>You are not currently logged in, so we're unable to check your eligibility for a free trial. Please log in using the button at the top of the page and then return to this page.</p>
+                {% endif %}
+            {% endif %}
+
+            <h5>Tournament owners</h5>
+            <p>If you're running a tournament which is expected to garner a reasonable amount of exposure please <a href="mailto:tournaments@{{ settings.SITE_DOMAIN }}">get in touch</a> and we can provide access to this feature on a temporary basis. <strong>Note:</strong> the more notice you provide, the more likely we are to grant access.</p>
         </div>
     </div>
+    {% endif %}
 
     <div class="row">
         <div class="medium-12 columns">
@@ -118,203 +153,205 @@
 {% endblock %}
 
 {% block additional_js %}
-{% boost_chart_data as data %}
+{% if replay.show_boost_analysis %}
+    {% boost_chart_data as data %}
 
-{% compress js %}
-<script>
-function parseHtmlEntities(str) {
-    return str.replace(/&#([0-9]{1,3});/gi, function(match, numStr) {
-        var num = parseInt(numStr, 10); // read num as normal number
-        return String.fromCharCode(num);
-    });
-}
+    {% compress js %}
+    <script>
+    function parseHtmlEntities(str) {
+        return str.replace(/&#([0-9]{1,3});/gi, function(match, numStr) {
+            var num = parseInt(numStr, 10); // read num as normal number
+            return String.fromCharCode(num);
+        });
+    }
 
 
-function getBaseSettings() {
-    return {
-        zoomEnabled: true,
-        title:{
-            fontSize: 14,
-        },
-        axisX: {
-            labelFontSize: 14,
-            titleFontSize: 14,
-        },
-        axisY: {
-            labelFontSize: 14,
-            titleFontSize: 14,
-        },
-        legend: {
-            cursor: "pointer",
-            itemclick: function (e) {
-                if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
-                    e.dataSeries.visible = false;
-                } else {
-                    e.dataSeries.visible = true;
-                }
-
-                e.chart.render();
+    function getBaseSettings() {
+        return {
+            zoomEnabled: true,
+            title:{
+                fontSize: 14,
             },
-            itemTextFormatter: function(e) {
-                return parseHtmlEntities(e.dataSeries.name)
+            axisX: {
+                labelFontSize: 14,
+                titleFontSize: 14,
+            },
+            axisY: {
+                labelFontSize: 14,
+                titleFontSize: 14,
+            },
+            legend: {
+                cursor: "pointer",
+                itemclick: function (e) {
+                    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                        e.dataSeries.visible = false;
+                    } else {
+                        e.dataSeries.visible = true;
+                    }
+
+                    e.chart.render();
+                },
+                itemTextFormatter: function(e) {
+                    return parseHtmlEntities(e.dataSeries.name)
+                }
+            },
+            toolTip: {
+                shared: true,
             }
-        },
-        toolTip: {
-            shared: true,
         }
     }
-}
 
-// Boost values per frame
-var boostValuesChart = new CanvasJS.Chart("boostValuesChart", getBaseSettings())
-boostValuesChart.options.title.text = "Boost values over the course of the match (click the legend to filter)"
-boostValuesChart.options.axisX.title = "Frame"
-boostValuesChart.options.axisY.title = "Boost percentage"
-boostValuesChart.options.axisY.minimum = 0
-boostValuesChart.options.axisY.maximum = 100
-boostValuesChart.options.data = [
-    {% for actor_id, values in data.boost_values.items %}
-    {
-        name: "{{ data.player_names|get_item:actor_id }}",
-        type: "line",
-        showInLegend: true,
-        {% if replay.team_sizes > 1 %}visible: {{ forloop.first|yesno:'true,false' }},{% endif %}
-        dataPoints: [
-            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'}, {% endfor %}
-        ],
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
+    // Boost values per frame
+    var boostValuesChart = new CanvasJS.Chart("boostValuesChart", getBaseSettings())
+    boostValuesChart.options.title.text = "Boost values over the course of the match (click the legend to filter)"
+    boostValuesChart.options.axisX.title = "Frame"
+    boostValuesChart.options.axisY.title = "Boost percentage"
+    boostValuesChart.options.axisY.minimum = 0
+    boostValuesChart.options.axisY.maximum = 100
+    boostValuesChart.options.data = [
+        {% for actor_id, values in data.boost_values.items %}
+        {
+            name: "{{ data.player_names|get_item:actor_id }}",
+            type: "line",
+            showInLegend: true,
+            {% if replay.team_sizes > 1 %}visible: {{ forloop.first|yesno:'true,false' }},{% endif %}
+            dataPoints: [
+                {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'}, {% endfor %}
+            ],
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
 
-]
-boostValuesChart.render();
+    ]
+    boostValuesChart.render();
 
-// Boost values per frame
-var teamBoostValuesChart = new CanvasJS.Chart("teamBoostValuesChart", getBaseSettings())
-teamBoostValuesChart.options.title.text = "Boost ownership per team (which team has the most boost?)"
-teamBoostValuesChart.options.axisX.title = "Frame"
-teamBoostValuesChart.options.axisY.title = ""
-teamBoostValuesChart.options.axisY.labelFontColor = "#fff"
-teamBoostValuesChart.options.data = [
-    {% for team, values in data.team_boost_values.items %}
-    {
-        name: "{% if team == 0 %}Blue{% else %}Orange{% endif %} Team",
-        type: "stackedArea100",
-        showInLegend: true,
-        color: "#{% if team == 0 %}6086e5{% else %}ffae7f{% endif %}",
-        dataPoints: [
-            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
-        ],
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
+    // Boost values per frame
+    var teamBoostValuesChart = new CanvasJS.Chart("teamBoostValuesChart", getBaseSettings())
+    teamBoostValuesChart.options.title.text = "Boost ownership per team (which team has the most boost?)"
+    teamBoostValuesChart.options.axisX.title = "Frame"
+    teamBoostValuesChart.options.axisY.title = ""
+    teamBoostValuesChart.options.axisY.labelFontColor = "#fff"
+    teamBoostValuesChart.options.data = [
+        {% for team, values in data.team_boost_values.items %}
+        {
+            name: "{% if team == 0 %}Blue{% else %}Orange{% endif %} Team",
+            type: "stackedArea100",
+            showInLegend: true,
+            color: "#{% if team == 0 %}6086e5{% else %}ffae7f{% endif %}",
+            dataPoints: [
+                {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+            ],
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
 
-]
-teamBoostValuesChart.render();
+    ]
+    teamBoostValuesChart.render();
 
-// Boost consumption chart
-var boostConsumptionChart = new CanvasJS.Chart("boostConsumptionChart", getBaseSettings())
-boostConsumptionChart.options.title.text = "Total boost consumption over the course of the match"
-boostConsumptionChart.options.axisX.title = "Frame"
-boostConsumptionChart.options.axisY.title = "Boost consumed"
-boostConsumptionChart.options.minimum = 0
-boostConsumptionChart.options.data = [
-    {% for actor_id, values in data.boost_consumption.items %}
-    {
-        name: "{{ data.player_names|get_item:actor_id }}",
-        type: "line",
-        showInLegend: true,
-        dataPoints: [
-            {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'},{% endfor %}
-        ],
-    }{% if not forloop.last %},{% endif %}
-    {% endfor %}
+    // Boost consumption chart
+    var boostConsumptionChart = new CanvasJS.Chart("boostConsumptionChart", getBaseSettings())
+    boostConsumptionChart.options.title.text = "Total boost consumption over the course of the match"
+    boostConsumptionChart.options.axisX.title = "Frame"
+    boostConsumptionChart.options.axisY.title = "Boost consumed"
+    boostConsumptionChart.options.minimum = 0
+    boostConsumptionChart.options.data = [
+        {% for actor_id, values in data.boost_consumption.items %}
+        {
+            name: "{{ data.player_names|get_item:actor_id }}",
+            type: "line",
+            showInLegend: true,
+            dataPoints: [
+                {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'},{% endfor %}
+            ],
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
 
-]
-boostConsumptionChart.render();
+    ]
+    boostConsumptionChart.render();
 
-// Team boost consumption chart
-var teamBoostConsumptionLineChart = new CanvasJS.Chart("teamBoostConsumptionLineChart", getBaseSettings())
-teamBoostConsumptionLineChart.options.title.text = "Total boost consumption over the course of the match (by team)"
-teamBoostConsumptionLineChart.options.axisX.title = "Frame"
-teamBoostConsumptionLineChart.options.axisY.title = "Boost consumed"
-teamBoostConsumptionLineChart.options.minimum = 0
-teamBoostConsumptionLineChart.options.data = [
-    {
-        name: "Blue Team",
-        type: "line",
-        showInLegend: true,
-        color: '#6086e5',
-        dataPoints: [
-            {% for frame, value in data.team_boost_consumption.0.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
-        ],
-    },
-    {
-        name: "Orange Team",
-        type: "line",
-        showInLegend: true,
-        color: '#ffae7f',
-        dataPoints: [
-            {% for frame, value in data.team_boost_consumption.1.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
-        ],
-    }
-]
-teamBoostConsumptionLineChart.render();
+    // Team boost consumption chart
+    var teamBoostConsumptionLineChart = new CanvasJS.Chart("teamBoostConsumptionLineChart", getBaseSettings())
+    teamBoostConsumptionLineChart.options.title.text = "Total boost consumption over the course of the match (by team)"
+    teamBoostConsumptionLineChart.options.axisX.title = "Frame"
+    teamBoostConsumptionLineChart.options.axisY.title = "Boost consumed"
+    teamBoostConsumptionLineChart.options.minimum = 0
+    teamBoostConsumptionLineChart.options.data = [
+        {
+            name: "Blue Team",
+            type: "line",
+            showInLegend: true,
+            color: '#6086e5',
+            dataPoints: [
+                {% for frame, value in data.team_boost_consumption.0.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
+            ],
+        },
+        {
+            name: "Orange Team",
+            type: "line",
+            showInLegend: true,
+            color: '#ffae7f',
+            dataPoints: [
+                {% for frame, value in data.team_boost_consumption.1.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none',},{% endfor %}
+            ],
+        }
+    ]
+    teamBoostConsumptionLineChart.render();
 
-// Boost per team pie chart.
-var teamBoostConsumptionChart = new CanvasJS.Chart("teamBoostConsumptionChart", getBaseSettings())
-teamBoostConsumptionChart.options.title.text = "Total boost consumed by each team"
-teamBoostConsumptionChart.options.axisY.title = "Boost consumed",
-teamBoostConsumptionChart.options.axisY.minimum = 0
-teamBoostConsumptionChart.options.data = [
-    {
-        indexLabelFontFamily: "Lato",
-        indexLabelFontSize: 14,
-        startAngle: -90,
-        percentInnerRadius: "10%",
-        indexLabelFontColor: "#fff",
-        indexLabelPlacement: "inside",
-        toolTipContent: "{y} boost consumed",
-        indexLabel: "#percent%",
-        type: "pie",
+    // Boost per team pie chart.
+    var teamBoostConsumptionChart = new CanvasJS.Chart("teamBoostConsumptionChart", getBaseSettings())
+    teamBoostConsumptionChart.options.title.text = "Total boost consumed by each team"
+    teamBoostConsumptionChart.options.axisY.title = "Boost consumed",
+    teamBoostConsumptionChart.options.axisY.minimum = 0
+    teamBoostConsumptionChart.options.data = [
+        {
+            indexLabelFontFamily: "Lato",
+            indexLabelFontSize: 14,
+            startAngle: -90,
+            percentInnerRadius: "10%",
+            indexLabelFontColor: "#fff",
+            indexLabelPlacement: "inside",
+            toolTipContent: "{y} boost consumed",
+            indexLabel: "#percent%",
+            type: "pie",
 
-        horizontalAlign: "center",
-        padding: 10,
+            horizontalAlign: "center",
+            padding: 10,
 
-        dataPoints: [
-            { y: {{ team_0_boost_consumed }}, color: '#6086e5', },
-            { y: {{ team_1_boost_consumed }}, color: '#ffae7f', },
-        ],
-    }
-]
-teamBoostConsumptionChart.render();
+            dataPoints: [
+                { y: {{ team_0_boost_consumed }}, color: '#6086e5', },
+                { y: {{ team_1_boost_consumed }}, color: '#ffae7f', },
+            ],
+        }
+    ]
+    teamBoostConsumptionChart.render();
 
-// Moving average per player.
+    // Moving average per player.
 
-// Boost distribution
-var teamBoostDistributionChart = new CanvasJS.Chart("teamBoostDistributionChart", getBaseSettings())
-teamBoostDistributionChart.options.title.text = "Boost distribution (time spent at each amount)"
-teamBoostDistributionChart.options.axisX.title = "Boost amount (%)"
-teamBoostDistributionChart.options.axisY.title = "Frames"
-teamBoostDistributionChart.options.data = [
-    {
-        name: "Blue Team",
-        type: "column",
-        showInLegend: true,
-        color: "#6086e5",
-        dataPoints: [
-            {% for frame, value in data.boost_distribution.0.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
-        ]
-    },
-    {
-        name: "Orange Team",
-        type: "column",
-        showInLegend: true,
-        color: "#ffae7f",
-        dataPoints: [
-            {% for frame, value in data.boost_distribution.1.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
-        ]
-    }
-]
-teamBoostDistributionChart.render();
-</script>
-{% endcompress %}
+    // Boost distribution
+    var teamBoostDistributionChart = new CanvasJS.Chart("teamBoostDistributionChart", getBaseSettings())
+    teamBoostDistributionChart.options.title.text = "Boost distribution (time spent at each amount)"
+    teamBoostDistributionChart.options.axisX.title = "Boost amount (%)"
+    teamBoostDistributionChart.options.axisY.title = "Frames"
+    teamBoostDistributionChart.options.data = [
+        {
+            name: "Blue Team",
+            type: "column",
+            showInLegend: true,
+            color: "#6086e5",
+            dataPoints: [
+                {% for frame, value in data.boost_distribution.0.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+            ]
+        },
+        {
+            name: "Orange Team",
+            type: "column",
+            showInLegend: true,
+            color: "#ffae7f",
+            dataPoints: [
+                {% for frame, value in data.boost_distribution.1.items %}{ x: {{ frame }}, y: {{ value }}}, {% endfor %}
+            ]
+        }
+    ]
+    teamBoostDistributionChart.render();
+    </script>
+    {% endcompress %}
+{% endif %}
 {% endblock %}
