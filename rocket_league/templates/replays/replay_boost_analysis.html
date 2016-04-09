@@ -13,7 +13,7 @@
     </div>
     {% endif %}
 
-    <div class="flex-row">
+    <div class="flex-row mb-40">
         <div class="large-8 columns">
             <h3>Boost management</h3>
 
@@ -78,9 +78,16 @@
     </div>
 
     <div class="row">
+        <div class="medium-6 columns">
+            <div id="boostConsumptionChart" style="height: 350px; width: 100%;"></div>
+        </div>
+        <div class="medium-6 columns">
             <div id="teamBoostConsumptionLineChart" style="height: 350px; width: 100%;"></div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="small-12 columns">
-            <div id="boostConsumptionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
             <div id="teamBoostDistributionChart" class="mt-40" style="height: 350px; width: 100%;"></div>
             <div id="teamBoostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
             <div id="boostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
@@ -160,7 +167,7 @@ function getBaseSettings() {
 
 // Boost values per frame
 var boostValuesChart = new CanvasJS.Chart("boostValuesChart", getBaseSettings())
-boostValuesChart.options.title.text = "Boost values over the course of the match"
+boostValuesChart.options.title.text = "Boost values over the course of the match (click the legend to filter)"
 boostValuesChart.options.axisX.title = "Frame"
 boostValuesChart.options.axisY.title = "Boost percentage"
 boostValuesChart.options.axisY.minimum = 0
@@ -171,6 +178,7 @@ boostValuesChart.options.data = [
         name: "{{ data.player_names|get_item:actor_id }}",
         type: "line",
         showInLegend: true,
+        {% if replay.team_sizes > 1 %}visible: {{ forloop.first|yesno:'true,false' }},{% endif %}
         dataPoints: [
             {% for frame, value in values.items %}{ x: {{ frame }}, y: {{ value }}, markerType: 'none'}, {% endfor %}
         ],
@@ -283,8 +291,8 @@ teamBoostConsumptionChart.render();
 
 // Boost distribution
 var teamBoostDistributionChart = new CanvasJS.Chart("teamBoostDistributionChart", getBaseSettings())
-teamBoostDistributionChart.options.title.text = "Boost distribution"
-teamBoostDistributionChart.options.axisX.title = "Boost amount"
+teamBoostDistributionChart.options.title.text = "Boost distribution (time spent at each amount)"
+teamBoostDistributionChart.options.axisX.title = "Boost amount (%)"
 teamBoostDistributionChart.options.axisY.title = "Frames"
 teamBoostDistributionChart.options.data = [
     {
