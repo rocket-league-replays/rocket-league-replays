@@ -4,7 +4,8 @@ from braces.views import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
+from django.views.generic import (CreateView, DeleteView, DetailView,
+                                  RedirectView, UpdateView)
 from django_filters.views import FilterView
 from rest_framework import mixins, viewsets
 
@@ -16,7 +17,7 @@ from .models import (Goal, Map, Player, Replay, ReplayPack, Season,
 from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
                           ReplayCreateSerializer, ReplaySerializer,
                           SeasonSerializer)
-from .templatetags.replays import boost_chart_data, process_boost_data
+from .templatetags.replays import process_boost_data
 
 
 class ReplayListView(FilterView):
@@ -71,6 +72,13 @@ class ReplayListView(FilterView):
 
 class ReplayDetailView(DetailView):
     model = Replay
+
+
+class ReplayAnalysisView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse('replay:playback', kwargs=kwargs)
 
 
 class ReplayBoostAnalysisView(DetailView):
