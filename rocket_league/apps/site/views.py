@@ -94,4 +94,4 @@ class StartTrialView(LoginRequiredMixin, RedirectView):
             )
             messages.success(self.request, "Your free trial has been activated. You can make full use of all patron benefits for the next 7 days.")
 
-        return reverse('replay:analysis', kwargs=kwargs)
+        return reverse('replay:playback', kwargs=kwargs)

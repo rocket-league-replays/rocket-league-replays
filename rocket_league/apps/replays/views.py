@@ -73,12 +73,12 @@ class ReplayDetailView(DetailView):
     model = Replay
 
 
-class ReplayAnalysisView(DetailView):
+class ReplayBoostAnalysisView(DetailView):
     model = Replay
-    template_name_suffix = '_analysis'
+    template_name_suffix = '_boost_analysis'
 
     def get_context_data(self, **kwargs):
-        context = super(ReplayAnalysisView, self).get_context_data(**kwargs)
+        context = super(ReplayBoostAnalysisView, self).get_context_data(**kwargs)
 
         context['team_0_boost_consumed'] = 0
         context['team_1_boost_consumed'] = 0
