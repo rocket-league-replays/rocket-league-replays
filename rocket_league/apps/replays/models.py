@@ -438,9 +438,6 @@ class Replay(models.Model):
         return 0
 
     def eligble_for_feature(self, feature):
-        if settings.DEBUG:
-            return True
-
         features = {
             'playback': 300,
             'boost_analysis': 1000,
