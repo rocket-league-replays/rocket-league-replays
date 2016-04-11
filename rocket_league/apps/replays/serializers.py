@@ -36,6 +36,8 @@ class SeasonSerializer(HyperlinkedModelSerializer):
 
 class ReplaySerializer(HyperlinkedModelSerializer):
 
+    id = ReadOnlyField()
+
     goal_set = GoalSerializer(
         many=True,
         read_only=True,
