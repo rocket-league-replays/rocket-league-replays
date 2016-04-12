@@ -22,7 +22,7 @@ class Command(BaseCommand):
             patron_id = pledge['relationships']['patron']['data']['id']
             patron = patrons[patron_id]
 
-            Patron.objects.get_or_create(
+            Patron.objects.update_or_create(
                 patron_email=patron['email'],
                 defaults={
                     'pledge_amount': pledge['attributes']['amount_cents'],
