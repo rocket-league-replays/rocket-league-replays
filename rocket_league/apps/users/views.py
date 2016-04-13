@@ -163,3 +163,29 @@ class SteamView(TemplateView):
             }
 
         return context
+
+class StreamSettingsView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+    model = Profile
+    template_name = 'users/stream_settings.html'
+    success_message = "Your settings were successfully updated."
+    form_class = StreamSettingsForm
+
+    def get_success_url(self):
+        return reverse('users:stream_settings')
+
+    def get_initial(self):
+        return self.request.user.profile.stream_settings
+
+    def get_form_kwargs(self):
+        kwargs = super(StreamSettingsView, self).get_form_kwargs()
+        kwargs['label_suffix'] = ''
+        return kwargs
+
+    def form_valid(self, form):
+        # Set all boolean values to false.
+        data = dict(form.cleaned_data)
+
+        profile = Profile.objects.get(pk=self.request.user.profile.pk)
+        profile.stream_settings = data
+        profile.save()
+        return super(StreamSettingsView, self).form_valid(form)

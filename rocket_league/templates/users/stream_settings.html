@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load site %}
+
+{% block content_primary %}
+<form class="stream-settings" action="" method="post">
+    {% csrf_token %}
+
+    {% for message in messages %}
+        <div class="alert-box success">{{ message }}</div>
+    {% endfor %}
+
+    <div class="row errored">
+        <div class="medium-3 columns">
+            {% for error in form.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% for error in form.non_field_errors %}
+        <span class="field-error">{{ error }}</span>
+    {% endfor %}
+
+    <br>
+
+    <div class="flex-row mb-40">
+        <div class="medium-3 columns">
+            {% for field in form %}
+                {% if field.name == 'font' %}
+                    </div>
+                    <div class="medium-3 columns">
+                    <h4>Display settings</h4>
+                {% elif field.name == 'limit_to' %}
+                    <h4>Data settings</h4>
+
+                {% endif %}
+
+                {% if field.field.widget|cls == 'CheckboxInput' %}
+                    <div>{{ field }} {{ field.label_tag }}</div>
+                {% else %}
+                    <div>{{ field.label_tag }} {{ field }}</div>
+                {% endif %}
+
+                {% if field.help_text %}
+                    <p style="font-size: 12px;" class="mb-20">{{ field.help_text }}</p>
+                {% endif %}
+
+                {% if field.name == 'show_goal_assist_ratio' %}
+                    <input type="submit" class="button small" value="Save settings">
+                {% endif %}
+            {% endfor %}
+        </div>
+        <div class="medium-6 columns">
+            <h4>Live Preview</h4>
+            <div style="position: absolute;width: 100%;top: 50px; bottom: 0;">
+                <iframe src="{% url 'users:stream' user_id=request.user.pk method='basic' %}" style="width: calc(100% - 30px);" height="100%" frameborder="0" class="preview" name="preview"></iframe>
+            </div>
+        </div>
+    </div>
+</form>
+
+    <div class="row">
+        <div class="small-12 columns">
+            <h4>Configuration</h4>
+
+            <p>There are a few different ways to integrate the overlay data into your stream.</p>
+            <ul>
+                <li><strong>Basic</strong> integration will give you the output shown above.</li>
+                <li><strong>Single</strong> integration will give you a URL for each data point.</li>
+                <li><strong>Custom</strong> integration gives you full control over the output.</li>
+            </ul>
+            <p>Please select which method you would like to use (you can use the different methods interchangably if you have the URLs).</p>
+        </div>
+
+        <div class="small-4 columns">
+            <h5>Basic</h5>
+            URL
+            <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='basic' %}" onclick="this.select()">
+        </div>
+
+        <div class="small-4 columns">
+            <h5>Single</h5>
+            {% for field in form %}
+                {% if field.name|startswith:'show_' %}
+                    {{ field.label|remove:'Show '|capfirst }}
+
+                    {% with field_name=field.name|remove:'show_' %}
+                    <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='single' field=field_name %}" onclick="this.select()">
+                    {% endwith %}
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="small-4 columns">
+            <h5>Complex</h5>
+            <p>Complex works by giving you control over the template used in the output.  You can use tags as placeholders which will be replaced when the page is generated.</p>
+            <p>The current list of available tags are as follows.</p>
+            <ul>
+                <li>Wins: {wins}</li>
+                <li>Losses: {losses}</li>
+                <li>Average goals: {average_goals}</li>
+                <li>Average assists: {average_assists}</li>
+                <li>Average saves: {average_saves}</li>
+                <li>Average shots: {average_shots}</li>
+                <li>Games played: {games_played}</li>
+                <li>Win percentage: {win_percentage}</li>
+                <li>Goal assist ratio: {goal_assist_ratio}</li>
+            </ul>
+            <textarea name="complex" style="width: 100%; height: 150px;">{games_played} games played, {wins} won ({win_percentage}%).</textarea>
+            <input type="text" name="custom_template" readonly="readonly" value="" onclick="this.select()">
+        </div>
+    </div>
+
+    <script>
+    var iframeBaseURL = "{% url 'users:stream' user_id=request.user.pk method='basic' %}";
+
+    if (document.querySelector('[name=transparent_background]').checked === true) {
+        document.querySelector('[name=background_color]').parentElement.style.display = 'none'
+    }
+
+    function updateiFrame(e) {
+        var form = document.querySelector('form.stream-settings');
+        var iframe = document.querySelector('.preview').contentDocument.body
+        var inputs = form.querySelectorAll('input:not([type=hidden]):not([type=submit])');
+        var values = [];
+
+        for (var x = 0; x < inputs.length; x++) {
+            if (inputs[x].type == 'checkbox') {
+                var el = iframe.querySelector('.str-Text-' + inputs[x].name.replace(/^show_/, ''))
+
+                if (!el) {
+                    if (inputs[x].name === 'transparent_background') {
+                        if (inputs[x].checked === true) {
+                            form.querySelector('[name=background_color]').parentElement.style.display = 'none'
+                            iframe.style.backgroundColor = 'transparent'
+                        } else {
+                            form.querySelector('[name=background_color]').parentElement.style.display = ''
+                            iframe.style.backgroundColor = document.querySelector('[name=background_color]').value
+                        }
+                    } else if (inputs[x].name === 'text_shadow') {
+                        if (inputs[x].checked === true) {
+                            iframe.style.textShadow = '#000 0px 0px 3px'
+                        } else {
+                            iframe.style.textShadow = 'none'
+                        }
+                    }
+
+                    continue
+                }
+
+                if (inputs[x].checked === true) {
+                    el.style.display = ''
+                } else {
+                    el.style.display = 'none'
+                }
+            } else {
+                switch (inputs[x].name) {
+                    case 'font_size':
+                        iframe.style.fontSize = inputs[x].value + 'px'
+                        break
+                    case 'background_color':
+                        iframe.style.backgroundColor = inputs[x].value
+
+                        if (form.querySelector('input[name=transparent_background').checked === true) {
+                            iframe.style.backgroundColor = 'transparent'
+                        }
+                        break
+                    case 'text_color':
+                        iframe.style.color = inputs[x].value
+                        break
+                    case 'custom_font':
+                        if (inputs[x].value.length > 0) {
+                            iframe.style.fontFamily = inputs[x].value + ', ' + form.querySelector('select[name=font]').value;
+                        } else {
+                            iframe.style.fontFamily = form.querySelector('select[name=font]').value;
+                        }
+                        break
+                    default:
+                        console.log(inputs[x].name, "does not have a handler.")
+                        break
+                }
+            }
+        }
+
+        return values.join('&')
+    }
+
+    var inputs = document.querySelectorAll('.stream-settings input, .stream-settings select');
+
+    for (var x = 0; x < inputs.length; x++) {
+        inputs[x].addEventListener('change', updateiFrame)
+        inputs[x].addEventListener('input', updateiFrame)
+    }
+
+    function generateCustomURL() {
+        {% url 'users:stream' user_id=request.user.pk method='custom' template='template' as url %}
+        var baseURL = "http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{{ url|remove:'template/' }}"
+        document.querySelector('[name=custom_template]').value = baseURL + encodeURIComponent(btoa(document.querySelector("[name=complex]").value))
+    }
+    generateCustomURL()
+
+    document.querySelector('[name=complex]').addEventListener('change', generateCustomURL)
+    document.querySelector('[name=complex]').addEventListener('input', generateCustomURL)
+    </script>
+
+
+{% endblock %}

@@ -14,6 +14,21 @@ def wrap(val, func):
 
 
 @register.filter
+def cls(obj):
+    return obj.__class__.__name__
+
+
+@register.filter
+def startswith(string, val):
+    return string.startswith(val)
+
+
+@register.filter
+def remove(string, val):
+    return string.replace(val, '')
+
+
+@register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
 
