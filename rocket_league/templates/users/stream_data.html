@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream data</title>
+  <style>
+  body {
+    font-family: {% if custom_font %}{{ custom_font }}, {% endif %}{{ font }}, sans-serif;
+    font-size: {{ font_size|default:'16' }}px;
+    color: {{ text_color|default:'#fff' }};
+
+    {% if transparent_background %}
+      background-color: transparent;
+    {% else %}
+        background-color: {{ background_color|default:'#0f0' }};
+    {% endif %}
+    line-height: 1.4;
+
+    {% if text_shadow %}
+      text-shadow: #000 0px 0px 3px;
+    {% endif %}
+  }
+  </style>
+
+  <script>
+  setTimeout(function() {
+    window.location.reload()
+  }, 1000)
+  </script>
+</head>
+<body>
+  {% if template %}
+    {{ template }}
+  {% else %}
+    <div class="str-Text str-Text-wins" {% if not show_wins %}style="display: none;"{% endif %}>
+      Wins: {{ wins }}
+    </div>
+
+    <div class="str-Text str-Text-losses" {% if not show_losses %}style="display: none;"{% endif %}>
+      Losses: {{ losses }}
+    </div>
+
+    <div class="str-Text str-Text-average_goals" {% if not show_average_goals %}style="display: none;"{% endif %}>
+      Average goals: {{ average_goals }}
+    </div>
+
+    <div class="str-Text str-Text-average_assists" {% if not show_average_assists %}style="display: none;"{% endif %}>
+      Average assists: {{ average_assists }}
+    </div>
+
+    <div class="str-Text str-Text-average_saves" {% if not show_average_saves %}style="display: none;"{% endif %}>
+      Average saves: {{ average_saves }}
+    </div>
+
+    <div class="str-Text str-Text-average_shots" {% if not show_average_shots %}style="display: none;"{% endif %}>
+      Average shots: {{ average_shots }}
+    </div>
+
+    <div class="str-Text str-Text-games_played" {% if not show_games_played %}style="display: none;"{% endif %}>
+      Games played: {{ games_played }}
+    </div>
+
+    <div class="str-Text str-Text-win_percentage" {% if not show_win_percentage %}style="display: none;"{% endif %}>
+      Win percentage: {{ win_percentage }}
+    </div>
+
+    <div class="str-Text str-Text-goal_assist_ratio" {% if not show_goal_assist_ratio %}style="display: none;"{% endif %}>
+      Goal assist ratio: {{ goal_assist_ratio }}
+    </div>
+  {% endif %}
+</body>
+</html>

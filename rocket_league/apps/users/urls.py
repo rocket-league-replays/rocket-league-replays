@@ -9,4 +9,7 @@ urlpatterns = patterns(
     url(r'^settings/patreon/$', views.PatreonSettingsView.as_view(), name='patreon'),
     url(r'^profile/settings/$', views.UserSettingsView.as_view(), name='settings'),
     url(r'^user/stream/settings/$', views.StreamSettingsView.as_view(), name='stream_settings'),
+    url(r'^user/stream/(?P<user_id>\d+)/(?P<method>\bbasic\b)/$', views.StreamDataView.as_view(), name='stream'),
+    url(r'^user/stream/(?P<user_id>\d+)/(?P<method>\bsingle\b)/(?P<field>[^/]+)/$', views.StreamDataView.as_view(), name='stream'),
+    url(r'^user/stream/(?P<user_id>\d+)/(?P<method>\bcustom\b)/(?P<template>[^/]+)/$', views.StreamDataView.as_view(), name='stream'),
 )

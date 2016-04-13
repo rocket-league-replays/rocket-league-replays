@@ -1,21 +1,25 @@
+import base64
+import datetime
 import xml.etree.ElementTree as ET
 
 import requests
-from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
-from django.http import Http404
-from django.shortcuts import redirect
+from django.http import Http404, HttpResponse
+from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
-from django.views.generic import DetailView, TemplateView, UpdateView
+from django.views.generic import (DetailView, FormView, TemplateView,
+                                  UpdateView, View)
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends.steam import USER_INFO
 
+from braces.views import LoginRequiredMixin
+
 from ..replays.models import Replay
-from .forms import PatreonSettingsForm, UserSettingsForm
+from .forms import PatreonSettingsForm, StreamSettingsForm, UserSettingsForm
 from .models import Profile, SteamCache
 
 
@@ -163,6 +167,101 @@ class SteamView(TemplateView):
             }
 
         return context
+
+
+class StreamDataView(View):
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(pk=kwargs['user_id'])
+        context = user.profile.stream_settings
+        context['user'] = user
+
+        # Data
+        context['games_played'] = user.replay_set.all()
+        context['wins'] = 0
+        context['losses'] = 0
+
+        context['average_goals'] = 0
+        context['average_assists'] = 0
+        context['average_saves'] = 0
+        context['average_shots'] = 0
+        context['win_percentage'] = 0
+        context['goal_assist_ratio'] = 0
+
+        goal_data = []
+        assist_data = []
+        save_data = []
+        shot_data = []
+
+        if context['limit_to'] == 'today':
+            context['games_played'] = context['games_played'].filter(
+                timestamp__range=[
+                    datetime.datetime.combine(now(), datetime.time.min),
+                    datetime.datetime.combine(now(), datetime.time.max),
+                ],
+            )
+
+        # What team was the user on?
+        uid = user.social_auth.get(provider='steam').uid
+
+        for replay in context['games_played']:
+            # Which team was this user on?
+            player = replay.player_set.filter(
+                platform__in=['OnlinePlatform_Steam', '1'],
+                online_id=uid,
+            )[0]
+
+            if player.team == 0:
+                if replay.team_0_score > replay.team_1_score:
+                    context['wins'] += 1
+                else:
+                    context['losses'] += 1
+            elif player.team == 1:
+                if replay.team_1_score > replay.team_0_score:
+                    context['wins'] += 1
+                else:
+                    context['losses'] += 1
+
+            goal_data.append(player.goals)
+            assist_data.append(player.assists)
+            save_data.append(player.saves)
+            shot_data.append(player.shots)
+
+        context['games_played'] = context['games_played'].count()
+
+        # Avoid dividing by zero.
+        if len(goal_data) > 0:
+            context['average_goals'] = sum(goal_data) / len(goal_data)
+
+        if len(assist_data) > 0:
+            context['average_assists'] = sum(assist_data) / len(assist_data)
+
+        if len(save_data) > 0:
+            context['average_saves'] = sum(save_data) / len(save_data)
+
+        if len(shot_data) > 0:
+            context['average_shots'] = sum(shot_data) / len(shot_data)
+
+        if context['games_played'] > 0:
+            context['win_percentage'] = context['wins'] / context['games_played'] * 100
+
+        if sum(assist_data) > 0:
+            context['goal_assist_ratio'] = sum(goal_data) / sum(assist_data)
+
+        if kwargs['method'] == 'single':
+            fields = ['show_wins', 'show_losses', 'show_average_goals',
+                      'show_average_assists', 'show_average_saves',
+                      'show_average_shots', 'show_games_played',
+                      'show_win_percentage', 'show_goal_assist_ratio']
+
+            for field in fields:
+                context[field] = False
+
+            context['show_{}'.format(kwargs['field'])] = True
+        if kwargs['method'] == 'custom':
+            context['template'] = base64.b64decode(kwargs['template']).decode('utf-8').format(**context)
+
+        return render(request, 'users/stream_data.html', context=context)
+
 
 class StreamSettingsView(LoginRequiredMixin, SuccessMessageMixin, FormView):
     model = Profile
