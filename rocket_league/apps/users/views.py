@@ -246,6 +246,8 @@ class StreamDataView(View):
 
         if sum(assist_data) > 0:
             context['goal_assist_ratio'] = sum(goal_data) / sum(assist_data)
+        else:
+            context['goal_assist_ratio'] = sum(goal_data)
 
         if kwargs['method'] == 'single':
             fields = ['show_wins', 'show_losses', 'show_average_goals',
