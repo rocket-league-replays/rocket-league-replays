@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import traceback
@@ -7,6 +8,8 @@ from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
 from ...models import Replay
+
+logger = logging.getLogger('rocket_league')
 
 
 @contextmanager
@@ -106,6 +109,10 @@ class Command(BaseCommand):
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
-                        # https://opbeat.com/docs/articles/get-started-with-django/
-                        print('Unable to process.')
-                        traceback.print_exc()
+                        logger.error(
+                            'Unable to process replay {}.'.format(replay.pk),
+                            exc_info=True
+                        )
+
+                        print('[{}] Unable to process replay {}.'.format(now(), replay.pk))
+                        print('[{}] {}'.format(now(), traceback.format_exc())
