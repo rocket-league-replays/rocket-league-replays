@@ -46,20 +46,9 @@ class Command(BaseCommand):
                 replays = Replay.objects.filter(pk=options['replay_id'])
             else:
                 # Get any replays which don't have a location JSON file.
-                replays_0 = Replay.objects.filter(
-                    boostdata__isnull=True,
-                ).exclude(
+                replays = Replay.objects.exclude(
                     crashed_heatmap_parser=True
                 ).order_by('-timestamp', '-average_rating')
-
-                # Get any replays which don't have any boost data.
-                replays_1 = Replay.objects.filter(
-                    location_json_file__isnull=True,
-                ).exclude(
-                    crashed_heatmap_parser=True
-                ).order_by('-timestamp', '-average_rating')
-
-                replays = replays_0 | replays_1
 
             for replay in replays:
                 # To avoid the queue getting too backlogged, only process a few
