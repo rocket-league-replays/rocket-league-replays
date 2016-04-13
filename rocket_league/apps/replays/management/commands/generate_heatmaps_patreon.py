@@ -63,7 +63,7 @@ class Command(BaseCommand):
             for replay in replays:
                 # To avoid the queue getting too backlogged, only process a few
                 # replays at a time.
-                if num_processed >= 10:
+                if num_processed >= 25:
                     return
 
                 if replay.replay_id and replay.file and replay.eligble_for_feature('playback'):
@@ -79,7 +79,15 @@ class Command(BaseCommand):
 
                         replay.refresh_from_db()
 
-                        if not replay.heatmap_json_file:
+                        replay_processed = True
+
+                        if replay.eligble_for_playback() and not replay.heatmap_json_file:
+                            replay_processed = False
+
+                        if replay.eligble_for_boost_analysis() and replay.boostdata_set.count() == 0:
+                            replay_processed = False
+
+                        if not replay_processed:
                             replay.crashed_heatmap_parser = True
                             replay.save()
                         else:
