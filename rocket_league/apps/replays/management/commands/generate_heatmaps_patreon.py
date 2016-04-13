@@ -66,7 +66,18 @@ class Command(BaseCommand):
                 if num_processed >= 25:
                     return
 
-                if replay.replay_id and replay.file and replay.eligble_for_feature('playback'):
+                if replay.replay_id and replay.file:
+                    needs_processing = False
+
+                    if replay.eligble_for_feature('playback') and not replay.heatmap_json_file:
+                        needs_processing = True
+
+                    if replay.eligble_for_boost_analysis() and replay.boostdata_set.count() == 0:
+                        needs_processing = True
+
+                    if not needs_processing:
+                        continue
+
                     print('[{}] Processing {} - {}'.format(
                         now(),
                         replay.pk,
