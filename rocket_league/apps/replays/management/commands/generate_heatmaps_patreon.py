@@ -59,7 +59,7 @@ class Command(BaseCommand):
                 if replay.replay_id and replay.file:
                     needs_processing = False
 
-                    if replay.eligble_for_feature('playback') and not replay.heatmap_json_file:
+                    if replay.eligble_for_playback() and not replay.location_json_file:
                         needs_processing = True
 
                     if replay.eligble_for_boost_analysis() and replay.boostdata_set.count() == 0:
@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
                         replay_processed = True
 
-                        if replay.eligble_for_playback() and not replay.heatmap_json_file:
+                        if replay.eligble_for_playback() and not replay.location_json_file:
                             replay_processed = False
 
                         if replay.eligble_for_boost_analysis() and replay.boostdata_set.count() == 0:
