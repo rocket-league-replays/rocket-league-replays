@@ -75,7 +75,7 @@
         <div class="small-4 columns">
             <h5>Basic</h5>
             URL
-            <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='basic' %}" onclick="this.select()">
+            <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www.,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='basic' %}" onclick="this.select()">
         </div>
 
         <div class="small-4 columns">
@@ -85,7 +85,7 @@
                     {{ field.label|remove:'Show '|capfirst }}
 
                     {% with field_name=field.name|remove:'show_' %}
-                    <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='single' field=field_name %}" onclick="this.select()">
+                    <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www.,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='single' field=field_name %}" onclick="this.select()">
                     {% endwith %}
                 {% endif %}
             {% endfor %}
@@ -194,7 +194,7 @@
 
     function generateCustomURL() {
         {% url 'users:stream' user_id=request.user.pk method='custom' template='template' as url %}
-        var baseURL = "http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www,' }}{{ settings.SITE_DOMAIN }}{{ url|remove:'template/' }}"
+        var baseURL = "http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www.,' }}{{ settings.SITE_DOMAIN }}{{ url|remove:'template/' }}"
         document.querySelector('[name=custom_template]').value = baseURL + encodeURIComponent(btoa(document.querySelector("[name=complex]").value))
     }
     generateCustomURL()
