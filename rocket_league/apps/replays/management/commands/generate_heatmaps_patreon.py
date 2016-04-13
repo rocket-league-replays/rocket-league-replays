@@ -115,4 +115,4 @@ class Command(BaseCommand):
                         )
 
                         print('[{}] Unable to process replay {}.'.format(now(), replay.pk))
-                        print('[{}] {}'.format(now(), traceback.format_exc())
+                        print('[{}] {}'.format(now(), traceback.format_exc()))
