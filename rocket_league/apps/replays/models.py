@@ -153,6 +153,10 @@ class Replay(models.Model):
         null=True,
     )
 
+    date_created = models.DateTimeField(
+        default=now,
+    )
+
     team_sizes = models.PositiveIntegerField(
         blank=True,
         null=True,
