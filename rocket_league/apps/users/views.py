@@ -273,7 +273,36 @@ class StreamSettingsView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         return reverse('users:stream_settings')
 
     def get_initial(self):
-        return self.request.user.profile.stream_settings
+        settings = self.request.user.profile.stream_settings
+
+        if settings == {}:
+            # Set a sensible default.
+            profile = Profile.objects.get(pk=self.request.user.profile.pk)
+            profile.stream_settings = {
+                'show_average_goals': True,
+                'show_games_played': True,
+                'background_color': '#00ff00',
+                'limit_to': 'today',
+                'show_win_percentage': True,
+                'font_size': '16',
+                'font': 'Arial',
+                'text_color': '#ffffff',
+                'show_goal_assist_ratio': True,
+                'show_average_shots': True,
+                'show_average_assists': True,
+                'show_average_saves': True,
+                'show_wins': True,
+                'show_losses': True,
+                'custom_font': '',
+                'transparent_background': True,
+                'text_shadow': True
+            }
+
+            profile.save()
+
+            settings = profile.stream_settings
+
+        return settings
 
     def get_form_kwargs(self):
         kwargs = super(StreamSettingsView, self).get_form_kwargs()
