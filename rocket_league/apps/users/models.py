@@ -58,6 +58,11 @@ class Profile(models.Model):
         null=True,
     )
 
+    stream_settings = JSONField(
+        blank=True,
+        null=True,
+    )
+
     def latest_ratings(self):
         if not self.has_steam_connected():
             return {}
