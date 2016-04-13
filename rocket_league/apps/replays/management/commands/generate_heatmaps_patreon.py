@@ -11,20 +11,18 @@ from ...models import Replay
 
 @contextmanager
 def file_lock(lock_file, options):
-    if os.path.exists(lock_file) and 'replay_id' not in options:
+    if os.path.exists(lock_file):
         print('[{}] Only one script can run at once. Script is locked with {}'.format(
             now(),
             lock_file
         ))
         sys.exit(-1)
     else:
-        if 'replay_id' not in options:
-            open(lock_file, 'w').write("1")
+        open(lock_file, 'w').write("1")
         try:
             yield
         finally:
-            if 'replay_id' not in options:
-                os.remove(lock_file)
+            os.remove(lock_file)
 
 
 class Command(BaseCommand):
