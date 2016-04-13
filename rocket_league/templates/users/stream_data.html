@@ -41,19 +41,19 @@
     </div>
 
     <div class="str-Text str-Text-average_goals" {% if not show_average_goals %}style="display: none;"{% endif %}>
-      Average goals: {{ average_goals }}
+      Average goals: {{ average_goals|floatformat:2 }}
     </div>
 
     <div class="str-Text str-Text-average_assists" {% if not show_average_assists %}style="display: none;"{% endif %}>
-      Average assists: {{ average_assists }}
+      Average assists: {{ average_assists|floatformat:2 }}
     </div>
 
     <div class="str-Text str-Text-average_saves" {% if not show_average_saves %}style="display: none;"{% endif %}>
-      Average saves: {{ average_saves }}
+      Average saves: {{ average_saves|floatformat:2 }}
     </div>
 
     <div class="str-Text str-Text-average_shots" {% if not show_average_shots %}style="display: none;"{% endif %}>
-      Average shots: {{ average_shots }}
+      Average shots: {{ average_shots|floatformat:2 }}
     </div>
 
     <div class="str-Text str-Text-games_played" {% if not show_games_played %}style="display: none;"{% endif %}>
@@ -61,11 +61,11 @@
     </div>
 
     <div class="str-Text str-Text-win_percentage" {% if not show_win_percentage %}style="display: none;"{% endif %}>
-      Win percentage: {{ win_percentage }}%
+      Win percentage: {{ win_percentage|floatformat:2 }}%
     </div>
 
     <div class="str-Text str-Text-goal_assist_ratio" {% if not show_goal_assist_ratio %}style="display: none;"{% endif %}>
-      Goal assist ratio: {{ goal_assist_ratio }}
+      Goal assist ratio: {{ goal_assist_ratio|floatformat:2 }}
     </div>
   {% endif %}
 </body>
