@@ -134,12 +134,12 @@
                     </div>
                 </div>
 
+                {% if 'steam' not in backends.not_associated %}
+                {% league_data as data %}
+
+                {% if data %}
                 <div class="row secondary-navigation">
                     <div class="medium-12 columns ranks">
-                        {% if 'steam' not in backends.not_associated %}
-                            {% league_data as data %}
-
-                            {% if data %}
                                 {% if data.10 %}
                                 <span title="This is your rating for ranked duels.">
                                     Duels:
@@ -263,10 +263,10 @@
                                     {% endif %}
                                 </span>
                                 {% endif %}
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% endif %}
             </header>
 
             <main>
