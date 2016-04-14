@@ -193,8 +193,11 @@
         {# Rating graph #}
         {% include "users/includes/latest_ratings.html" with steam_id=steam_info.steamid %}
 
+        <p>Want to see more of your stats as well as some fancy charts? Check out your profile on <a href="https://rocketleaguestats.com/profile/steam/{{ steam_info.steamid }}" target="_blank">Rocket League Stats</a>!</p>
+
         {# Scoreboard + totals #}
         {% custom_scoreboard steam_info %}
+
     </div>
     {% endcache %}
 </div>
