@@ -3,7 +3,7 @@
 
 {% block content_primary %}
     <div class="row">
-        <div class="small-6 columns">
+        <div class="medium-6 columns">
             <h3>Stream overlay data</h3>
             <p>Want to show your Rocket League stats on stream?  You can use Rocket League Replays to collate all of your stats and provide URLs for use with CLR Browser (or similar plugins).</p>
             <p>Simply upload your replays to your account and the data will start to appear in the output.  You can upload replays automatically with the desktop application, more information can be found on the <a href="{% url 'replay:upload' %}">upload page</a>.</p>
@@ -81,13 +81,13 @@
             <p>Please select which method you would like to use (you can use the different methods interchangably if you have the URLs).</p>
         </div>
 
-        <div class="small-4 columns">
+        <div class="medium-4 columns">
             <h5>Basic</h5>
             URL
             <input type="text" readonly="readonly" value="http{{ request.is_secure|yesno:'s,' }}://{{ settings.PREPEND_WWW|yesno:'www.,' }}{{ settings.SITE_DOMAIN }}{% url 'users:stream' user_id=request.user.pk method='basic' %}" onclick="this.select()">
         </div>
 
-        <div class="small-4 columns">
+        <div class="medium-4 columns">
             <h5>Single</h5>
             {% for field in form %}
                 {% if field.name|startswith:'show_' %}
@@ -100,7 +100,7 @@
             {% endfor %}
         </div>
 
-        <div class="small-4 columns">
+        <div class="medium-4 columns">
             <h5>Complex</h5>
             <p>Complex works by giving you control over the template used in the output.  You can use tags as placeholders which will be replaced when the page is generated.</p>
             <p>The current list of available tags are as follows.</p>

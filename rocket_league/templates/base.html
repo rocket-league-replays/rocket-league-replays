@@ -77,14 +77,14 @@
         <div class="row page-wrapper">
             <header>
                 <div class="row">
-                    <div class="small-6 medium-3 columns logo-container left">
+                    <div class="medium-3 columns logo-container left">
                         <a href="/" class="secondary">
                             <img src="{% static 'build/img/social_logo.png' %}">
                             <span class="logo-text">Rocket League<br>Replays</span>
                         </a>
                     </div>
 
-                    <ul class="small-6 medium-9 columns text-right primary-navigation">
+                    <ul class="medium-9 columns text-right primary-navigation">
                         {% get_navigation pages.homepage.navigation as nav %}
 
                         {% for item in nav %}
@@ -104,7 +104,35 @@
                 </div>
 
                 <div class="row secondary-navigation">
-                    <div class="medium-3 columns ">
+                    <div class="medium-12 columns text-right pl-0 pr-0">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
+                            <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
+                            <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
+                            <a href="{% url 'users:patreon' %}">Patreon Settings</a>
+
+                            {% if 'steam' in backends.not_associated %}
+                                <a href="{% url 'social:begin' backend='steam' %}">
+                                  <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                                </a>
+                            {% else %}
+                                <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
+                                  {% csrf_token %}
+                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
+                                </form>
+
+                                <a href="{% url 'auth_logout' %}">Logout</a>
+                            {% endif %}
+                        {% else %}
+                        <a href="{% url 'social:begin' backend='steam' %}">
+                          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row secondary-navigation">
+                    <div class="medium-12 columns ranks">
                         {% if 'steam' not in backends.not_associated %}
                             {% league_data as data %}
 
@@ -138,7 +166,6 @@
                                         </span>
                                     {% endif %}
                                 </span>
-                                {% if data.11 or data.12 or data.13 %}<br>{% endif %}
                                 {% endif %}
 
                                 {% if data.11 %}
@@ -170,7 +197,6 @@
                                         </span>
                                     {% endif %}
                                 </span>
-                                {% if data.12 or data.13 %}<br>{% endif %}
                                 {% endif %}
 
                                 {% if data.12 %}
@@ -202,7 +228,6 @@
                                         </span>
                                     {% endif %}
                                 </span>
-                                {% if data.13 %}<br>{% endif %}
                                 {% endif %}
 
                                 {% if data.13 %}
@@ -236,31 +261,6 @@
                                 </span>
                                 {% endif %}
                             {% endif %}
-                        {% endif %}
-                    </div>
-                    <div class="medium-9 columns right text-right ">
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
-                            <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
-                            <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
-                            <a href="{% url 'users:patreon' %}">Patreon Settings</a>
-
-                            {% if 'steam' in backends.not_associated %}
-                                <a href="{% url 'social:begin' backend='steam' %}">
-                                  <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
-                                </a>
-                            {% else %}
-                                <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
-                                  {% csrf_token %}
-                                  <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
-                                </form>
-
-                                <a href="{% url 'auth_logout' %}">Logout</a>
-                            {% endif %}
-                        {% else %}
-                        <a href="{% url 'social:begin' backend='steam' %}">
-                          <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
-                        </a>
                         {% endif %}
                     </div>
                 </div>
