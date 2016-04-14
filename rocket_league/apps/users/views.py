@@ -192,13 +192,32 @@ class StreamDataView(View):
         save_data = []
         shot_data = []
 
-        if context['limit_to'] == 'today':
+        if context['limit_to'] == '3':
+            context['games_played'] = context['games_played'][:3]
+        elif context['limit_to'] == '5':
+            context['games_played'] = context['games_played'][:5]
+        elif context['limit_to'] == '10':
+            context['games_played'] = context['games_played'][:10]
+        elif context['limit_to'] == '20':
+            context['games_played'] = context['games_played'][:20]
+        elif context['limit_to'] == 'hour':
             context['games_played'] = context['games_played'].filter(
-                timestamp__range=[
-                    datetime.datetime.combine(now(), datetime.time.min),
-                    datetime.datetime.combine(now(), datetime.time.max),
-                ],
+              timestamp__gte=now() - datetime.timedelta(hours=1)
             )
+        elif context['limit_to'] == 'today':
+            context['games_played'] = context['games_played'].filter(
+              timestamp__gte=now() - datetime.timedelta(days=1)
+            )
+
+        elif context['limit_to'] == 'week':
+            context['games_played'] = context['games_played'].filter(
+              timestamp__gte=now() - datetime.timedelta(days=7)
+            )
+        elif context['limit_to'] == 'all':
+            # We don't need to do anything here.
+            pass
+        # elif context['limit_to'] == 'session':
+        #     pass
 
         # What team was the user on?
         uid = user.social_auth.get(provider='steam').uid
@@ -208,7 +227,12 @@ class StreamDataView(View):
             player = replay.player_set.filter(
                 platform__in=['OnlinePlatform_Steam', '1'],
                 online_id=uid,
-            )[0]
+            )
+
+            if player.count() == 0:
+                continue
+
+            player = player[0]
 
             if player.team == 0:
                 if replay.team_0_score > replay.team_1_score:
@@ -230,22 +254,22 @@ class StreamDataView(View):
 
         # Avoid dividing by zero.
         if len(goal_data) > 0:
-            context['average_goals'] = sum(goal_data) / len(goal_data)
+            context['average_goals'] = "{0:.2f}".format(sum(goal_data) / len(goal_data))
 
         if len(assist_data) > 0:
-            context['average_assists'] = sum(assist_data) / len(assist_data)
+            context['average_assists'] = "{0:.2f}".format(sum(assist_data) / len(assist_data))
 
         if len(save_data) > 0:
-            context['average_saves'] = sum(save_data) / len(save_data)
+            context['average_saves'] = "{0:.2f}".format(sum(save_data) / len(save_data))
 
         if len(shot_data) > 0:
-            context['average_shots'] = sum(shot_data) / len(shot_data)
+            context['average_shots'] = "{0:.2f}".format(sum(shot_data) / len(shot_data))
 
         if context['games_played'] > 0:
-            context['win_percentage'] = context['wins'] / context['games_played'] * 100
+            context['win_percentage'] = "{0:.2f}".format(context['wins'] / context['games_played'] * 100)
 
         if sum(assist_data) > 0:
-            context['goal_assist_ratio'] = sum(goal_data) / sum(assist_data)
+            context['goal_assist_ratio'] = "{0:.2f}".format(sum(goal_data) / sum(assist_data))
         else:
             context['goal_assist_ratio'] = sum(goal_data)
 

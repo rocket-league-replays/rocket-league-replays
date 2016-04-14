@@ -113,7 +113,7 @@ class StreamSettingsForm(forms.Form):
             ('today', 'Today'),
             ('week', 'Last week'),
             ('all', 'All time'),
-            ('session', 'This session'),  # Have a button which allows you to start / stop a session.
+            # ('session', 'This session'),  # Have a button which allows you to start / stop a session.
         ],
         initial='today',
     )
