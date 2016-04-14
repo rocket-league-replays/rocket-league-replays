@@ -34,12 +34,20 @@
   {% if template %}
     {{ template }}
   {% else %}
+    <div class="str-Text str-Text-games_played" {% if not show_games_played %}style="display: none;"{% endif %}>
+      Games played: {{ games_played }}
+    </div>
+
     <div class="str-Text str-Text-wins" {% if not show_wins %}style="display: none;"{% endif %}>
       Wins: {{ wins }}
     </div>
 
     <div class="str-Text str-Text-losses" {% if not show_losses %}style="display: none;"{% endif %}>
       Losses: {{ losses }}
+    </div>
+
+    <div class="str-Text str-Text-win_percentage" {% if not show_win_percentage %}style="display: none;"{% endif %}>
+      Win percentage: {{ win_percentage }}%
     </div>
 
     <div class="str-Text str-Text-average_goals" {% if not show_average_goals %}style="display: none;"{% endif %}>
@@ -58,16 +66,8 @@
       Average shots: {{ average_shots }}
     </div>
 
-    <div class="str-Text str-Text-games_played" {% if not show_games_played %}style="display: none;"{% endif %}>
-      Games played: {{ games_played }}
-    </div>
-
-    <div class="str-Text str-Text-win_percentage" {% if not show_win_percentage %}style="display: none;"{% endif %}>
-      Win percentage: {{ win_percentage }}%
-    </div>
-
     <div class="str-Text str-Text-goal_assist_ratio" {% if not show_goal_assist_ratio %}style="display: none;"{% endif %}>
-      Goal assist ratio: {{ goal_assist_ratio }}
+      Goal / assist ratio: {{ goal_assist_ratio }}
     </div>
   {% endif %}
 </body>
