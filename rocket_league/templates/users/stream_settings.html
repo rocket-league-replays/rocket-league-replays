@@ -2,6 +2,15 @@
 {% load site %}
 
 {% block content_primary %}
+    <div class="row">
+        <div class="small-6 columns">
+            <h3>Stream overlay data</h3>
+            <p>Want to show your Rocket League stats on stream?  You can use Rocket League Replays to collate all of your stats and provide URLs for use with CLR Browser (or similar plugins).</p>
+            <p>Simply upload your replays to your account and the data will start to appear in the output.  You can upload replays automatically with the desktop application, more information can be found on the <a href="{% url 'replay:upload' %}">upload page</a>.</p>
+            <p>This is a free service, so you do not require a Patreon pledge to make use of this information.</p>
+        </div>
+    </div>
+
 <form class="stream-settings" action="" method="post">
     {% csrf_token %}
 
