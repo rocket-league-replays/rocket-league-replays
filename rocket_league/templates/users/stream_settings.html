@@ -53,7 +53,7 @@
         <div class="medium-6 columns">
             <h4>Live Preview</h4>
             <div style="position: absolute;width: 100%;top: 50px; bottom: 0;">
-                <iframe src="{% url 'users:stream' user_id=request.user.pk method='basic' %}" style="width: calc(100% - 30px);" height="100%" frameborder="0" class="preview" name="preview"></iframe>
+                <iframe src="{% url 'users:stream' user_id=request.user.pk method='basic' %}?refresh=off" style="width: calc(100% - 30px);" height="100%" frameborder="0" class="preview" name="preview"></iframe>
             </div>
         </div>
     </div>

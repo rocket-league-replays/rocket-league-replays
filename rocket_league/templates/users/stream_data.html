@@ -22,11 +22,13 @@
   }
   </style>
 
+  {% if not request.GET.refresh or request.GET.refresh == 'on' %}
   <script>
   setTimeout(function() {
     window.location.reload()
   }, 20000)
   </script>
+  {% endif %}
 </head>
 <body>
   {% if template %}
