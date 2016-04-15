@@ -8,6 +8,8 @@ import Detector from './Detector'
 let camera
 let renderer
 let playState = 1
+let maxFPS
+let maxFPSCalulating = false
 
 if (!Detector.webgl) {
   Detector.addGetWebGLMessage({
@@ -78,6 +80,49 @@ export function init () {
   animate()
 }
 
+function getMaxFPS () {
+  if (maxFPSCalulating) {
+    return
+  }
+
+  maxFPSCalulating = true
+
+  let lastCalledTime
+  let fps
+  let iterations = 0
+  const fps_values = []
+
+  function requestAnimFrame () {
+    iterations++
+
+    if (!lastCalledTime) {
+      lastCalledTime = Date.now()
+      fps = 0
+    } else {
+      const delta = (Date.now() - lastCalledTime) / 1000
+      lastCalledTime = Date.now()
+      fps = 1 / delta
+    }
+
+    fps_values.push(fps)
+
+    if (iterations < 60) {
+      window.requestAnimationFrame(requestAnimFrame)
+    } else {
+      maxFPS = Math.max(...fps_values.slice(-20))
+
+      // I doubt anyone is this glorious..
+      if (maxFPS > 144) {
+        maxFPS = 144
+      }
+
+      document.querySelector('.sim-FPS_Controls').setAttribute('max', maxFPS)
+    }
+  }
+
+  window.requestAnimationFrame(requestAnimFrame)
+}
+
 function animate () {
   if (typeof scene === 'undefined') {
     return
@@ -97,7 +142,12 @@ function animate () {
 
   render()
 
-  const fpsLimit = 30 // Cap at 30 FPS.
+  if (maxFPS === undefined && !maxFPSCalulating) {
+    getMaxFPS()
+  }
+
+  const fpsLimit = document.querySelector('.sim-FPS_Controls').value // Get FPS from slider.
+  document.querySelector('.sim-FPS_Value').innerHTML = fpsLimit
   const timeoutDelay = 1000 / fpsLimit
 
   setTimeout(() => {
