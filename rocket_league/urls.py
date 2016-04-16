@@ -51,7 +51,7 @@ urlpatterns = patterns(
     url(r"^favicon.ico$", generic.RedirectView.as_view(url='/static/build/img/icons/favicon.ico', permanent=True)),
 
     url(r'^api/', include(router.urls)),
-    url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view()),
+    url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view(), name='stream-data'),
 
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 

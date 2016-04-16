@@ -1,5 +1,6 @@
 import base64
 import datetime
+import re
 import xml.etree.ElementTree as ET
 
 import requests
@@ -188,7 +189,11 @@ class StreamDataView(View):
 
             context['show_{}'.format(kwargs['field'])] = True
         if kwargs['method'] == 'custom':
-            context['template'] = base64.b64decode(kwargs['template']).decode('utf-8').format(**context)
+            template = base64.b64decode(kwargs['template']).decode('utf-8')
+            context['template'] = re.sub(r'{([a-z_]+)}', r'{{ data.\1 }}', template)
+
+        context['method'] = kwargs['method']
+        context['field'] = kwargs.get('field', '')
 
         return render(request, 'users/stream_data.html', context=context)
 
