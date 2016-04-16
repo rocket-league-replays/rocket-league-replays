@@ -122,7 +122,9 @@
             <input type="text" name="custom_template" readonly="readonly" value="" onclick="this.select()">
         </div>
     </div>
+{% endblock %}
 
+{% block additional_js %}
     <script>
     var iframeBaseURL = "{% url 'users:stream' user_id=request.user.pk method='basic' %}";
 
