@@ -66,6 +66,8 @@ class ReplaySerializer(HyperlinkedModelSerializer):
 
 class ReplayCreateSerializer(HyperlinkedModelSerializer):
 
+    id = ReadOnlyField()
+
     def validate(self, attrs):
         instance = Replay(**attrs)
         instance.clean()
@@ -73,5 +75,5 @@ class ReplayCreateSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = Replay
-        fields = ['file', 'url', 'get_absolute_url']
+        fields = ['id', 'file', 'url', 'get_absolute_url']
         depth = 0
