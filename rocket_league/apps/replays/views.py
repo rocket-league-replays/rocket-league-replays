@@ -89,15 +89,19 @@ class ReplayBoostAnalysisView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ReplayBoostAnalysisView, self).get_context_data(**kwargs)
 
-        CACHE_KEY = 'replay_boost_context_{}'.format(self.object.pk)
+        CACHE_KEY_0 = 'replay_boost_context_{}_team_0'.format(self.object.pk)
+        CACHE_KEY_1 = 'replay_boost_context_{}_team_1'.format(self.object.pk)
 
-        cached_context = cache.get(CACHE_KEY)
-
-        if cached_context:
-            return cached_context
+        cached_data_0 = cache.get(CACHE_KEY_0)
+        cached_data_1 = cache.get(CACHE_KEY_1)
 
         context['team_0_boost_consumed'] = 0
         context['team_1_boost_consumed'] = 0
+
+        if cached_data_0 and cached_data_1:
+            context['team_0_boost_consumed'] = cached_data_0
+            context['team_1_boost_consumed'] = cached_data_1
+            return context
 
         # Get the tabular data.
         for player in self.object.player_set.all():
@@ -111,7 +115,8 @@ class ReplayBoostAnalysisView(DetailView):
             elif player.team == 1:
                 context['team_1_boost_consumed'] += player.boost_data['boost_consumption']
 
-        cache.set(CACHE_KEY, context, 3600)
+        cache.set(CACHE_KEY_0, context['team_0_boost_consumed'], 3600)
+        cache.set(CACHE_KEY_1, context['team_1_boost_consumed'], 3600)
 
         return context
 
