@@ -1,6 +1,7 @@
 import re
 
 from braces.views import LoginRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q
@@ -88,6 +89,13 @@ class ReplayBoostAnalysisView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(ReplayBoostAnalysisView, self).get_context_data(**kwargs)
 
+        CACHE_KEY = 'replay_boost_context_{}'.format(self.object.pk)
+
+        cached_context = cache.get(CACHE_KEY)
+
+        if cached_context:
+            return cached_context
+
         context['team_0_boost_consumed'] = 0
         context['team_1_boost_consumed'] = 0
 
@@ -102,6 +110,8 @@ class ReplayBoostAnalysisView(DetailView):
                 context['team_0_boost_consumed'] += player.boost_data['boost_consumption']
             elif player.team == 1:
                 context['team_1_boost_consumed'] += player.boost_data['boost_consumption']
+
+        cache.set(CACHE_KEY, context, 3600)
 
         return context
 
