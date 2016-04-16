@@ -17,6 +17,7 @@
 
     {% if replay.eligble_for_boost_analysis %}
         {% if replay.show_boost_analysis %}
+            {% cache 3600 replay_boost_analysis replay.pk %}
             <div class="flex-row mb-40">
                 <div class="large-8 columns">
                     <h3>Boost management</h3>
@@ -97,6 +98,7 @@
                     <div id="boostValuesChart" class="mt-40" style="height: 350px; width: 100%;"></div>
                 </div>
             </div>
+            {% endcache %}
         {% else %}
         <div class="row">
             <div class="medium-8 medium-centered columns mb-50">
@@ -154,6 +156,7 @@
 
 {% block additional_js %}
 {% if replay.show_boost_analysis %}
+    {% cache 3600 replay_boost_analysis_js replay.pk %}
     {% boost_chart_data as data %}
 
     <script>
@@ -351,5 +354,6 @@
     ]
     teamBoostDistributionChart.render();
     </script>
+    {% endcache %}
 {% endif %}
 {% endblock %}
