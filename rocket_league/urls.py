@@ -12,6 +12,7 @@ from rest_framework import routers
 
 from .apps.replays.views import (GoalViewSet, MapViewSet, PlayerViewSet,
                                  ReplayViewSet, SeasonViewSet)
+from .apps.users.views import StreamDataAPIView
 
 admin.autodiscover()
 
@@ -50,6 +51,8 @@ urlpatterns = patterns(
     url(r"^favicon.ico$", generic.RedirectView.as_view(url='/static/build/img/icons/favicon.ico', permanent=True)),
 
     url(r'^api/', include(router.urls)),
+    url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view()),
+
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
     url(r'^login/$', 'django.contrib.auth.views.login', name='auth_login'),

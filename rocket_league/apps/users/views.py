@@ -3,24 +3,26 @@ import datetime
 import xml.etree.ElementTree as ET
 
 import requests
+from braces.views import LoginRequiredMixin
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.views.generic import (DetailView, FormView, TemplateView,
                                   UpdateView, View)
+from rest_framework import views
+from rest_framework.response import Response
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends.steam import USER_INFO
-
-from braces.views import LoginRequiredMixin
 
 from ..replays.models import Replay
 from .forms import PatreonSettingsForm, StreamSettingsForm, UserSettingsForm
 from .models import Profile, SteamCache
+from .serializers import StreamDataSerializer
 
 
 class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -175,6 +177,87 @@ class StreamDataView(View):
         context = user.profile.stream_settings
         context['user'] = user
 
+        if kwargs['method'] == 'single':
+            fields = ['show_wins', 'show_losses', 'show_average_goals',
+                      'show_average_assists', 'show_average_saves',
+                      'show_average_shots', 'show_games_played',
+                      'show_win_percentage', 'show_goal_assist_ratio']
+
+            for field in fields:
+                context[field] = False
+
+            context['show_{}'.format(kwargs['field'])] = True
+        if kwargs['method'] == 'custom':
+            context['template'] = base64.b64decode(kwargs['template']).decode('utf-8').format(**context)
+
+        return render(request, 'users/stream_data.html', context=context)
+
+
+class StreamSettingsView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+    model = Profile
+    template_name = 'users/stream_settings.html'
+    success_message = "Your settings were successfully updated."
+    form_class = StreamSettingsForm
+
+    def get_success_url(self):
+        return reverse('users:stream_settings')
+
+    def get_initial(self):
+        settings = self.request.user.profile.stream_settings
+
+        if settings == {}:
+            # Set a sensible default.
+            profile = Profile.objects.get(pk=self.request.user.profile.pk)
+            profile.stream_settings = {
+                'show_average_goals': True,
+                'show_games_played': True,
+                'background_color': '#00ff00',
+                'limit_to': 'today',
+                'show_win_percentage': True,
+                'font_size': '16',
+                'font': 'Arial',
+                'text_color': '#ffffff',
+                'show_goal_assist_ratio': True,
+                'show_average_shots': True,
+                'show_average_assists': True,
+                'show_average_saves': True,
+                'show_wins': True,
+                'show_losses': True,
+                'custom_font': '',
+                'transparent_background': True,
+                'text_shadow': True
+            }
+
+            profile.save()
+
+            settings = profile.stream_settings
+
+        return settings
+
+    def get_form_kwargs(self):
+        kwargs = super(StreamSettingsView, self).get_form_kwargs()
+        kwargs['label_suffix'] = ''
+        return kwargs
+
+    def form_valid(self, form):
+        # Set all boolean values to false.
+        data = dict(form.cleaned_data)
+
+        profile = Profile.objects.get(pk=self.request.user.profile.pk)
+        profile.stream_settings = data
+        profile.save()
+        return super(StreamSettingsView, self).form_valid(form)
+
+
+class StreamDataAPIView(views.APIView):
+
+    serializer_class = StreamDataSerializer
+
+    def get_serializer_context(self):
+        user = User.objects.get(pk=self.kwargs['user_id'])
+        context = user.profile.stream_settings
+        context['user'] = user
+
         # Data
         context['games_played'] = user.replay_set.all()
         context['wins'] = 0
@@ -273,73 +356,8 @@ class StreamDataView(View):
         else:
             context['goal_assist_ratio'] = sum(goal_data)
 
-        if kwargs['method'] == 'single':
-            fields = ['show_wins', 'show_losses', 'show_average_goals',
-                      'show_average_assists', 'show_average_saves',
-                      'show_average_shots', 'show_games_played',
-                      'show_win_percentage', 'show_goal_assist_ratio']
+        return context
 
-            for field in fields:
-                context[field] = False
-
-            context['show_{}'.format(kwargs['field'])] = True
-        if kwargs['method'] == 'custom':
-            context['template'] = base64.b64decode(kwargs['template']).decode('utf-8').format(**context)
-
-        return render(request, 'users/stream_data.html', context=context)
-
-
-class StreamSettingsView(LoginRequiredMixin, SuccessMessageMixin, FormView):
-    model = Profile
-    template_name = 'users/stream_settings.html'
-    success_message = "Your settings were successfully updated."
-    form_class = StreamSettingsForm
-
-    def get_success_url(self):
-        return reverse('users:stream_settings')
-
-    def get_initial(self):
-        settings = self.request.user.profile.stream_settings
-
-        if settings == {}:
-            # Set a sensible default.
-            profile = Profile.objects.get(pk=self.request.user.profile.pk)
-            profile.stream_settings = {
-                'show_average_goals': True,
-                'show_games_played': True,
-                'background_color': '#00ff00',
-                'limit_to': 'today',
-                'show_win_percentage': True,
-                'font_size': '16',
-                'font': 'Arial',
-                'text_color': '#ffffff',
-                'show_goal_assist_ratio': True,
-                'show_average_shots': True,
-                'show_average_assists': True,
-                'show_average_saves': True,
-                'show_wins': True,
-                'show_losses': True,
-                'custom_font': '',
-                'transparent_background': True,
-                'text_shadow': True
-            }
-
-            profile.save()
-
-            settings = profile.stream_settings
-
-        return settings
-
-    def get_form_kwargs(self):
-        kwargs = super(StreamSettingsView, self).get_form_kwargs()
-        kwargs['label_suffix'] = ''
-        return kwargs
-
-    def form_valid(self, form):
-        # Set all boolean values to false.
-        data = dict(form.cleaned_data)
-
-        profile = Profile.objects.get(pk=self.request.user.profile.pk)
-        profile.stream_settings = data
-        profile.save()
-        return super(StreamSettingsView, self).form_valid(form)
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(self.get_serializer_context())
+        return Response(serializer.data)
