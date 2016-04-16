@@ -118,12 +118,22 @@ class StreamSettingsForm(forms.Form):
         initial='today',
     )
 
+    show_games_played = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
     show_wins = forms.BooleanField(
         initial=False,
         required=False,
     )
 
     show_losses = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_win_percentage = forms.BooleanField(
         initial=False,
         required=False,
     )
@@ -144,16 +154,6 @@ class StreamSettingsForm(forms.Form):
     )
 
     show_average_shots = forms.BooleanField(
-        initial=False,
-        required=False,
-    )
-
-    show_games_played = forms.BooleanField(
-        initial=False,
-        required=False,
-    )
-
-    show_win_percentage = forms.BooleanField(
         initial=False,
         required=False,
     )
