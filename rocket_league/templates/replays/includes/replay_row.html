@@ -1,10 +1,11 @@
-{% load cache ratings site static %}
+{% load cache ratings site static replays %}
 
-{% cache 3600 'replay_list_item' replay.pk %}
+{% replay_playback_eligibility as eligible %}
+{% cache 3600 'replay_list_item' replay.pk eligible replay.location_json_file %}
     <tr data-href="{{ replay.get_absolute_url }}">
         <td>
             <a href="{{ replay.get_absolute_url }}">{{ replay }}</a>
-            {% if replay.show_playback %}
+            {% if eligible and replay.location_json_file %}
             <a href="{% url 'replay:playback' pk=replay.pk %}" title="This replay has additional analysis because the uploader or a player within the match is supporting {{ settings.SITE_NAME }} on Patreon.">
                 <em class="icon-crown-plus"></em>
             </a>
