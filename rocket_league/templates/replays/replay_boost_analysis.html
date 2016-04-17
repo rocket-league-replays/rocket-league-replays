@@ -15,7 +15,7 @@
 
     {% user_in_replay as user_in_replay %}
 
-    {% if replay.eligble_for_boost_analysis %}
+    {% if replay.eligible_for_boost_analysis %}
         {% if replay.show_boost_analysis %}
             {% cache 3600 replay_boost_analysis replay.pk %}
             <div class="flex-row mb-40">

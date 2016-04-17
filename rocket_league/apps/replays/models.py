@@ -441,7 +441,7 @@ class Replay(models.Model):
             return total_player_ratings / num_player_ratings
         return 0
 
-    def eligble_for_feature(self, feature):
+    def eligible_for_feature(self, feature):
         features = {
             'playback': 300,
             'boost_analysis': 1000,
@@ -473,25 +473,25 @@ class Replay(models.Model):
         return False
 
     # Feature eligibility checks.
-    def eligble_for_playback(self):
-        return self.eligble_for_feature('playback')
+    def eligible_for_playback(self):
+        return self.eligible_for_feature('playback')
 
     def show_playback(self):
         # First of all, is there even a JSON file?
         if not self.location_json_file:
             return False
 
-        return self.eligble_for_feature('playback')
+        return self.eligible_for_feature('playback')
 
-    def eligble_for_boost_analysis(self):
-        return self.eligble_for_feature('boost_analysis')
+    def eligible_for_boost_analysis(self):
+        return self.eligible_for_feature('boost_analysis')
 
     def show_boost_analysis(self):
         # Have we got any boost data yet?
         if self.boostdata_set.count() == 0:
             return False
 
-        return self.eligble_for_feature('boost_analysis')
+        return self.eligible_for_feature('boost_analysis')
 
     # Other stuff
     def get_human_playlist(self):
@@ -566,7 +566,7 @@ class Replay(models.Model):
                 if hasattr(parser, 'location_json_filename'):
                     self.location_json_file = parser.location_json_filename
 
-                if hasattr(parser, 'boost_data') and self.eligble_for_boost_analysis():
+                if hasattr(parser, 'boost_data'):
                     BoostData.objects.filter(replay=self).delete()
 
             if 'playlist' in parser.match_metadata:
@@ -712,7 +712,7 @@ class Replay(models.Model):
                 )
 
                 # If this player had any boost data, then lets store that too.
-                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data and self.eligble_for_boost_analysis():
+                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data:
                     boost_objects = []
 
                     for key, boost_data in parser.boost_data['values'].items():

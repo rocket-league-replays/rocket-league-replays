@@ -372,7 +372,7 @@ def boost_chart_data(context, obj=None):
     if not obj:
         obj = context['replay']
 
-    if not obj.eligble_for_boost_analysis():
+    if not obj.eligible_for_boost_analysis():
         return {}
 
     players = obj.player_set.filter(spectator=False)
