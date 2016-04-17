@@ -158,6 +158,8 @@ def steam_stats(uid):
             data['overtime_triggering_and_winning_goals'] += 1
         except Goal.DoesNotExist:
             pass
+        except Goal.MultipleObjectsReturned:
+            pass
 
     # Which match size does this player appear most in?
     data['preferred_match_size'] = None
