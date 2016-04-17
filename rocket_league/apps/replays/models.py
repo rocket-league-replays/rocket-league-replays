@@ -826,6 +826,18 @@ class Replay(models.Model):
                                 team=goal['PlayerTeam']
                             )
 
+                    try:
+                        goal_obj = Goal.objects.get(
+                            replay=self,
+                            frame=goal['frame'],
+                            number=index + 1,
+                            player=player,
+                        )
+
+                        goal_obj.delete()
+                    except Goal.DoesNotExist:
+                        pass
+
                     Goal.objects.create(
                         replay=self,
                         frame=goal['frame'],
