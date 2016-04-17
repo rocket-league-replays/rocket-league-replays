@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import traceback
@@ -8,9 +9,11 @@ from django.utils.timezone import now
 
 from ...models import Replay
 
+logger = logging.getLogger('rocket_league')
+
 
 @contextmanager
-def file_lock(lock_file):
+def file_lock(lock_file, options):
     if os.path.exists(lock_file):
         print('[{}] Only one script can run at once. Script is locked with {}'.format(
             now(),
@@ -33,20 +36,38 @@ class Command(BaseCommand):
         parser.add_argument('replay_id', nargs='?', type=int)
 
     def handle(self, *args, **options):
-        with file_lock('/tmp/generate_heatmaps.lock'):
+        num_processed = 0
+
+        with file_lock('/tmp/generate_heatmaps.lock', options):
+            # Get any replays which don't have a location JSON file. Check if
+            # each replay is eligible to have one.
+
             if options['replay_id']:
                 replays = Replay.objects.filter(pk=options['replay_id'])
             else:
-                replays = Replay.objects.filter(
-                    heatmap_json_file='',
-                ).exclude(
-                    crashed_heatmap_parser=True,
-                ).extra(select={
-                    'timestamp__date': 'DATE(timestamp)'
-                }).order_by('-timestamp__date', '-average_rating')[:10]
+                # Get any replays which don't have a location JSON file.
+                replays = Replay.objects.exclude(
+                    crashed_heatmap_parser=True
+                ).order_by('-timestamp', '-average_rating')
 
             for replay in replays:
+                # To avoid the queue getting too backlogged, only process a few
+                # replays at a time.
+                if num_processed >= 25:
+                    return
+
                 if replay.replay_id and replay.file:
+                    needs_processing = False
+
+                    if not replay.location_json_file:
+                        needs_processing = True
+
+                    if replay.boostdata_set.count() == 0:
+                        needs_processing = True
+
+                    if not needs_processing:
+                        continue
+
                     print('[{}] Processing {} - {}'.format(
                         now(),
                         replay.pk,
@@ -59,14 +80,28 @@ class Command(BaseCommand):
 
                         replay.refresh_from_db()
 
-                        if not replay.heatmap_json_file:
+                        replay_processed = True
+
+                        if not replay.location_json_file:
+                            replay_processed = False
+
+                        if replay.boostdata_set.count() == 0:
+                            replay_processed = False
+
+                        if not replay_processed:
                             replay.crashed_heatmap_parser = True
                             replay.save()
+                        else:
+                            num_processed += 1
 
                     except Exception:
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
-                        # https://opbeat.com/docs/articles/get-started-with-django/
-                        print('Unable to process.')
-                        traceback.print_exc()
+                        logger.error(
+                            'Unable to process replay {}.'.format(replay.pk),
+                            exc_info=True
+                        )
+
+                        print('[{}] Unable to process replay {}.'.format(now(), replay.pk))
+                        print('[{}] {}'.format(now(), traceback.format_exc()))
