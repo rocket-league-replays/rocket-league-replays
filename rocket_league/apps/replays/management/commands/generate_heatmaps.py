@@ -1,9 +1,12 @@
+import json
 import logging
 import os
 import sys
 import traceback
 from contextlib import contextmanager
 
+import requests
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
@@ -126,10 +129,17 @@ class Command(BaseCommand):
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
-                        logger.error(
-                            'Unable to process replay {}.'.format(replay.pk),
-                            exc_info=True
-                        )
-
                         print('[{}] Unable to process replay {}.'.format(now(), replay.pk))
                         print('[{}] {}'.format(now(), traceback.format_exc()))
+
+                        try:
+                            requests.post(settings.SLACK_URL, data={
+                              'payload': json.dumps({
+                                  'channel': '#cronjobs',
+                                  'username': 'Cronjob Bot',
+                                  'icon_emoji': ':timer_clock:',
+                                  'text': 'Unable to process replay {}.'.format(replay.pk)
+                              })
+                            })
+                        except:
+                            pass
