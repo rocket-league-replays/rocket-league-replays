@@ -35,6 +35,15 @@ class Command(BaseCommand):
         # Positional arguments
         parser.add_argument('replay_id', nargs='?', type=int)
 
+        # Named (optional) arguments
+        parser.add_argument(
+            '--patreon',
+            action='store_true',
+            dest='patreon',
+            default=False,
+            help='Only process replays which are eligible for extra display options.'
+        )
+
     def handle(self, *args, **options):
         num_processed = 0
 
@@ -59,11 +68,20 @@ class Command(BaseCommand):
                 if replay.replay_id and replay.file:
                     needs_processing = False
 
-                    if not replay.location_json_file:
-                        needs_processing = True
+                    # Is this a Patreon-specific job? If so, skip any replays which
+                    # aren't naturally eligible for the extra stuff.
+                    if options['patreon']:
+                        if replay.eligble_for_playback() and not replay.location_json_file:
+                            needs_processing = True
 
-                    if replay.boostdata_set.count() == 0:
-                        needs_processing = True
+                        if replay.eligble_for_boost_analysis() and replay.boostdata_set.count() == 0:
+                            needs_processing = True
+                    else:
+                        if not replay.location_json_file:
+                            needs_processing = True
+
+                        if replay.boostdata_set.count() == 0:
+                            needs_processing = True
 
                     if not needs_processing:
                         continue
