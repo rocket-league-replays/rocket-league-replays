@@ -1099,7 +1099,7 @@ class ReplayPack(models.Model):
         hours, minutes = divmod(minutes, 60)
 
         return '{} {}m {}s'.format(
-            '{}h'.format(hours) if hours > 0 else '',
+            '{}h'.format(int(hours)) if hours > 0 else '',
             int(minutes),
             int(seconds),
         )
