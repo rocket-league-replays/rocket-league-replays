@@ -85,7 +85,7 @@ admin.site.register(Map, MapAdmin)
 
 
 class ReplayPackAdmin(admin.ModelAdmin):
-    filter_horizontal = ['replays']
+    raw_id_fields = ['replays']
 
 admin.site.register(ReplayPack, ReplayPackAdmin)
 
