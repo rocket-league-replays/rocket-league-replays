@@ -415,6 +415,8 @@ DIVISIONS = {
     4: 'Division V',  # Highest
 }
 
+SLACK_URL = os.getenv('SLACK_URL', '')
+
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
     # our real migration files, so point to a nonexistent one, which will make
