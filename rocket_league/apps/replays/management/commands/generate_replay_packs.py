@@ -54,10 +54,12 @@ class Command(BaseCommand):
                         filename = '{}.replay'.format(replay.replay_id)
 
                         print('Getting {}'.format(replay.file.url))
-                        r = requests.get(replay.file.url, stream=True)
+                        r = requests.get(replay.file.url)
 
-                        for chunk in r.iter_content(1024):
-                            f.writestr(filename, chunk)
+                        if r.status_code != 200:
+                            continue
+
+                        f.writestr(filename, r.text)
 
                     # Create a README file.
                     readme = render_to_string('replays/readme.html', {
