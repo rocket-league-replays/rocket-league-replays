@@ -705,6 +705,7 @@ class Replay(models.Model):
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
+                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', [[], []])[1],
                     total_xp=total_xp,
                     platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
@@ -976,6 +977,11 @@ class Player(models.Model):
         null=True,
     )
 
+    vehicle_loadout = JSONField(
+        blank=True,
+        null=True,
+    )
+
     total_xp = models.PositiveIntegerField(
         default=0,
         blank=True,
@@ -987,6 +993,14 @@ class Player(models.Model):
         blank=True,
         null=True,
     )
+
+    def vehicle_data(self):
+        if not self.vehicle_loadout:
+            return {}
+
+        return {
+            'body': Body.objects.get_or_create(id=self.vehicle_loadout[0])[0]
+        }
 
     def __str__(self):
         return '{} on Team {}'.format(
@@ -1136,3 +1150,17 @@ class BoostData(models.Model):
     class Meta:
         ordering = ['player', 'frame']
         # unique_together = [('player', 'frame', 'value')]
+
+
+class Body(models.Model):
+
+    id = models.PositiveIntegerField(
+        unique=True,
+        db_index=True,
+        primary_key=True,
+    )
+
+    name = models.CharField(
+        max_length=100,
+        default='Unknown',
+    )
