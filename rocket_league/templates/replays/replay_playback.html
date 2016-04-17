@@ -21,10 +21,21 @@
         {% endfor %}
     {% endif %}
 
+
+    {% comment %}
+        The conditions for showing playback are as follows:
+            * The current user is a patron.
+            * The uploader is a patron.
+            * One of the players is a patron.
+
+        (Patrons must be at the $3+ level)
+    {% endcomment %}
+
+    {% replay_playback_eligibility as eligible %}
     {% user_in_replay as user_in_replay %}
 
-    {% if replay.eligible_for_playback %}
-        {% if replay.show_playback %}
+    {% if eligible %}
+        {% if replay.location_json_file %}
             <div class="sim-Outer">
                 <div class="sim-Timer">
                     <div class="sim-Timer_Score sim-Timer_Score-0">0</div>

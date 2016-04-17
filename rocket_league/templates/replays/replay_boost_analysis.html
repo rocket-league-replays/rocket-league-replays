@@ -13,10 +13,20 @@
     </div>
     {% endif %}
 
+    {% comment %}
+        The conditions for showing playback are as follows:
+            * The current user is a patron.
+            * The uploader is a patron.
+            * One of the players is a patron.
+
+        (Patrons must be at the $10+ level)
+    {% endcomment %}
+
+    {% replay_boost_eligibility as eligible %}
     {% user_in_replay as user_in_replay %}
 
-    {% if replay.eligible_for_boost_analysis %}
-        {% if replay.show_boost_analysis %}
+    {% if eligible %}
+        {% if replay.boostdata_set.count > 0 %}
             {% cache 3600 replay_boost_analysis replay.pk %}
             <div class="flex-row mb-40">
                 <div class="large-8 columns">
@@ -155,7 +165,8 @@
 {% endblock %}
 
 {% block additional_js %}
-{% if replay.show_boost_analysis %}
+{% replay_boost_eligibility as eligible %}
+{% if eligible and replay.boostdata_set.count > 0 %}
     {% cache 3600 replay_boost_analysis_js replay.pk %}
     {% boost_chart_data as data %}
 

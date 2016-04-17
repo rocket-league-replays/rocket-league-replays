@@ -328,6 +328,24 @@ def user_in_replay(context):
 
 
 @register.assignment_tag(takes_context=True)
+def replay_playback_eligibility(context):
+    # If the user is a patron, this overrides everything else.
+    if context['patreon'] >= 300:
+        return True
+
+    return context['replay'].eligible_for_playback()
+
+
+@register.assignment_tag(takes_context=True)
+def replay_boost_eligibility(context):
+    # If the user is a patron, this overrides everything else.
+    if context['patreon'] >= 1000:
+        return True
+
+    return context['replay'].eligible_for_boost_analysis()
+
+
+@register.assignment_tag(takes_context=True)
 def process_boost_data(context, obj=None):
     if not obj:
         obj = context['player']
@@ -371,9 +389,6 @@ def process_boost_data(context, obj=None):
 def boost_chart_data(context, obj=None):
     if not obj:
         obj = context['replay']
-
-    if not obj.eligible_for_boost_analysis():
-        return {}
 
     players = obj.player_set.filter(spectator=False)
 
