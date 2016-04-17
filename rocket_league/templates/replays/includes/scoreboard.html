@@ -17,7 +17,7 @@
         <th>Assists</th>
         <th>Saves</th>
         <th>Shots</th>
-        <th></th>
+        <th colspan="2"></th>
     </tr>
     {% for player in players %}
     {% if player.player_name != 'Unknown player (own goal?)' %}
@@ -88,6 +88,13 @@
             </span>
 
         {% endif %}</td>
+        <td>
+            {% if player.vehicle_loadout %}
+            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="{{ player.vehicle_data.body.name }}">
+                <em class="icon-cab"></em>
+            </span>
+            {% endif %}
+        </td>
     </tr>
     {% endif %}
     {% endfor %}
