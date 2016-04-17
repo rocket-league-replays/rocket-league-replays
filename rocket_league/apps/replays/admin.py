@@ -1,8 +1,9 @@
-from django.core.management import call_command
 from django.contrib import admin
+from django.core.management import call_command
 from django.db.models import Q
 
-from .models import Replay, Player, Goal, Map, ReplayPack, Season, BoostData
+from .models import (Body, BoostData, Goal, Map, Player, Replay, ReplayPack,
+                     Season)
 
 
 def reprocess_matches(modeladmin, request, queryset):
@@ -90,3 +91,9 @@ class ReplayPackAdmin(admin.ModelAdmin):
 admin.site.register(ReplayPack, ReplayPackAdmin)
 
 admin.site.register(Season)
+
+
+class BodyAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
+
+admin.site.register(Body, BodyAdmin)

@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from django.core.management.base import BaseCommand
 from django.utils.timezone import now
 
-from ...models import Replay
+from ...models import Player, Replay
 
 logger = logging.getLogger('rocket_league')
 
@@ -82,6 +82,16 @@ class Command(BaseCommand):
 
                         if replay.boostdata_set.count() == 0:
                             needs_processing = True
+
+                    # Have any of the players got vehicle data?
+                    vehicle_data = Player.objects.filter(
+                        replay_id=replay.pk
+                    ).exclude(
+                        vehicle_loadout__in=['"{}"', '{}']
+                    )
+
+                    if vehicle_data.count() == 0:
+                        needs_processing = True
 
                     if not needs_processing:
                         continue
