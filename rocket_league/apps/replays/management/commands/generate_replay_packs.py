@@ -1,11 +1,9 @@
 import os
+import shutil
 import sys
 from contextlib import contextmanager
-from zipfile import ZipFile
 
-import io
-import requests
-from django.core.files.base import ContentFile
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.template.loader import render_to_string
 
@@ -45,28 +43,45 @@ class Command(BaseCommand):
 
             for obj in replay_packs:
                 print('Processing', obj.pk)
-                zip_filename = '{}.zip'.format(str(obj))
+                zip_filename = '{}.zip'.format(obj.pk)
+                tmp_folder = '/tmp/{}/'.format(obj.pk)
+                zip_filepath = '/tmp/{}'.format(zip_filename)
 
-                zip_string = io.BytesIO()
+                try:
+                    shutil.rmtree(tmp_folder)
+                except FileNotFoundError:
+                    pass
 
-                with ZipFile(zip_string, 'w') as f:
-                    for replay in obj.replays.all():
-                        filename = '{}.replay'.format(replay.replay_id)
+                os.mkdir(tmp_folder)
 
-                        print('Getting {}'.format(replay.file.url))
-                        r = requests.get(replay.file.url)
-
-                        if r.status_code != 200:
-                            continue
-
-                        f.writestr(filename, r.text)
-
-                    # Create a README file.
+                # Create a README file.
+                with open('{}README.txt'.format(tmp_folder), 'w') as f:
                     readme = render_to_string('replays/readme.html', {
                         'replaypack': obj,
                     })
 
-                    f.writestr('README.txt', str(readme))
-                f.close()
+                    f.write(str(readme))
 
-                obj.file.save(zip_filename, ContentFile(zip_string.getvalue()))
+                for replay in obj.replays.all():
+                    command = 'wget {} -qO {}{}.replay'.format(
+                        replay.file.url,
+                        tmp_folder,
+                        replay.replay_id,
+                    )
+
+                    os.system(command)
+
+                # Make the .zip
+                command = 'rm {} 2> /dev/null; cd /tmp; zip -q ./{} ./{}/*'.format(
+                    zip_filepath,
+                    zip_filename,
+                    obj.pk,
+                )
+                os.system(command)
+                shutil.rmtree(tmp_folder)
+
+                with open(zip_filepath, 'rb') as f:
+                    zip_file = File(f)
+                    obj.file.save(zip_filename, zip_file)
+
+                os.remove(zip_filepath)
