@@ -692,6 +692,14 @@ class Replay(models.Model):
                     team_id = data['Engine.PlayerReplicationInfo:Team'][1]
                     if team_id in parser.team_metadata:
                         team = parser.team_metadata[team_id]
+                    elif team_id == -1:
+                        # Can we find any information in the data which might
+                        # link this player to an actual team?
+                        try:
+                            team = parser.team_metadata[parser.actors[actor_id]['team']]
+                        except:
+                            team = -1
+                        pass
                     else:
                         team = -1
                 else:
@@ -717,6 +725,8 @@ class Replay(models.Model):
                     boost_objects = []
 
                     for key, boost_data in parser.boost_data['values'].items():
+                        boost_actor_id = None
+
                         if parser.boost_data['actors'][key] != {}:
                             boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
 
