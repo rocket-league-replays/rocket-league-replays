@@ -255,28 +255,28 @@ class Parser(object):
             if base_index not in self.replay.netstream:
                 search_index = base_index - 1
 
-        frame = self.replay.netstream[search_index]
+        frame = self.replay.netstream.get(search_index, None)
 
         scorer = None
 
-        players = [
-            value
-            for name, value in frame.actors.items()
-            if value['actor_type'] == 'TAGame.Default__PRI_TA'
-        ]
+        if frame:
+            players = [
+                value
+                for name, value in frame.actors.items()
+                if value['actor_type'] == 'TAGame.Default__PRI_TA'
+            ]
 
-        # Figure out who scored.
-        for value in players:
-            if 'TAGame.PRI_TA:MatchGoals' in value['data']:
-                scorer = value['actor_id']
-                break
+            # Figure out who scored.
+            for value in players:
+                if 'TAGame.PRI_TA:MatchGoals' in value['data']:
+                    scorer = value['actor_id']
+                    break
 
-            if 'TAGame.PRI_TA:MatchAssists' in value['data']:
-                # print('we have the assister!', value['actor_id'])
-                pass
+                if 'TAGame.PRI_TA:MatchAssists' in value['data']:
+                    # print('we have the assister!', value['actor_id'])
+                    pass
 
         # Search in the closest frames, then gradually expand the search.
-
         if scorer is None:
             if search_index < base_index - 100:
                 print('Unable to find goal for frame', base_index)
@@ -290,7 +290,10 @@ class Parser(object):
                 next_index = base_index + (search_index - base_index + 1) * -1
 
             if next_index not in self.replay.netstream:
-                next_index = search_index - 1
+                if next_index < 0:
+                    next_index = abs(search_index) + 1
+                else:
+                    next_index = search_index - 1
 
             self._extract_goal_data(base_index, next_index)
             return
