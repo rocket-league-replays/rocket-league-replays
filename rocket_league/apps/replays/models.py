@@ -699,7 +699,6 @@ class Replay(models.Model):
                             team = parser.team_metadata[parser.actors[actor_id]['team']]
                         except:
                             team = -1
-                        pass
                     else:
                         team = -1
                 else:
