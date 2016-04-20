@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
 from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.views.generic import (DetailView, FormView, TemplateView,
@@ -259,7 +259,7 @@ class StreamDataAPIView(views.APIView):
     serializer_class = StreamDataSerializer
 
     def get_serializer_context(self):
-        user = User.objects.get(pk=self.kwargs['user_id'])
+        user = get_object_or_404(User, pk=self.kwargs['user_id'])
         context = user.profile.stream_settings
         context['user'] = user
 
