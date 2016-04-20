@@ -485,7 +485,7 @@ def boost_chart_data(context, obj=None):
 
                     boost_values[actor_id][key - 1] = rendered_value
 
-                    if key - 1 not in team_boost_values[team]:
+                    if key - 1 not in team_boost_values.get(team, {}):
                         team_boost_values[team][key - 1] = 0
 
                     team_boost_values[team][key - 1] += rendered_value
