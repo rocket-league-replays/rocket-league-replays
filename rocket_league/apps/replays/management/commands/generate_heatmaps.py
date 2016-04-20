@@ -17,6 +17,9 @@ logger = logging.getLogger('rocket_league')
 
 @contextmanager
 def file_lock(lock_file, options):
+    if options['replay_id']:
+        lock_file = '{}.{}'.format(lock_file, options['replay_id'])
+
     if os.path.exists(lock_file):
         print('[{}] Only one script can run at once. Script is locked with {}'.format(
             now(),
