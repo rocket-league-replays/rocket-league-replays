@@ -86,6 +86,9 @@ class Command(BaseCommand):
                         if replay.boostdata_set.count() == 0:
                             needs_processing = True
 
+                    if options['replay_id']:
+                        needs_processing = True
+
                     # Have any of the players got vehicle data?
                     vehicle_data = Player.objects.filter(
                         replay_id=replay.pk
