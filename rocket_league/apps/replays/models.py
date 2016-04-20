@@ -726,7 +726,7 @@ class Replay(models.Model):
                     for key, boost_data in parser.boost_data['values'].items():
                         boost_actor_id = None
 
-                        if parser.boost_data['actors'][key] != {}:
+                        if parser.boost_data['actors'][key] != {} and parser.boost_data['actors'][key] in parser.boost_data['cars']:
                             boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
 
                         if boost_actor_id != actor_id:
