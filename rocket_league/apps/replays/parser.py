@@ -370,7 +370,7 @@ class Parser(object):
                             self.actors[actor_id]['left'] = index
 
                 elif 'TAGame.PRI_TA:ClientLoadout' in value['data']:
-                    player_name = value['data']['Engine.PlayerReplicationInfo:PlayerName']
+                    player_name = value['data'].get('Engine.PlayerReplicationInfo:PlayerName', None)
 
                     self.actors[actor_id] = {
                         'type': 'player',
@@ -388,7 +388,7 @@ class Parser(object):
                     self.actor_metadata[actor_id] = value['data']
                 else:
                     for key, value in value['data'].items():
-                        if key not in self.actor_metadata[actor_id]:
+                        if key not in self.actor_metadata[actor_id] or self.actor_metadata[actor_id].get(key, None) is None:
                             self.actor_metadata[actor_id][key] = value
 
             # Get the ball data (if any).
