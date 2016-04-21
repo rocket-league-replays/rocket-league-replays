@@ -67,3 +67,5 @@ bower_components/
 secrets.py
 webpack-stats.json
 .venv-python2
+cars
+patron_sql_tests.sql
