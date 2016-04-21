@@ -135,6 +135,7 @@ INSTALLED_APPS = [
 
     "sorl.thumbnail",
     "compressor",
+    'corsheaders',
 
     "cms",
 
@@ -184,6 +185,7 @@ COMPRESS_CSS_FILTERS = [
 
 MIDDLEWARE_CLASSES = (
     # "cms.middleware.LocalisationMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -330,6 +332,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 30
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_URLS_REGEX = r'^/api/.*$'
 
 SWAGGER_SETTINGS = {
     'info': {
