@@ -1,4 +1,4 @@
-from .models import Goal, Map, Player, Replay, Season
+from .models import Goal, Map, Player, Replay, Season, Body
 
 from rest_framework.serializers import HyperlinkedModelSerializer, ReadOnlyField
 
@@ -32,6 +32,14 @@ class SeasonSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = Season
+
+
+class BodySerializer(HyperlinkedModelSerializer):
+
+    id = ReadOnlyField()
+
+    class Meta:
+        model = Body
 
 
 class ReplaySerializer(HyperlinkedModelSerializer):

@@ -10,8 +10,9 @@ from django.contrib import admin
 from django.views import generic
 from rest_framework import routers
 
-from .apps.replays.views import (GoalViewSet, LatestUserReplay, MapViewSet,
-                                 PlayerViewSet, ReplayViewSet, SeasonViewSet)
+from .apps.replays.views import (BodyViewSet, GoalViewSet, LatestUserReplay,
+                                 MapViewSet, PlayerViewSet, ReplayViewSet,
+                                 SeasonViewSet)
 from .apps.users.views import StreamDataAPIView
 
 admin.autodiscover()
@@ -23,6 +24,7 @@ router.register(r'replays', ReplayViewSet)
 router.register(r'players', PlayerViewSet)
 router.register(r'goals', GoalViewSet)
 router.register(r'seasons', SeasonViewSet)
+router.register(r'bodies', BodyViewSet)
 
 
 urlpatterns = patterns(

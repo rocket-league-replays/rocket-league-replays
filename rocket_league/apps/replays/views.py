@@ -16,11 +16,11 @@ from ...utils.forms import AjaxableResponseMixin
 from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import (Goal, Map, Player, Replay, ReplayPack, Season,
+from .models import (Body, Goal, Map, Player, Replay, ReplayPack, Season,
                      get_default_season)
-from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
-                          ReplayCreateSerializer, ReplaySerializer,
-                          SeasonSerializer)
+from .serializers import (BodySerializer, GoalSerializer, MapSerializer,
+                          PlayerSerializer, ReplayCreateSerializer,
+                          ReplaySerializer, SeasonSerializer)
 from .templatetags.replays import process_boost_data
 
 
@@ -397,6 +397,16 @@ class GoalViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
+
+
+class BodyViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all of the car bodies available in-game.
+    """
+
+    queryset = Body.objects.all()
+    serializer_class = BodySerializer
 
 
 class LatestUserReplay(views.APIView):
