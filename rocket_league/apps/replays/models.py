@@ -1,18 +1,18 @@
 import re
 import time
 from datetime import datetime
+from itertools import zip_longest
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+import bitstring
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from social.apps.django_app.default.fields import JSONField
-
-from itertools import zip_longest
-import bitstring
 
 from .parser import Parser
 
@@ -236,6 +236,10 @@ class Replay(models.Model):
     processed = models.BooleanField(
         default=False,
     )
+
+    @cached_property
+    def uuid(self):
+        return re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower()
 
     def team_x_player_list(self, team):
         return [

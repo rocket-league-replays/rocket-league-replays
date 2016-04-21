@@ -1,20 +1,20 @@
 <div class="lyt-Tabs">
     <div class="lyt-Tabs_Items">
-        {% url 'replay:detail' pk=object.pk as url %}
+        {% url 'replay:detail' replay_id=object.uuid as url %}
         <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
             <a href="{{ url }}" class="lyt-Tabs_Action">
                 Statistics
             </a>
         </div>
 
-        {% url 'replay:playback' pk=object.pk as url %}
+        {% url 'replay:playback' replay_id=object.uuid as url %}
         <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
             <a href="{{ url }}" class="lyt-Tabs_Action">
                 Playback <em class="icon-crown-plus"></em>
             </a>
         </div>
 
-        {% url 'replay:boost-analysis' pk=object.pk as url %}
+        {% url 'replay:boost-analysis' replay_id=object.uuid as url %}
         <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
             <a href="{{ url }}" class="lyt-Tabs_Action">
                 Boost Analysis <em class="icon-crown-plus"></em>

@@ -72,20 +72,33 @@ class ReplayListView(FilterView):
         return context
 
 
-class ReplayRedirectView(RedirectView):
-    permanent = True
+class ReplayUUIDMixin(DetailView):
 
-    def get_redirect_url(self, *args, **kwargs):
-        obj = get_object_or_404(Replay, pk=kwargs['pk'])
-        return obj.get_absolute_url()
+    def dispatch(self, request, *args, **kwargs):
+        if 'pk' in kwargs:
+            from django.shortcuts import redirect
+            from django.core.urlresolvers import resolve
 
+            obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
+            resolved_url = resolve(request.path)
 
-class ReplayDetailView(DetailView):
-    model = Replay
+            return redirect(
+                'replay:{}'.format(
+                    resolved_url.url_name
+                ),
+                permanent=True,
+                replay_id=re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
+            )
+
+        return super(ReplayUUIDMixin, self).dispatch(request, *args, **kwargs)
 
     def get_object(self):
         replay_id = self.kwargs['replay_id'].replace('-', '').upper()
         return get_object_or_404(Replay, replay_id=replay_id)
+
+
+class ReplayDetailView(ReplayUUIDMixin):
+    model = Replay
 
 
 class ReplayAnalysisView(RedirectView):
@@ -95,7 +108,7 @@ class ReplayAnalysisView(RedirectView):
         return reverse('replay:playback', kwargs=kwargs)
 
 
-class ReplayBoostAnalysisView(DetailView):
+class ReplayBoostAnalysisView(ReplayUUIDMixin):
     model = Replay
     template_name_suffix = '_boost_analysis'
 
@@ -134,7 +147,7 @@ class ReplayBoostAnalysisView(DetailView):
         return context
 
 
-class ReplayPlaybackView(DetailView):
+class ReplayPlaybackView(ReplayUUIDMixin):
     model = Replay
     template_name_suffix = '_playback'
 
