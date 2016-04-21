@@ -669,7 +669,7 @@ class Replay(models.Model):
                     else:
                         id_parts = [
                             '-1',
-                            data['Engine.PlayerReplicationInfo:PlayerName'],
+                            data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
                             '0'
                         ]
 
