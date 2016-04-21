@@ -9,9 +9,11 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import (CreateView, DeleteView, DetailView,
                                   RedirectView, UpdateView)
 from django_filters.views import FilterView
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, views, viewsets
+from rest_framework.response import Response
 
 from ...utils.forms import AjaxableResponseMixin
+from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
 from .models import (Goal, Map, Player, Replay, ReplayPack, Season,
@@ -395,3 +397,20 @@ class GoalViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Goal.objects.all()
     serializer_class = GoalSerializer
+
+
+class LatestUserReplay(views.APIView):
+    serializer_class = ReplaySerializer
+
+    def get_serializer_context(self):
+        user = get_object_or_404(User, pk=self.kwargs['user_id'])
+
+        return Replay.objects.filter(
+            user=user,
+        ).order_by('-pk')[0]
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(self.get_serializer_context(), context={
+            'request': request,
+        })
+        return Response(serializer.data)

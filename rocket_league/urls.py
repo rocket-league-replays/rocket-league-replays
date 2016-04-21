@@ -10,8 +10,8 @@ from django.contrib import admin
 from django.views import generic
 from rest_framework import routers
 
-from .apps.replays.views import (GoalViewSet, MapViewSet, PlayerViewSet,
-                                 ReplayViewSet, SeasonViewSet)
+from .apps.replays.views import (GoalViewSet, LatestUserReplay, MapViewSet,
+                                 PlayerViewSet, ReplayViewSet, SeasonViewSet)
 from .apps.users.views import StreamDataAPIView
 
 admin.autodiscover()
@@ -52,6 +52,7 @@ urlpatterns = patterns(
 
     url(r'^api/', include(router.urls)),
     url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view(), name='stream-data'),
+    url(r'^api/latest-replay/(?P<user_id>\d+)/$', LatestUserReplay.as_view(), name='latest-replay'),
 
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 
