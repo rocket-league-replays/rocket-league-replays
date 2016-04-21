@@ -113,6 +113,7 @@ class Command(BaseCommand):
 
                     try:
                         replay.processed = False
+                        replay.crashed_heatmap_parser = False
                         replay.save(parse_netstream=True)
 
                         replay.refresh_from_db()
@@ -132,20 +133,22 @@ class Command(BaseCommand):
                             num_processed += 1
 
                     except Exception:
+                        replay.refresh_from_db()
                         replay.crashed_heatmap_parser = True
                         replay.save()
 
                         print('[{}] Unable to process replay {}.'.format(now(), replay.pk))
                         print('[{}] {}'.format(now(), traceback.format_exc()))
 
-                        try:
-                            requests.post(settings.SLACK_URL, data={
-                              'payload': json.dumps({
-                                  'channel': '#cronjobs',
-                                  'username': 'Cronjob Bot',
-                                  'icon_emoji': ':timer_clock:',
-                                  'text': 'Unable to process replay {}.'.format(replay.pk)
-                              })
-                            })
-                        except:
-                            pass
+                        if not options['replay_id']:
+                            try:
+                                requests.post(settings.SLACK_URL, data={
+                                    'payload': json.dumps({
+                                        'channel': '#cronjobs',
+                                        'username': 'Cronjob Bot',
+                                        'icon_emoji': ':timer_clock:',
+                                        'text': 'Unable to process replay {}.'.format(replay.pk)
+                                    })
+                                })
+                            except:
+                                pass
