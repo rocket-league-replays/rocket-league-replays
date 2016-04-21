@@ -121,6 +121,7 @@ class Replay(models.Model):
         max_length=100,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     player_name = models.CharField(
@@ -502,7 +503,7 @@ class Replay(models.Model):
 
     def get_absolute_url(self):
         return reverse('replay:detail', kwargs={
-            'pk': self.pk,
+            'replay_id': re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower(),
         })
 
     class Meta:

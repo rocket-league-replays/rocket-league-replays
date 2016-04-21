@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.views.generic import (CreateView, DeleteView, DetailView,
                                   RedirectView, UpdateView)
 from django_filters.views import FilterView
@@ -71,12 +72,24 @@ class ReplayListView(FilterView):
         return context
 
 
+class ReplayRedirectView(RedirectView):
+    permanent = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        obj = get_object_or_404(Replay, pk=kwargs['pk'])
+        return obj.get_absolute_url()
+
+
 class ReplayDetailView(DetailView):
     model = Replay
 
+    def get_object(self):
+        replay_id = self.kwargs['replay_id'].replace('-', '').upper()
+        return get_object_or_404(Replay, replay_id=replay_id)
+
 
 class ReplayAnalysisView(RedirectView):
-    permanent = False
+    permanent = True
 
     def get_redirect_url(self, *args, **kwargs):
         return reverse('replay:playback', kwargs=kwargs)
