@@ -75,7 +75,25 @@ export function init () {
   })
 
   addStadium()
-  animate()
+  getMaxFPS()
+}
+
+function getMaxFPS () {
+  var t = []
+  var testAnimate = function (now) {
+    t.unshift(now)
+    if (t.length > 10) {
+      var t0 = t.pop()
+      var fps = Math.floor(1000 * 10 / (now - t0))
+      document.getElementById("fpsSlider").setAttribute("max", fps)
+      animate()
+    }
+    else {
+      window.requestAnimationFrame(testAnimate)
+    }
+  }
+
+  window.requestAnimationFrame(testAnimate)
 }
 
 function animate () {
@@ -97,7 +115,7 @@ function animate () {
 
   render()
 
-  const fpsLimit = 30 // Cap at 30 FPS.
+  const fpsLimit = document.getElementById("fpsSlider").value // Get FPS from slider.
   const timeoutDelay = 1000 / fpsLimit
 
   setTimeout(() => {
