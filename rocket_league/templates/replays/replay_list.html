@@ -3,10 +3,25 @@
 
 {% block content_primary %}
 <div class="row">
-    <div class="small-12 columns">
+    <div class="medium-6 columns">
         <h3>All replays</h3>
         <p>Below you can find all replays which have been uploaded to {{ settings.SITE_NAME }}.</p>
     </div>
+
+    {% if patreon == 0 %}
+    <div class="medium-6 columns text-center">
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <!-- List page -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-1408820986188374"
+             data-ad-slot="1675124088"
+             data-ad-format="auto"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+    {% endif %}
 </div>
 
 <div class="row">
