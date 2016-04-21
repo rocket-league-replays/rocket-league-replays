@@ -707,7 +707,7 @@ class Replay(models.Model):
                 obj = Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
-                    player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
+                    player_name=data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
                     team=team,
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
