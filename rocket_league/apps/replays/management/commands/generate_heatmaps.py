@@ -147,7 +147,12 @@ class Command(BaseCommand):
                                         'channel': '#cronjobs',
                                         'username': 'Cronjob Bot',
                                         'icon_emoji': ':timer_clock:',
-                                        'text': 'Unable to process replay {}.'.format(replay.pk)
+                                        'text': '[{}][Patreon server? {}]Unable to process replay {}.```{}```'.format(
+                                            now(),
+                                            'Y' if options['replay_id'] else 'N',
+                                            replay.pk,
+                                            traceback.format_exc()
+                                        )
                                     })
                                 })
                             except:
