@@ -96,7 +96,18 @@ class ReplayUUIDMixin(DetailView):
 
     def get_object(self):
         replay_id = self.kwargs['replay_id'].replace('-', '').upper()
-        return get_object_or_404(Replay, replay_id=replay_id)
+
+        try:
+            return get_object_or_404(Replay, replay_id=replay_id)
+        except Replay.MultipleObjectsReturned:
+            replays = Replay.objects.filter(
+                replay_id=replay_id,
+            )[1:]
+
+            for replay in replays:
+                replay.delete()
+
+            return get_object_or_404(Replay, replay_id=replay_id)
 
 
 class ReplayDetailView(ReplayUUIDMixin):
