@@ -415,9 +415,12 @@ class LatestUserReplay(views.APIView):
     def get_serializer_context(self):
         user = get_object_or_404(User, pk=self.kwargs['user_id'])
 
-        return Replay.objects.filter(
-            user=user,
-        ).order_by('-pk')[0]
+        try:
+            return Replay.objects.filter(
+                user=user,
+            ).order_by('-pk')[0]
+        except IndexError:
+            pass
 
     def get(self, request, *args, **kwargs):
         serializer = self.serializer_class(self.get_serializer_context(), context={
