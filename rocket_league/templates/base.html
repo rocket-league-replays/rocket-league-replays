@@ -153,19 +153,6 @@
                                     {% league_name data.10 %}
 
                                     {% if data.10_division != -1 %} ({% division_name data.10_division %}){% endif %}
-
-                                    {% if 10 in user.profile.rating_diff and user.profile.rating_diff.10 != 0 %}
-                                        {% if user.profile.rating_diff.10 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.10|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.10 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
                                 </span>
                                 {% endif %}
 
@@ -184,19 +171,6 @@
                                     {% league_name data.11 %}
 
                                     {% if data.11_division != -1 %} ({% division_name data.11_division %}){% endif %}
-
-                                    {% if 11 in user.profile.rating_diff and user.profile.rating_diff.11 != 0 %}
-                                        {% if user.profile.rating_diff.11 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.11|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.11 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
                                 </span>
                                 {% endif %}
 
@@ -215,19 +189,6 @@
                                     {% league_name data.12 %}
 
                                     {% if data.12_division != -1 %} ({% division_name data.12_division %}){% endif %}
-
-                                    {% if 12 in user.profile.rating_diff and user.profile.rating_diff.12 != 0 %}
-                                        {% if user.profile.rating_diff.12 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.12|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.12 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
                                 </span>
                                 {% endif %}
 
@@ -246,19 +207,6 @@
                                     {% league_name data.13 %}
 
                                     {% if data.13_division != -1 %} ({% division_name data.13_division %}){% endif %}
-
-                                    {% if 13 in user.profile.rating_diff and user.profile.rating_diff.13 != 0 %}
-                                        {% if user.profile.rating_diff.13 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.13|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.13 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
                                 </span>
                                 {% endif %}
                             </div>

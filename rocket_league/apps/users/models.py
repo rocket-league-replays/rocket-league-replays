@@ -72,7 +72,15 @@ class Profile(models.Model):
         ratings = LeagueRating.objects.filter(
             steamid=steam_id,
             season_id=get_default_season(),
-        )[:1]
+        )
+
+        if ratings.count() > 1:
+            LeagueRating.objects.filter(
+                steamid=steam_id,
+                season_id=get_default_season(),
+            ).exclude(
+                pk=ratings[0].pk
+            ).delete()
 
         if ratings:
             return {

@@ -36,7 +36,7 @@ def latest_ratings(context):
         season_id=get_default_season(),
     )[:1]
 
-    if ratings:
+    if ratings.count() > 0:
         return {
             settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
             '{}_division'.format(settings.PLAYLISTS['RankedDuels']): ratings[0].duels_division,
