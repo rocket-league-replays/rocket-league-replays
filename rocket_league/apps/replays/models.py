@@ -269,6 +269,7 @@ class Replay(models.Model):
     def player_pairs(self):
         return zip_longest(self.team_0_player_list(), self.team_1_player_list())
 
+    @cached_property
     def region(self):
         if not self.server_name:
             return 'N/A'
@@ -289,6 +290,7 @@ class Replay(models.Model):
             *match
         )
 
+    @cached_property
     def match_length(self):
         if not self.num_frames or not self.record_fps:
             return 'N/A'
@@ -478,9 +480,11 @@ class Replay(models.Model):
         return False
 
     # Feature eligibility checks.
+    @cached_property
     def eligible_for_playback(self):
         return self.eligible_for_feature('playback')
 
+    @cached_property
     def show_playback(self):
         # First of all, is there even a JSON file?
         if not self.location_json_file:
@@ -488,9 +492,11 @@ class Replay(models.Model):
 
         return self.eligible_for_feature('playback')
 
+    @cached_property
     def eligible_for_boost_analysis(self):
         return self.eligible_for_feature('boost_analysis')
 
+    @cached_property
     def show_boost_analysis(self):
         # Have we got any boost data yet?
         if self.boostdata_set.count() == 0:
@@ -499,6 +505,7 @@ class Replay(models.Model):
         return self.eligible_for_feature('boost_analysis')
 
     # Other stuff
+    @cached_property
     def get_human_playlist(self):
         if not self.playlist:
             return None
@@ -1020,6 +1027,7 @@ class Player(models.Model):
         null=True,
     )
 
+    @cached_property
     def vehicle_data(self):
         if not self.vehicle_loadout:
             return {}
@@ -1059,6 +1067,7 @@ class Goal(models.Model):
         null=True,
     )
 
+    @cached_property
     def goal_time(self):
         if not self.frame or not self.replay.record_fps:
             return 'N/A'
@@ -1110,6 +1119,7 @@ class ReplayPack(models.Model):
         auto_now=True,
     )
 
+    @cached_property
     def maps(self):
         maps = Map.objects.filter(
             id__in=set(self.replays.values_list('map_id', flat=True))
@@ -1117,6 +1127,7 @@ class ReplayPack(models.Model):
 
         return ', '.join(maps)
 
+    @cached_property
     def goals(self):
         if not self.replays.count():
             return 0
@@ -1124,11 +1135,13 @@ class ReplayPack(models.Model):
             num_goals=models.Sum(models.F('team_0_score') + models.F('team_1_score'))
         )['num_goals']
 
+    @cached_property
     def players(self):
         return set(Player.objects.filter(
             replay_id__in=self.replays.values_list('id', flat=True),
         ).values_list('player_name', flat=True))
 
+    @cached_property
     def total_duration(self):
         calculation = 0
 
