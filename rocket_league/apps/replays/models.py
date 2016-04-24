@@ -567,6 +567,8 @@ class Replay(models.Model):
         if self.file and not self.processed:
             self.file.seek(0)
 
+            player_objects = {}
+
             parser = Parser(self.file.read(), parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
@@ -731,6 +733,8 @@ class Replay(models.Model):
                     spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
                 )
 
+                player_objects[actor_id] = obj
+
                 # If this player had any boost data, then lets store that too.
                 if hasattr(parser, 'boost_data') and 'values' in parser.boost_data:
                     boost_objects = []
@@ -827,10 +831,13 @@ class Replay(models.Model):
                     player = None
 
                     if goal['frame'] in parser.goal_metadata:
-                        player = Player.objects.get(
-                            replay=self,
-                            actor_id=parser.goal_metadata[goal['frame']],
-                        )
+                        if actor_id in player_objects:
+                            player = player_objects[actor_id]
+                        else:
+                            player = Player.objects.get(
+                                replay=self,
+                                actor_id=parser.goal_metadata[goal['frame']],
+                            )
                     else:
                         players = Player.objects.filter(
                             replay=self,
