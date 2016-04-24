@@ -335,7 +335,7 @@ def replay_playback_eligibility(context):
     if context['patreon'] >= 300:
         return True
 
-    return context['replay'].eligible_for_playback()
+    return context['replay'].eligible_for_playback
 
 
 @register.assignment_tag(takes_context=True)
@@ -344,7 +344,7 @@ def replay_boost_eligibility(context):
     if context['patreon'] >= 1000:
         return True
 
-    return context['replay'].eligible_for_boost_analysis()
+    return context['replay'].eligible_for_boost_analysis
 
 
 @register.assignment_tag(takes_context=True)

@@ -77,10 +77,10 @@ class Command(BaseCommand):
                     # Is this a Patreon-specific job? If so, skip any replays which
                     # aren't naturally eligible for the extra stuff.
                     if options['patreon']:
-                        if replay.eligible_for_playback() and not replay.location_json_file:
+                        if replay.eligible_for_playback and not replay.location_json_file:
                             needs_processing = True
 
-                        if replay.eligible_for_boost_analysis() and replay.boostdata_set.count() == 0:
+                        if replay.eligible_for_boost_analysis and replay.boostdata_set.count() == 0:
                             needs_processing = True
                     else:
                         if not replay.location_json_file:
