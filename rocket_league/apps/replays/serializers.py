@@ -66,6 +66,8 @@ class ReplaySerializer(HyperlinkedModelSerializer):
         read_only=True,
     )
 
+    user_id = ReadOnlyField()
+
     class Meta:
         model = Replay
         exclude = ['user', 'crashed_heatmap_parser']
