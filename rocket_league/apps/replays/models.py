@@ -565,7 +565,21 @@ class Replay(models.Model):
         super(Replay, self).save(*args, **kwargs)
 
         if self.file and not self.processed:
-            self.file.seek(0)
+            try:
+                self.file.seek(0)
+            except FileNotFoundError as e:
+                if settings.DEBUG:
+                    import os
+
+                    # Download the file from S3.
+                    command = 'wget https://media.rocketleaguereplays.com/uploads/replay_files/{}.replay -qO {}'.format(
+                        self.replay_id,
+                        e.filename,
+                    )
+
+                    os.system(command)
+
+                    self.file.seek(0)
 
             player_objects = {}
 
