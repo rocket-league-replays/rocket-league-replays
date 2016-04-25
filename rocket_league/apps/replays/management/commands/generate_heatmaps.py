@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         # Positional arguments
-        parser.add_argument('replay_id', nargs='?', type=int)
+        parser.add_argument('replay_id', nargs='?', type=str)
 
         # Named (optional) arguments
         parser.add_argument(
@@ -58,7 +58,10 @@ class Command(BaseCommand):
             # each replay is eligible to have one.
 
             if options['replay_id']:
-                replays = Replay.objects.filter(pk=options['replay_id'])
+                try:
+                    replays = Replay.objects.filter(pk=int(options['replay_id']))
+                except ValueError:
+                    replays = Replay.objects.filter(replay_id=options['replay_id'].replace('-', '').upper())
             else:
                 # Get any replays which don't have a location JSON file.
                 replays = Replay.objects.exclude(
