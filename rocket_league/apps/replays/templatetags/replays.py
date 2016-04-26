@@ -519,7 +519,7 @@ def boost_chart_data(context, obj=None):
         if obj.num_frames not in boost_consumption[key] and len(boost_consumption[key]) > 0:
             boost_consumption[key][obj.num_frames] = boost_consumption[key][next(reversed(boost_consumption[key]))]
 
-    team_boost_consumption_full = {0: OrderedDict(), 1: OrderedDict()}
+    team_boost_consumption_full = {-1: OrderedDict(), 0: OrderedDict(), 1: OrderedDict()}
 
     for key in team_boost_consumption:
         # team_boost_consumption[key] = OrderedDict(sorted(team_boost_consumption[key].items()))
@@ -542,7 +542,7 @@ def boost_chart_data(context, obj=None):
             boost_values[key][obj.num_frames] = boost_values[key][next(reversed(boost_values[key]))]
 
     # Generate the team boost distribution charts.
-    team_boost_values_full = {0: OrderedDict(), 1: OrderedDict()}
+    team_boost_values_full = {-1: OrderedDict(), 0: OrderedDict(), 1: OrderedDict()}
 
     for frame in range(obj.num_frames):
         for team in range(2):
