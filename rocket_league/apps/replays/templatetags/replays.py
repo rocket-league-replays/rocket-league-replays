@@ -559,7 +559,7 @@ def boost_chart_data(context, obj=None):
     team_boost_values = team_boost_values_full
 
     # Get the maximum value for both teams, in terms of boost value. Pad any empty values.
-    boost_distribution_full = {0: OrderedDict(), 1: OrderedDict()}
+    boost_distribution_full = {-1: OrderedDict(), 0: OrderedDict(), 1: OrderedDict()}
     for value in range(max(list(boost_distribution[0].keys()) + list(boost_distribution[1].keys())) + 1):
         for team in range(2):
             if value not in boost_distribution[team]:
