@@ -105,6 +105,9 @@ class Command(BaseCommand):
                     if vehicle_data.count() == 0:
                         needs_processing = True
 
+                    if not replay.processed:
+                        needs_processing = True
+
                     if not needs_processing:
                         continue
 
