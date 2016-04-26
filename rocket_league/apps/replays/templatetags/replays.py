@@ -399,7 +399,7 @@ def boost_chart_data(context, obj=None):
     boost_values = {}
     boost_consumption = {}
 
-    team_boost_consumption = {0: {}, 1: {}}
+    team_boost_consumption = {-1: {}, 0: {}, 1: {}}
 
     player_names = {}
     team_boost_values = {
