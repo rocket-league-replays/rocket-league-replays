@@ -917,6 +917,9 @@ class Replay(models.Model):
             if get_season:
                 self.season = get_season[0]
 
+            if 'ReplayName' in data:
+                self.title = data['ReplayName']
+
             self.team_sizes = data['TeamSize']
             self.team_0_score = data.get('Team0Score', 0)
             self.team_1_score = data.get('Team1Score', 0)
