@@ -71,7 +71,7 @@ class Command(BaseCommand):
             for replay in replays:
                 # To avoid the queue getting too backlogged, only process a few
                 # replays at a time.
-                if num_processed >= 25:
+                if num_processed >= 5:
                     return
 
                 if replay.replay_id and replay.file:
