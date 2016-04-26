@@ -408,7 +408,7 @@ def boost_chart_data(context, obj=None):
         1: {}
     }
 
-    boost_distribution = {0: {}, 1: {}}
+    boost_distribution = {-1: {}, 0: {}, 1: {}}
 
     boost_consumed_values = {}
     boost_data_values = {}
