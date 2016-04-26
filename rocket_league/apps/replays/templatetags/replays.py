@@ -403,6 +403,7 @@ def boost_chart_data(context, obj=None):
 
     player_names = {}
     team_boost_values = {
+        -1: {},
         0: {},
         1: {}
     }
