@@ -778,10 +778,16 @@ class Replay(models.Model):
 
                 if 'TAGame.PRI_TA:PartyLeader' in data:
                     # Get this player object, then get the party leader object.
-                    player_obj = Player.objects.get(
-                        replay=self,
-                        unique_id='-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId']),
-                    )
+                    if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                        player_obj = Player.objects.get(
+                            replay=self,
+                            unique_id='-'.join(
+                                str(x)
+                                for x in data['Engine.PlayerReplicationInfo:UniqueId']
+                            ),
+                        )
+                    else:
+                        player_obj = None
 
                     try:
                         leader_obj = Player.objects.get(
