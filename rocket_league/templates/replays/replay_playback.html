@@ -84,7 +84,8 @@
         <div class="row">
             <div class="medium-8 medium-centered columns mb-50">
                 <h4>Awaiting processing</h4>
-                <p>This replay is eligible for playback, we just haven't got round to processing it yet. Please hang on and we'll have it done as soon as possible. Thank you for your patience.</p>
+
+                <p>This replay is eligible for playback, {% if replay.crashed_heatmap_parser %}but we're having trouble parsing it. This is usually a temporary thing and requires us to update the parser{% else %}we just haven't got round to processing it yet{% endif %}. Please hang on and we'll have it done as soon as possible. Thank you for your patience.</p>
             </div>
         </div>
         {% endif %}
