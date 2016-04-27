@@ -684,7 +684,7 @@ class Replay(models.Model):
                     if 'Engine.PlayerReplicationInfo:Team' in data:
                         id_parts = [
                             str(data['Engine.PlayerReplicationInfo:Team'][1]),
-                            data['Engine.PlayerReplicationInfo:PlayerName'],
+                            data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
                             '0',
                         ]
 
