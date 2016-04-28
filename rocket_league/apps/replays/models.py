@@ -801,13 +801,6 @@ class Replay(models.Model):
                         player_obj.party_leader = leader_obj
                         player_obj.save()
 
-            if len(parser.actor_metadata) > 0:
-                assert len([
-                    1
-                    for _, data in parser.actor_metadata.items()
-                    if len(data) > 1
-                ]) == Player.objects.filter(replay=self).count()
-
             if 'PlayerStats' in parser.replay.header:
                 # We can show a leaderboard!
                 self.show_leaderboard = True
