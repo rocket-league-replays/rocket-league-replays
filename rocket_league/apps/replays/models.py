@@ -851,6 +851,8 @@ class Replay(models.Model):
                     player = None
 
                     if goal['frame'] in parser.goal_metadata:
+                        actor_id = parser.goal_metadata[goal['frame']]
+
                         if actor_id in player_objects:
                             player = player_objects[actor_id]
                         else:
