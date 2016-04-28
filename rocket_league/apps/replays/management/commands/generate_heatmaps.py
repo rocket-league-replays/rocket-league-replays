@@ -108,6 +108,12 @@ class Command(BaseCommand):
                     if not replay.processed:
                         needs_processing = True
 
+                    goal_scoring_players = len([p.id for p in replay.player_set.all() if p.goals > 0])
+                    goal_object_players = len(set([goal.player_id for goal in replay.goal_set.all()]))
+
+                    if goal_scoring_players > goal_object_players:
+                        needs_processing = True
+
                     if not needs_processing:
                         continue
 
