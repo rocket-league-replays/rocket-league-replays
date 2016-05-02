@@ -22,6 +22,7 @@ from .serializers import (BodySerializer, GoalSerializer, MapSerializer,
                           PlayerSerializer, ReplayCreateSerializer,
                           ReplaySerializer, SeasonSerializer)
 from .templatetags.replays import process_boost_data
+from .tasks import process_netstream
 
 
 class ReplayListView(FilterView):
@@ -184,7 +185,12 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         if self.request.user.is_authenticated():
             form.instance.user = self.request.user
 
-        return super(ReplayCreateView, self).form_valid(form)
+        response = super(ReplayCreateView, self).form_valid(form)
+
+        # Add the replay to the netstream processing queue.
+        process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
+
+        return response
 
 
 class ReplayUpdateView(LoginRequiredMixin, UpdateView):

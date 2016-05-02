@@ -1,14 +1,16 @@
 from django.contrib import admin
-from django.core.management import call_command
 from django.db.models import Q
+from djcelery.models import TaskMeta
 
 from .models import (Body, BoostData, Goal, Map, Player, Replay, ReplayPack,
                      Season)
+from .tasks import process_netstream
 
 
 def reprocess_matches(modeladmin, request, queryset):
-    call_command('reprocess_matches')
-reprocess_matches.short_description = "Reprocess all matches"
+    for replay in queryset:
+        process_netstream.apply_async([replay.pk], queue=replay.queue_priority)
+reprocess_matches.short_description = "Reprocess selected matches"
 
 
 def recalculate_average_rating(modeladmin, request, queryset):
@@ -66,10 +68,10 @@ class ReplayAdmin(admin.ModelAdmin):
         ).count() == 0
     has_heatmaps.boolean = True
 
-    list_display = ['replay_id', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
+    list_display = ['__str__', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
     list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'crashed_heatmap_parser']
     search_fields = ['replay_id']
-    inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
+    # inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
     actions = [reprocess_matches, recalculate_average_rating]
 
 admin.site.register(Replay, ReplayAdmin)
@@ -97,3 +99,10 @@ class BodyAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
 
 admin.site.register(Body, BodyAdmin)
+
+
+class TaskMetaAdmin(admin.ModelAdmin):
+    list_display = ['task_id', 'status', 'date_done']
+    list_filter = ['status']
+    readonly_fields = ['result', 'meta']
+admin.site.register(TaskMeta, TaskMetaAdmin)
