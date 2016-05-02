@@ -26,3 +26,4 @@ python-social-auth
 Werkzeug
 python-memcached
 celery[redis]
+django-celery
