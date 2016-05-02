@@ -63,13 +63,11 @@ class BoostDataInlineAdmin(admin.TabularInline):
 class ReplayAdmin(admin.ModelAdmin):
 
     def has_heatmaps(self, obj):
-        return obj.player_set.filter(
-            Q(heatmap__isnull=True) | Q(heatmap=''),
-        ).count() == 0
+        return bool(obj.heatmap_json_file)
     has_heatmaps.boolean = True
 
     list_display = ['__str__', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
-    list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'crashed_heatmap_parser']
+    list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'processed', 'crashed_heatmap_parser']
     search_fields = ['replay_id']
     # inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
     actions = [reprocess_matches, recalculate_average_rating]
