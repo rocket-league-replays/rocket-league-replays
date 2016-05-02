@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     "rocket_league.apps.site",
     "rocket_league.apps.users",
 
+    "djcelery",
     'server_management',
     'django_extensions',
     'cachalot',
@@ -423,6 +424,14 @@ DIVISIONS = {
 }
 
 SLACK_URL = os.getenv('SLACK_URL', '')
+
+# CELERY
+BROKER_URL = 'redis://:{}@{}'.format(
+    os.getenv('REDIS_MASTER_PASSWORD'),
+    os.getenv('REDIS_HOST'),
+)
+
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
