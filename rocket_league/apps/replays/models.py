@@ -479,6 +479,18 @@ class Replay(models.Model):
 
         return False
 
+    @property
+    def queue_priority(self):
+        # Returns one of 'tournament', 'priority', 'general', where 'tournament'
+        # is the highest priority.
+
+        # TODO: Add tournament logic.
+
+        if self.eligible_for_playback:
+            return 'priority'
+
+        return 'general'
+
     # Feature eligibility checks.
     @cached_property
     def eligible_for_playback(self):
