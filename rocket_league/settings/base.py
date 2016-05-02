@@ -431,7 +431,10 @@ BROKER_URL = 'redis://:{}@{}'.format(
     os.getenv('REDIS_HOST'),
 )
 
+CELERY_DISABLE_RATE_LIMITS = True
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_IGNORE_RESULT = False
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
