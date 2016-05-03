@@ -373,7 +373,10 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        instance = serializer.save(user=self.request.user)
+
+        # Add the replay to the netstream processing queue.
+        process_netstream.apply_async([instance.pk], queue=instance.queue_priority)
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):
