@@ -69,8 +69,8 @@ function render_heatmap (data) {
 
     const el = elements[index]
 
-    let radius = 20
-    let blur
+    let radius = 40
+    let blur = 0.9
 
     const heatmap = h337.create({
       container: el,
@@ -215,7 +215,7 @@ function render_heatmap (data) {
       reformatted_data.push({
         x: offsetX,
         y: offsetY,
-        value: item.value
+        value: 1 / (1 + Math.exp(Math.log(item.value)))
       })
     })
 
