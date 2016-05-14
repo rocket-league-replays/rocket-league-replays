@@ -72,11 +72,6 @@ function render_heatmap (data) {
     let radius = 20
     let blur
 
-    if (el.offsetWidth > 300) {
-      radius = 30
-      blur = 0.45
-    }
-
     const heatmap = h337.create({
       container: el,
       radius,

@@ -151,6 +151,28 @@
 
     {# JSON powered heatmaps #}
     {% if replay.heatmap_json_file %}
+    <div class="row">
+      <div class="medium-4 medium-centered column">
+          <h5>Ball</h5>
+          <div class="heatmap" data-actor-id="ball">
+              <p>Loading heatmap..</p>
+
+              <div class="thirds" data-actor-id="ball">
+                <div class="third-value left"></div>
+                <div class="third-value middle"></div>
+                <div class="third-value right"></div>
+            </div>
+
+            <div class="quadrants" data-actor-id="ball">
+                <div class="quadrant-value top-left"></div>
+                <div class="quadrant-value top-right"></div>
+                <div class="quadrant-value bottom-left"></div>
+                <div class="quadrant-value bottom-right"></div>
+            </div>
+        </div>
+      </div>
+    </div>
+
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
