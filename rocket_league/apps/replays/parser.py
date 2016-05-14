@@ -413,6 +413,22 @@ class Parser(object):
                         'type': 'ball'
                     }
 
+            # Get the camera data (if any)
+            cameras = [
+                value
+                for name, value in frame.actors.items()
+                if value['actor_type'] == 'TAGame.Default__CameraSettingsActor_TA' and
+                'TAGame.CameraSettingsActor_TA:PRI' in value.get('data', {}) and
+                'TAGame.CameraSettingsActor_TA:ProfileSettings' in value.get('data', {})
+            ]
+
+            if len(cameras) > 0:
+                for camera in cameras:
+                    actor_id = camera['data']['TAGame.CameraSettingsActor_TA:PRI'][1]
+
+                    if 'TAGame.PRI_TA:CameraSettings' not in self.actor_metadata[actor_id]:
+                        self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['data']['TAGame.CameraSettingsActor_TA:ProfileSettings']
+
     def _get_boost_data(self):
         # 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount'
 
