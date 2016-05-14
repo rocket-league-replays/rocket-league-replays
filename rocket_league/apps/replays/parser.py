@@ -24,6 +24,7 @@ class Parser(object):
         self.cars = {}
         self.boost_data = {}
         self.heatmap_json_filename = None
+        self.disabled_frame_ranges = []
 
         assert len(self.team_metadata) == 0
 
@@ -429,6 +430,36 @@ class Parser(object):
                     if 'TAGame.PRI_TA:CameraSettings' not in self.actor_metadata[actor_id]:
                         self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['data']['TAGame.CameraSettingsActor_TA:ProfileSettings']
 
+            # Figure out if the cars are locked in position at this point.
+            # TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining
+            """
+            {'actor_id': 3,
+             'actor_type': 'Archetypes.GameEvent.GameEvent_Soccar',
+             'data': {'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining': 3,
+                      'id': 3,
+                      'state': 'existing'},
+             'new': False,
+             'open': True,
+             'startpos': 2864065})
+            """
+
+            game_events = [
+                value
+                for name, value in frame.actors.items()
+                if value['actor_type'] == 'Archetypes.GameEvent.GameEvent_Soccar' and
+                'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value.get('data', {})
+            ]
+
+            if len(game_events):
+                for event in game_events:
+                    if len(self.disabled_frame_ranges) == 0:
+                        self.disabled_frame_ranges.append([])
+
+                    if len(self.disabled_frame_ranges[-1]) == 2:
+                        self.disabled_frame_ranges.append([])
+
+                    self.disabled_frame_ranges[-1].append(index)
+
     def _get_boost_data(self):
         # 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount'
 
@@ -534,6 +565,18 @@ class Parser(object):
                     # Handle truncated network data.
                     break
 
+                stop = False
+                for pair in self.disabled_frame_ranges:
+                    if pair[0] <= index <= pair[1]:
+                        stop = True
+                        break
+
+                if stop:
+                    continue
+                # Give it away, give it away, give it away now..
+
+                assert stop is False
+
                 # First we need to find the player's car object.
                 for actor in frame.actors:
                     actor_obj = frame.actors[actor]
@@ -567,6 +610,18 @@ class Parser(object):
 
         elif player['type'] == 'ball':
             for index, frame in self.replay.netstream.items():
+                stop = False
+                for pair in self.disabled_frame_ranges:
+                    if pair[0] <= index <= pair[1]:
+                        stop = True
+                        break
+
+                if stop:
+                    continue
+                # Give it away, give it away, give it away now..
+
+                assert stop is False
+
                 # Does this actor exist in the frame data?
                 for actor in frame.actors:
                     actor_obj = frame.actors[actor]
