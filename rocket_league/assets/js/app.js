@@ -94,6 +94,11 @@ function render_heatmap (data) {
     let min_x = null
     let min_y = null
 
+    if (!data.hasOwnProperty(selected_actor)) {
+      el.parentNode.style.display = 'none'
+      continue
+    }
+
     Object.keys(data[selected_actor]).forEach(function (item) {
       const value = data[selected_actor][item]
       let x = parseInt(item.split(',')[0], 10)
