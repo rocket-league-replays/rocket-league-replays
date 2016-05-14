@@ -36,6 +36,13 @@
                 {% endif %}
             {% endfor %}
 
+            {% if user.is_authenticated %}
+            <div class="medium-2 columns">
+                <label for="id_user">Show only your replays?</label>
+                <input {% if user.pk|stringformat:'s' == request.GET.user %}checked="checked"{% endif %} id="id_user" name="user" type="checkbox" value="{{ user.pk }}">
+            </div>
+            {% endif %}
+
             <div class="medium-2 columns">
                 <label>&nbsp;</label>
                 <input type="submit" style="margin-top: 4px;" value="Search" class="button tiny expand">
