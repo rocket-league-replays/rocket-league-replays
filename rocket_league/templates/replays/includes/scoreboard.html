@@ -70,8 +70,9 @@
         <td>{{ player.assists|intcomma }}</td>
         <td>{{ player.saves|intcomma }}</td>
         <td>{{ player.shots|intcomma }}</td>
-        <td>{% if player.camera_settings %}
+        <td>
             <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
+                {% if player.camera_settings %}
                 Field of View: {{ player.camera_settings.fov|floatformat:0 }}<br>
                 Height: {{ player.camera_settings.height|floatformat:0 }}<br>
                 Angle: {{ player.camera_settings.pitch|floatformat:0 }}<br>
@@ -84,10 +85,17 @@
                         {{ k }}: {{ v }}<br>
                     {% endif %}
                 {% endfor %}">
+                {% else %}
+                Field of View: 90<br>
+                Height: 100<br>
+                Angle: -5<br>
+                Distance: 240<br>
+                Stiffness: 0<br>
+                Swivel Speed: 2.50<br>
+                {% endif %}
                 <em class="icon-videocam"></em>
             </span>
-
-        {% endif %}</td>
+        </td>
         <td>
             {% if player.vehicle_loadout %}
             <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="{{ player.vehicle_data.body.name }}">
