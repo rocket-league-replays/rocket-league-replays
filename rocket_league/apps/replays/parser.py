@@ -97,6 +97,7 @@ class Parser(object):
             elif self.actors[player]['type'] == 'ball':
                 if 'ball' not in self.actors:
                     self.actors['ball'] = {
+                        'type': 'ball',
                         'position_data': {}
                     }
 
@@ -116,31 +117,30 @@ class Parser(object):
             if 'type' not in self.actors[actor]:
                 continue
 
-            if self.actors[actor]['type'] == 'player':
-                compressed_data[actor] = {}
+            compressed_data[actor] = {}
 
-                current_key = ''
-                key = ''
+            current_key = ''
+            key = ''
 
-                keys = self.actors[actor]['position_data'].keys()
+            keys = self.actors[actor]['position_data'].keys()
 
-                if len(keys) == 0:
-                    continue
+            if len(keys) == 0:
+                continue
 
-                for frame in range(min(keys), max(keys)):
-                    if frame in self.actors[actor]['position_data']:
-                        data = self.actors[actor]['position_data'][frame]
-                        key = '{},{}'.format(data['x'], data['y'])
+            for frame in range(min(keys), max(keys)):
+                if frame in self.actors[actor]['position_data']:
+                    data = self.actors[actor]['position_data'][frame]
+                    key = '{},{}'.format(data['x'], data['y'])
 
-                    if key == current_key:
-                        compressed_data[actor][key] += 1
+                if key == current_key:
+                    compressed_data[actor][key] += 1
+                else:
+                    if key not in compressed_data[actor]:
+                        compressed_data[actor][key] = 1
                     else:
-                        if key not in compressed_data[actor]:
-                            compressed_data[actor][key] = 1
-                        else:
-                            compressed_data[actor][key] += 1
+                        compressed_data[actor][key] += 1
 
-                assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
+            assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
 
         if default_storage.exists(heatmap_json_filename):
             default_storage.delete(heatmap_json_filename)
