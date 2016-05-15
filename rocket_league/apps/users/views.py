@@ -39,7 +39,7 @@ class UserSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
         return self.request.user
 
 
-class PatreonSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class SettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     template_name = 'users/patreon_settings.html'
     model = Profile
     form_class = PatreonSettingsForm
@@ -49,7 +49,7 @@ class PatreonSettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
                        "not applied after 24 hours.")
 
     def get_success_url(self):
-        return reverse('users:patreon')
+        return reverse('users:settings')
 
     def get_object(self):
         return self.request.user.profile

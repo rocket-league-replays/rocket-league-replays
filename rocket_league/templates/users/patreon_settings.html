@@ -3,7 +3,7 @@
 {% block content_primary %}
 <div class="row">
     <div class="small-12 columns">
-        <h3>Patreon settings</h3>
+        <h3>Settings</h3>
         <p><strong>Patreon status:</strong> {% if patreon == 0 %}Inactive{% else %}Active (${{ patreon_dollars }}) - thank you!{% endif %}</p>
     </div>
 </div>
@@ -21,6 +21,15 @@
             {{ form.patreon_email_address }}
 
             {% for error in form.patreon_email_address.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="medium-4 columns end">
+            {{ form.privacy.label_tag }}
+            {{ form.privacy }}
+
+            {% for error in form.privacy.errors %}
                 <span class="field-error">{{ error }}</span>
             {% endfor %}
         </div>

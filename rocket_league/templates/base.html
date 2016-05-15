@@ -109,7 +109,7 @@
                             <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
                             <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
                             <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
-                            <a href="{% url 'users:patreon' %}">Patreon Settings</a>
+                            <a href="{% url 'users:settings' %}">Settings</a>
                             <a href="{% url 'users:stream_settings' %}">Stream Data</a>
 
                             {% if 'steam' in backends.not_associated %}
