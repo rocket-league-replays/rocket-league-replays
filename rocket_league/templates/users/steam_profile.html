@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load cache pagination replays site %}
 
+{% block title %}{{ steam_info.personaname }} - {{ block.super }}{% endblock %}
+
 {% block content_primary %}
 {% comment %}
     [x] Link to Steam profile

@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load cache humanize ratings replays site static %}
 
+{% block object_title %}{{ block.super }} - Boost Analysis{% endblock %}
+
 {% block content_primary %}
     {% include "replays/includes/tabs.html" %}
 

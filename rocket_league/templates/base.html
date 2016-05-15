@@ -6,7 +6,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta name="description" content="{% block meta_description %}{% meta_description %}{% endblock %}">
+        <meta name="description" content="Rocket League Replays is a fansite focused on providing post-match analysis of games played in Rocket League.">
         <meta name="robots" content="{% block meta_robots %}{% meta_robots %}{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="canonical" href="{% canonical_url %}"/>
@@ -18,7 +18,7 @@
         <meta property="og:description" content="{% block og_description %}{% og_description %}{% endblock %}">
         <meta property="og:image" content="{% block og_image %}{% og_image %}{% endblock %}">
 
-        <title>{% block title %}{% title %}{% endblock %}</title>
+        <title>{% block title %}{% if object %}{% block object_title %}{{ object }}{% endblock %} - {% endif %}{% title %}{% endblock %}</title>
 
         {% block feeds %}{% endblock %}
 
