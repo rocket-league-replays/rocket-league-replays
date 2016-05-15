@@ -16,6 +16,10 @@ from social.apps.django_app.default.fields import JSONField
 
 from .parser import Parser
 
+PRIVACY_PRIVATE = 1
+PRIVACY_UNLISTED = 2
+PRIVACY_PUBLIC = 3
+
 
 class Season(models.Model):
 
@@ -185,10 +189,11 @@ class Replay(models.Model):
     )
 
     privacy = models.PositiveIntegerField(
+        'replay privacy',
         choices=[
-            (1, 'Private'),
-            (2, 'Unlisted'),
-            (3, 'Public')
+            (PRIVACY_PRIVATE, 'Private'),
+            (PRIVACY_UNLISTED, 'Unlisted'),
+            (PRIVACY_PUBLIC, 'Public')
         ],
         default=3,
     )
