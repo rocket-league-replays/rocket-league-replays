@@ -18,7 +18,7 @@
         <meta property="og:description" content="{% block og_description %}{% og_description %}{% endblock %}">
         <meta property="og:image" content="{% block og_image %}{% og_image %}{% endblock %}">
 
-        <title>{% block title %}{% if object %}{% block object_title %}{{ object }}{% endblock %} - {% endif %}{% title %}{% endblock %}</title>
+        <title>{% block title %}{% block object_title_outer %}{% if object %}{% block object_title %}{{ object }}{% endblock %} - {% endif %}{% endblock %}{% title %}{% endblock %}</title>
 
         {% block feeds %}{% endblock %}
 
