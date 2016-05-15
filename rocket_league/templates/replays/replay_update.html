@@ -1,18 +1,31 @@
 {% extends "base.html" %}
 
 {% block content_primary %}
-<div class="row">
-    <form action="" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
 
+    <div class="row">
         <div class="medium-6 columns">
             <h3>Replay information</h3>
+        </div>
+    </div>
 
+    <div class="row">
+        <div class="medium-3 columns">
             {{ form.title.label_tag }}
             {{ form.title }}
             {{ form.title.errors }}
         </div>
 
+        <div class="medium-3 columns end">
+            {{ form.privacy.label_tag }}
+            {{ form.privacy }}
+            {{ form.privacy.errors }}
+        </div>
+    </div>
+
+    {% if form.team_0_player_1 or form.team_1_player_1 %}
+    <div class="row">
         <div class="medium-8 columns">
             <h3>Teams</h3>
             <p>Someone missing from your player list? Add them in here.</p>
@@ -101,12 +114,15 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    {% endif %}
 
+    <div class="row">
         <div class="small-12 columns">
             <p>
                 <input class="button tiny" type="submit" value="Update">
             </p>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 {% endblock content_primary %}

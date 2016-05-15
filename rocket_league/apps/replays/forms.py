@@ -32,13 +32,13 @@ class ReplayUpdateForm(forms.ModelForm):
                             'Blue' if team == 0 else 'Orange',
                             x + team_players + 1,
                         ),
-                        initial=user_players[x].player_name if len(user_players) >= x+1 else '',
+                        initial=user_players[x].player_name if len(user_players) >= x + 1 else '',
                         required=False,
                     )
 
     class Meta:
         model = Replay
-        fields = ['title']
+        fields = ['title', 'privacy']
 
 
 class ReplayPackForm(forms.ModelForm):
