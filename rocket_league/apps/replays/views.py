@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import (CreateView, DeleteView, DetailView,
                                   RedirectView, UpdateView)
@@ -16,13 +17,14 @@ from ...utils.forms import AjaxableResponseMixin
 from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import (Body, Goal, Map, Player, Replay, ReplayPack, Season,
+from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Body,
+                     Goal, Map, Player, Replay, ReplayPack, Season,
                      get_default_season)
 from .serializers import (BodySerializer, GoalSerializer, MapSerializer,
                           PlayerSerializer, ReplayCreateSerializer,
                           ReplaySerializer, SeasonSerializer)
-from .templatetags.replays import process_boost_data
 from .tasks import process_netstream
+from .templatetags.replays import process_boost_data
 
 
 class ReplayListView(FilterView):
@@ -58,6 +60,15 @@ class ReplayListView(FilterView):
             })
             qs = qs.order_by('-timestamp__date', '-average_rating')
 
+        # Limit to public games, or unlisted / private games uploaded by the user.
+        if self.request.user.is_authenticated():
+            qs = qs.filter(
+                Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+            )
+        else:
+            qs = qs.filter(
+                privacy=PRIVACY_PUBLIC,
+            )
         return qs
 
     def get_context_data(self, **kwargs):
@@ -99,7 +110,7 @@ class ReplayUUIDMixin(DetailView):
         replay_id = self.kwargs['replay_id'].replace('-', '').upper()
 
         try:
-            return get_object_or_404(Replay, replay_id=replay_id)
+            obj = get_object_or_404(Replay, replay_id=replay_id)
         except Replay.MultipleObjectsReturned:
             replays = Replay.objects.filter(
                 replay_id=replay_id,
@@ -108,7 +119,20 @@ class ReplayUUIDMixin(DetailView):
             for replay in replays:
                 replay.delete()
 
-            return get_object_or_404(Replay, replay_id=replay_id)
+            obj = get_object_or_404(Replay, replay_id=replay_id)
+
+        # Ensure the current user is allowed to view this replay.
+        if obj.privacy in [PRIVACY_PUBLIC, PRIVACY_UNLISTED]:
+            return obj
+
+        if obj.privacy == PRIVACY_PRIVATE:
+            if not self.request.user.is_authenticated():
+                raise Http404
+
+            if self.request.user != obj.user:
+                raise Http404
+
+        return obj
 
 
 class ReplayDetailView(ReplayUUIDMixin):

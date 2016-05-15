@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
@@ -20,7 +21,7 @@ from rest_framework.response import Response
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends.steam import USER_INFO
 
-from ..replays.models import Replay
+from ..replays.models import PRIVACY_PUBLIC, Replay
 from .forms import PatreonSettingsForm, StreamSettingsForm, UserSettingsForm
 from .models import Profile, SteamCache
 from .serializers import StreamDataSerializer
@@ -102,6 +103,17 @@ class SteamView(TemplateView):
             context['steam_info'] = social_obj.extra_data['player']
 
             context['uploaded'] = social_obj.user.replay_set.all()
+
+            # Limit to public games, or unlisted / private games uploaded by the user.
+            if self.request.user.is_authenticated() and self.request.user == social_obj.user:
+                context['uploaded'] = context['uploaded'].filter(
+                    Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+                )
+            else:
+                context['uploaded'] = context['uploaded'].filter(
+                    privacy=PRIVACY_PUBLIC,
+                )
+
             context['has_user'] = True
             context['social_obj'] = social_obj
         except UserSocialAuth.DoesNotExist:
@@ -164,6 +176,15 @@ class SteamView(TemplateView):
             player__online_id=kwargs['steam_id'],
         ).distinct()
 
+        if self.request.user.is_authenticated():
+            context['appears_in'] = context['appears_in'].filter(
+                Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+            )
+        else:
+            context['appears_in'] = context['appears_in'].filter(
+                privacy=PRIVACY_PUBLIC,
+            )
+
         if not context.get('steam_info', None):
             context['steam_info'] = {
                 'steamid': kwargs['steam_id'],
@@ -173,6 +194,7 @@ class SteamView(TemplateView):
 
 
 class StreamDataView(View):
+
     def get(self, request, *args, **kwargs):
         user = User.objects.get(pk=kwargs['user_id'])
         context = user.profile.stream_settings
@@ -290,16 +312,16 @@ class StreamDataAPIView(views.APIView):
             context['games_played'] = context['games_played'][:20]
         elif context['limit_to'] == 'hour':
             context['games_played'] = context['games_played'].filter(
-              timestamp__gte=now() - datetime.timedelta(hours=1)
+                timestamp__gte=now() - datetime.timedelta(hours=1)
             )
         elif context['limit_to'] == 'today':
             context['games_played'] = context['games_played'].filter(
-              timestamp__gte=now() - datetime.timedelta(days=1)
+                timestamp__gte=now() - datetime.timedelta(days=1)
             )
 
         elif context['limit_to'] == 'week':
             context['games_played'] = context['games_played'].filter(
-              timestamp__gte=now() - datetime.timedelta(days=7)
+                timestamp__gte=now() - datetime.timedelta(days=7)
             )
         elif context['limit_to'] == 'all':
             # We don't need to do anything here.
