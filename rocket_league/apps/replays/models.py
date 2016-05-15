@@ -184,6 +184,15 @@ class Replay(models.Model):
         null=True,
     )
 
+    privacy = models.PositiveIntegerField(
+        choices=[
+            (1, 'Private'),
+            (2, 'Unlisted'),
+            (3, 'Public')
+        ],
+        default=3,
+    )
+
     # Parser V2 values.
     keyframe_delay = models.FloatField(
         blank=True,
