@@ -63,6 +63,16 @@ class Profile(models.Model):
         null=True,
     )
 
+    privacy = models.PositiveIntegerField(
+        'replay privacy',
+        choices=[
+            (1, 'Private'),
+            (2, 'Unlisted'),
+            (3, 'Public')
+        ],
+        default=3,
+    )
+
     def latest_ratings(self):
         if not self.has_steam_connected():
             return {}
