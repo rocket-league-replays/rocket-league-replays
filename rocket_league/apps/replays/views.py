@@ -187,6 +187,9 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         if self.request.user.is_authenticated():
             form.instance.user = self.request.user
 
+            # Set the privacy level according to this user's settings.
+            form.instance.privacy = self.request.user.profile.privacy
+
         response = super(ReplayCreateView, self).form_valid(form)
 
         # Add the replay to the netstream processing queue.
@@ -253,6 +256,10 @@ class ReplayPackCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+
+        # Set the privacy level according to this user's settings.
+        form.instance.privacy = self.request.user.profile.privacy
+
         return super(ReplayPackCreateView, self).form_valid(form)
 
     def get_form_kwargs(self):
