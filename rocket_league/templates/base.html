@@ -56,6 +56,7 @@
         <meta name="msapplication-wide310x150logo" content="{% static 'build/img/icons/widetile.png' %}" />
         <meta name="msapplication-square310x310logo" content="{% static 'build/img/icons/largetile.png' %}" />
 
+        {% if patreon == 0 %}
         <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         <script>
           (adsbygoogle = window.adsbygoogle || []).push({
@@ -63,6 +64,7 @@
             enable_page_level_ads: true
           });
         </script>
+        {% endif %}
     </head>
 
     <body class="{% block body_class %}{% endblock %}">
