@@ -12,7 +12,9 @@ from django.views.generic import (CreateView, DeleteView, DetailView,
 from django_filters.views import FilterView
 from rest_framework import mixins, views, viewsets
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
+from . import serializers
 from ...utils.forms import AjaxableResponseMixin
 from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
@@ -20,9 +22,6 @@ from .forms import ReplayPackForm, ReplayUpdateForm
 from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Body,
                      Goal, Map, Player, Replay, ReplayPack, Season,
                      get_default_season)
-from .serializers import (BodySerializer, GoalSerializer, MapSerializer,
-                          PlayerSerializer, ReplayCreateSerializer,
-                          ReplaySerializer, SeasonSerializer)
 from .tasks import process_netstream
 from .templatetags.replays import process_boost_data
 
@@ -357,11 +356,11 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
     queryset = Replay.objects.filter(
         processed=True,
     )
-    serializer_class = ReplaySerializer
+    serializer_class = serializers.ReplaySerializer
 
     serializer_action_classes = {
-        'list': ReplaySerializer,
-        'create': ReplayCreateSerializer,
+        'list': serializers.ReplaySerializer,
+        'create': serializers.ReplayCreateSerializer,
     }
 
     def get_serializer_class(self):
@@ -371,7 +370,7 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
         i.e.:
 
         class MyViewSet(MultiSerializerViewSetMixin, ViewSet):
-            serializer_class = MyDefaultSerializer
+            serializer_class = serializers.MyDefaultSerializer
             serializer_action_classes = {
                'list': MyListSerializer,
                'my_action': MyActionSerializer,
@@ -419,7 +418,7 @@ class MapViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Map.objects.all()
-    serializer_class = MapSerializer
+    serializer_class = serializers.MapSerializer
 
 
 class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
@@ -429,7 +428,7 @@ class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Season.objects.all()
-    serializer_class = SeasonSerializer
+    serializer_class = serializers.SeasonSerializer
 
 
 class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -439,7 +438,7 @@ class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Player.objects.all()
-    serializer_class = PlayerSerializer
+    serializer_class = serializers.PlayerSerializer
 
 
 class GoalViewSet(viewsets.ReadOnlyModelViewSet):
@@ -449,7 +448,7 @@ class GoalViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Goal.objects.all()
-    serializer_class = GoalSerializer
+    serializer_class = serializers.GoalSerializer
 
 
 class BodyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -459,11 +458,26 @@ class BodyViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Body.objects.all()
-    serializer_class = BodySerializer
+    serializer_class = serializers.BodySerializer
+
+
+class LimitedPageNumberPagination(PageNumberPagination):
+    page_size = 10
+
+
+class ReplayPackViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all of the car bodies available in-game.
+    """
+
+    queryset = ReplayPack.objects.all()
+    serializer_class = serializers.ReplayPackSerializer
+    pagination_class = LimitedPageNumberPagination
 
 
 class LatestUserReplay(views.APIView):
-    serializer_class = ReplaySerializer
+    serializer_class = serializers.ReplaySerializer
 
     def get_serializer_context(self):
         user = get_object_or_404(User, pk=self.kwargs['user_id'])

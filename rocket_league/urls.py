@@ -10,21 +10,20 @@ from django.contrib import admin
 from django.views import generic
 from rest_framework import routers
 
-from .apps.replays.views import (BodyViewSet, GoalViewSet, LatestUserReplay,
-                                 MapViewSet, PlayerViewSet, ReplayViewSet,
-                                 SeasonViewSet)
+from .apps.replays import views as api_views
 from .apps.users.views import StreamDataAPIView
 
 admin.autodiscover()
 
 
 router = routers.DefaultRouter()
-router.register(r'maps', MapViewSet)
-router.register(r'replays', ReplayViewSet)
-router.register(r'players', PlayerViewSet)
-router.register(r'goals', GoalViewSet)
-router.register(r'seasons', SeasonViewSet)
-router.register(r'bodies', BodyViewSet)
+router.register(r'maps', api_views.MapViewSet)
+router.register(r'replays', api_views.ReplayViewSet)
+router.register(r'replay-packs', api_views.ReplayPackViewSet)
+router.register(r'players', api_views.PlayerViewSet)
+router.register(r'goals', api_views.GoalViewSet)
+router.register(r'seasons', api_views.SeasonViewSet)
+router.register(r'bodies', api_views.BodyViewSet)
 
 
 urlpatterns = patterns(
@@ -54,7 +53,7 @@ urlpatterns = patterns(
 
     url(r'^api/', include(router.urls)),
     url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view(), name='stream-data'),
-    url(r'^api/latest-replay/(?P<user_id>\d+)/$', LatestUserReplay.as_view(), name='latest-replay'),
+    url(r'^api/latest-replay/(?P<user_id>\d+)/$', api_views.LatestUserReplay.as_view(), name='latest-replay'),
 
     url(r'^api-docs/', include('rest_framework_swagger.urls')),
 

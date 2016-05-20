@@ -1,6 +1,7 @@
-from .models import Goal, Map, Player, Replay, Season, Body
+from rest_framework.serializers import (HyperlinkedModelSerializer,
+                                        ReadOnlyField)
 
-from rest_framework.serializers import HyperlinkedModelSerializer, ReadOnlyField
+from .models import Body, Goal, Map, Player, Replay, ReplayPack, Season
 
 
 class GoalSerializer(HyperlinkedModelSerializer):
@@ -72,6 +73,22 @@ class ReplaySerializer(HyperlinkedModelSerializer):
         model = Replay
         exclude = ['user', 'crashed_heatmap_parser']
         depth = 1
+
+
+class ReplayPackSerializer(HyperlinkedModelSerializer):
+
+    id = ReadOnlyField()
+
+    user_id = ReadOnlyField()
+
+    replays = ReplaySerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = ReplayPack
+        exclude = ['user']
 
 
 class ReplayCreateSerializer(HyperlinkedModelSerializer):
