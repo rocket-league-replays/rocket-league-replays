@@ -90,7 +90,8 @@ class StartTrialView(LoginRequiredMixin, RedirectView):
         else:
             # Activate a trial for this user.
             PatronTrial.objects.create(
-                user=self.request.user
+                user=self.request.user,
+                expiry_date=now() + timedelta(days=7),
             )
             messages.success(self.request, "Your free trial has been activated. You can make full use of all patron benefits for the next 7 days.")
 
