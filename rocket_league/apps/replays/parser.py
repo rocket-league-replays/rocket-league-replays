@@ -505,7 +505,11 @@ class Parser(object):
                         if actor_id not in self.boost_data:
                             self.boost_data[actor_id] = {}
 
-                        self.boost_data[actor_id][index] = value['properties']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['contents']
+                        boost_value = value['properties']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['contents']
+
+                        assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
+
+                        self.boost_data[actor_id][index] = boost_value
 
         # Data structure:
         #

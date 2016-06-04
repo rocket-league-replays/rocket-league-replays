@@ -69,8 +69,8 @@ function render_heatmap (data) {
 
     const el = elements[index]
 
-    let radius = 40
-    let blur = 0.9
+    const radius = 40
+    const blur = 0.9
 
     const heatmap = h337.create({
       container: el,

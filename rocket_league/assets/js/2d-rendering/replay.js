@@ -129,7 +129,7 @@ export function positionReplayObjects () {
               const rawValue = boostData.values[item][i] + (frameDiff * (255 / 74))
 
               if (rawValue < 0 || rawValue > 255) {
-                throw new Error('BoostRangeError')
+                throw new RangeError(`BoostRangeError: Value of ${rawValue} is not within the range of 0-255`)
               }
 
               const value = Math.ceil(rawValue * (100 / 255))
