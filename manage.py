@@ -28,6 +28,8 @@ if __name__ == "__main__":
         if len(current_binaries) > 0:
             current_version = current_binaries[0].split('-')[1]
 
+        print('GH: {}. RLR: {}'.format(octane_release['name'], current_version))
+
         if tuple(octane_release['name'].split('.')) > tuple(current_version.split('.')):
             # Download the latest version.
             for file in current_binaries:
@@ -36,6 +38,8 @@ if __name__ == "__main__":
             for asset in octane_release['assets']:
                 if 'windows' in asset['browser_download_url']:
                     continue
+
+                print('Downloading {}'.format(asset['name']))
 
                 os.system('wget -qP octane-binaries/ {} && gunzip -f octane-binaries/{} && chmod +x octane-binaries/{}'.format(
                     asset['browser_download_url'],
