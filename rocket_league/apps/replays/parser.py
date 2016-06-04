@@ -78,7 +78,7 @@ class Parser(object):
                """
         if len(self.replay['meta']['properties'].get('Goals', [])) < self.replay['meta']['properties'].get('Team0Score', 0) + self.replay['meta']['properties'].get('Team1Score', 0):
             for index, frame in enumerate(self.replay['frames']):
-                for _, actor in frame['replications'].items():
+                for actor in frame['replications']:
                     if 'properties' not in actor:
                         continue
 
@@ -394,7 +394,7 @@ class Parser(object):
                         'type': 'player',
                         'join': index,
                         'left': self.replay['meta']['properties']['NumFrames'],
-                        'name': player_name['contents'],
+                        'name': player_name['contents'] if player_name else '',
                         'team': team_id,
                     }
 

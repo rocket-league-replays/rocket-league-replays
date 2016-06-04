@@ -1,3 +1,4 @@
+import codecs
 import re
 import time
 from datetime import datetime
@@ -772,6 +773,23 @@ class Replay(models.Model):
                         'swiv': data['TAGame.PRI_TA:CameraSettings']['contents'][5]
                     }
 
+                platform = ''
+                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                    if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
+                        platform = data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0]
+                    else:
+                        platform = data['Engine.PlayerReplicationInfo:UniqueId'][0]
+
+                online_id = ''
+                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                    if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
+                        online_id = data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents']
+                    else:
+                        online_id = data['Engine.PlayerReplicationInfo:UniqueId'][1]
+
+                if platform == 2 and online_id != '':
+                    online_id = codecs.decode(online_id[:32], 'hex').rstrip(b'\x00')
+
                 obj = Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
@@ -782,8 +800,8 @@ class Replay(models.Model):
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {'contents': []})['contents'],
                     vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'],
                     total_xp=total_xp,
-                    platform=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                    online_id=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    platform=platform,
+                    online_id=online_id,
                     spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
                 )
 
@@ -819,11 +837,18 @@ class Replay(models.Model):
                 if 'TAGame.PRI_TA:PartyLeader' in data:
                     # Get this player object, then get the party leader object.
                     if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                        unique_id = '{}-{}-{}'.format(
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
-                        )
+                        if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
+                            unique_id = '{}-{}-{}'.format(
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
+                            )
+                        else:
+                            unique_id = '{}-{}-{}'.format(
+                                data['Engine.PlayerReplicationInfo:UniqueId'][0],
+                                data['Engine.PlayerReplicationInfo:UniqueId'][1],
+                                data['Engine.PlayerReplicationInfo:UniqueId'][2],
+                            )
 
                         player_obj = Player.objects.get(
                             replay=self,
