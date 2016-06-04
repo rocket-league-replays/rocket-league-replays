@@ -41,7 +41,7 @@ class Parser(object):
 
                 self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(self.file.name), shell=True).decode('utf-8'))
 
-                os.remove(self.file.name)
+                # os.remove(self.file.name)
 
             self.replay_id = self.replay['meta']['properties']['Id']
 
