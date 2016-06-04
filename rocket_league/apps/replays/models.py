@@ -763,6 +763,16 @@ class Replay(models.Model):
                 else:
                     team = -1
 
+                if data.get('TAGame.PRI_TA:CameraSettings', None) and type(data['TAGame.PRI_TA:CameraSettings']) == dict:
+                    data['TAGame.PRI_TA:CameraSettings']['contents'] = {
+                        'dist': data['TAGame.PRI_TA:CameraSettings']['contents'][0],
+                        'fov': data['TAGame.PRI_TA:CameraSettings']['contents'][1],
+                        'height': data['TAGame.PRI_TA:CameraSettings']['contents'][2],
+                        'pitch': data['TAGame.PRI_TA:CameraSettings']['contents'][3],
+                        'stiff': data['TAGame.PRI_TA:CameraSettings']['contents'][4],
+                        'swiv': data['TAGame.PRI_TA:CameraSettings']['contents'][5]
+                    }
+
                 obj = Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
@@ -771,7 +781,7 @@ class Replay(models.Model):
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {'contents': []})['contents'],
-                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'][1],
+                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'],
                     total_xp=total_xp,
                     platform=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     online_id=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
