@@ -1,6 +1,6 @@
 import json
+import os
 import subprocess
-from pprint import pprint
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -10,7 +10,7 @@ from pyrope import Replay
 
 class Parser(object):
 
-    def __init__(self, file_path, parse_netstream=False, obj=None):
+    def __init__(self, parse_netstream=False, obj=None):
         if not parse_netstream:
             self.replay = Replay(obj.file.read())
             self.replay_id = self.replay.header['Id']
@@ -29,9 +29,19 @@ class Parser(object):
             self.replay = replay_temp
         else:
             if settings.DEBUG:
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(file_path), shell=True).decode('utf-8'))
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(obj.file.path), shell=True).decode('utf-8'))
             else:
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(file_path), shell=True).decode('utf-8'))
+                # Download the file from S3.
+                command = 'wget {} -qO {}'.format(
+                    self.file.url,
+                    self.file.name,
+                )
+
+                os.system(command)
+
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(self.file.name), shell=True).decode('utf-8'))
+
+                os.remove(self.file.name)
 
             self.replay_id = self.replay['meta']['properties']['Id']
 

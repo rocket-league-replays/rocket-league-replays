@@ -566,7 +566,7 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser('', obj=self)
+                self.parser = Parser(obj=self)
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
@@ -598,8 +598,8 @@ class Replay(models.Model):
                     import os
 
                     # Download the file from S3.
-                    command = 'wget https://media.rocketleaguereplays.com/uploads/replay_files/{}.replay -qO {}'.format(
-                        self.replay_id,
+                    command = 'wget https://media.rocketleaguereplays.com/uploads/replay_files/{} -qO {}'.format(
+                        self.file.name,
                         e.filename,
                     )
 
@@ -609,7 +609,7 @@ class Replay(models.Model):
 
             player_objects = {}
 
-            parser = Parser('', parse_netstream=parse_netstream, obj=self)
+            parser = Parser(parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
