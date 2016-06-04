@@ -566,7 +566,7 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(self.file.read(), obj=self)
+                self.parser = Parser(self.file.path, obj=self)
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
@@ -609,7 +609,7 @@ class Replay(models.Model):
 
             player_objects = {}
 
-            parser = Parser(self.file.read(), parse_netstream=parse_netstream, obj=self)
+            parser = Parser(self.file.path, parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
@@ -624,19 +624,19 @@ class Replay(models.Model):
                     BoostData.objects.filter(replay=self).delete()
 
             if 'playlist' in parser.match_metadata:
-                self.playlist = parser.match_metadata['playlist']
+                self.playlist = parser.match_metadata['playlist']['contents']
 
             if 'server_name' in parser.match_metadata:
-                self.server_name = parser.match_metadata['server_name']
+                self.server_name = parser.match_metadata['server_name']['contents']
 
             if len(parser.actor_metadata) == 0:
                 # Parse the players the 'old' way.
-                if 'PlayerStats' in parser.replay.header:
-                    for player in parser.replay.header['PlayerStats']:
+                if 'PlayerStats' in parser.replay['meta']['properties']:
+                    for player in parser.replay['meta']['properties']['PlayerStats']:
                         Player.objects.get_or_create(
                             replay=self,
                             player_name=player['Name'],
-                            platform=player['Platform'].get('OnlinePlatform', ''),
+                            platform=player['Platform'],
                             saves=player['Saves'],
                             score=player['Score'],
                             goals=player['Goals'],
@@ -648,18 +648,18 @@ class Replay(models.Model):
                         )
                 else:
                     # The best we can do is to get the goal scorers and the player.
-                    for goal in parser.replay.header.get('Goals', []):
+                    for goal in parser.replay['meta']['properties'].get('Goals', []):
                         Player.objects.get_or_create(
                             replay=self,
                             player_name=goal['PlayerName'],
                             team=goal['PlayerTeam'],
                         )
 
-                    if 'PlayerName' in parser.replay.header and 'PrimaryPlayerTeam' in parser.replay.header:
+                    if 'PlayerName' in parser.replay['meta']['properties'] and 'PrimaryPlayerTeam' in parser.replay['meta']['properties']:
                         Player.objects.get_or_create(
                             replay=self,
-                            player_name=parser.replay.header['PlayerName'],
-                            team=parser.replay.header['PrimaryPlayerTeam'],
+                            player_name=parser.replay['meta']['properties']['PlayerName'],
+                            team=parser.replay['meta']['properties']['PrimaryPlayerTeam'],
                         )
 
             # Create the player objects.
@@ -690,9 +690,14 @@ class Replay(models.Model):
                 if len(data) == 1:
                     continue
 
-                # Geneate the unique ID string/
+                # Geneate the unique ID string.
                 if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                    unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
+                    unique_id = '{}-{}-{}'.format(
+                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
+                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
+                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
+
+                    )
 
                     # If a console player is playing split-screen, there can
                     # sometimes be two actors with the same 'unique id', so this
@@ -700,16 +705,16 @@ class Replay(models.Model):
 
                     while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
                         data['Engine.PlayerReplicationInfo:UniqueId'] = (
-                            data['Engine.PlayerReplicationInfo:UniqueId'][0],
-                            data['Engine.PlayerReplicationInfo:UniqueId'][1],
-                            data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2] + 1,
                         )
 
                         unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
                 else:
                     if 'Engine.PlayerReplicationInfo:Team' in data:
                         id_parts = [
-                            str(data['Engine.PlayerReplicationInfo:Team'][1]),
+                            str(data['Engine.PlayerReplicationInfo:Team']['contents'][1]),
                             data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
                             '0',
                         ]
@@ -734,8 +739,8 @@ class Replay(models.Model):
                             unique_id = '-'.join(id_parts)
 
                 if 'TAGame.PRI_TA:TotalXP' in data:
-                    if data['TAGame.PRI_TA:TotalXP'] >= 0:
-                        total_xp = data['TAGame.PRI_TA:TotalXP']
+                    if data['TAGame.PRI_TA:TotalXP']['contents'] >= 0:
+                        total_xp = data['TAGame.PRI_TA:TotalXP']['contents']
                     else:
                         total_xp = 0
                 else:
@@ -743,7 +748,7 @@ class Replay(models.Model):
 
                 # Try to work out the player's team.
                 if 'Engine.PlayerReplicationInfo:Team' in data:
-                    team_id = data['Engine.PlayerReplicationInfo:Team'][1]
+                    team_id = data['Engine.PlayerReplicationInfo:Team']['contents'][1]
                     if team_id in parser.team_metadata:
                         team = parser.team_metadata[team_id]
                     elif team_id == -1:
@@ -761,15 +766,15 @@ class Replay(models.Model):
                 obj = Player.objects.create(
                     replay=self,
                     unique_id=unique_id,
-                    player_name=data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
+                    player_name=data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
                     team=team,
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
                     camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
-                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', [[], []])[1],
+                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'][1],
                     total_xp=total_xp,
-                    platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                    online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    platform=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
+                    online_id=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
                     spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
                 )
 
@@ -793,7 +798,7 @@ class Replay(models.Model):
                                 replay=self,
                                 player=obj,
                                 frame=frame,
-                                value=value,
+                                value=abs(value),
                             ))
 
                     BoostData.objects.bulk_create(boost_objects)
@@ -827,11 +832,11 @@ class Replay(models.Model):
                         player_obj.party_leader = leader_obj
                         player_obj.save()
 
-            if 'PlayerStats' in parser.replay.header:
+            if 'PlayerStats' in parser.replay['meta']['properties']:
                 # We can show a leaderboard!
                 self.show_leaderboard = True
 
-                for player in parser.replay.header['PlayerStats']:
+                for player in parser.replay['meta']['properties']['PlayerStats']:
                     # Attempt to match up this player with a Player object.
                     obj = Player.objects.filter(
                         replay=self,
@@ -865,8 +870,8 @@ class Replay(models.Model):
                             print('Unable to find an object for', player)
 
             # Create the Goal objects.
-            if 'Goals' in parser.replay.header:
-                for index, goal in enumerate(parser.replay.header['Goals']):
+            if 'Goals' in parser.replay['meta']['properties']:
+                for index, goal in enumerate(parser.replay['meta']['properties']['Goals']):
                     player = None
 
                     if goal['frame'] in parser.goal_metadata:
@@ -914,7 +919,7 @@ class Replay(models.Model):
                         player=player,
                     )
 
-            data = parser.replay.header
+            data = parser.replay['meta']['properties']
 
             self.replay_id = data['Id']
             self.player_name = data['PlayerName']

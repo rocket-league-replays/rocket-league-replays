@@ -1,20 +1,21 @@
 import json
-import pickle
-import traceback
+import subprocess
 from pprint import pprint
 
-from boto.exception import S3ResponseError
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from pyrope import Replay
-from pyrope.exceptions import FrameParsingError
 
 
 class Parser(object):
 
     def __init__(self, file_path, parse_netstream=False, obj=None):
-        self.replay = Replay(file_path)
-        self.replay_id = self.replay.header['Id']
+        if settings.DEBUG:
+            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(file_path), shell=True).decode('utf-8'))
+        else:
+            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(file_path), shell=True).decode('utf-8'))
+
+        self.replay_id = self.replay['meta']['properties']['Id']
 
         self.actor_metadata = {}
         self.goal_metadata = {}
@@ -28,24 +29,8 @@ class Parser(object):
 
         assert len(self.team_metadata) == 0
 
-        pickle_filename = 'uploads/pickle_files/{}.pickle'.format(self.replay_id)
         heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
         location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(self.replay_id)
-
-        if parse_netstream:
-            try:
-                self.replay = pickle.loads(default_storage.open(pickle_filename).read())
-            except (FileNotFoundError, OSError, S3ResponseError):
-                try:
-                    self.replay.parse_netstream()
-                    default_storage.save(pickle_filename, ContentFile(pickle.dumps(self.replay)))
-                except FrameParsingError:
-                    # Bail us out of here early, just provide an 'old school' parse.
-                    parse_netstream = False
-                    traceback.print_exc()
-
-        if not parse_netstream:
-            return
 
         self._get_actors()
 
@@ -55,37 +40,37 @@ class Parser(object):
         """
          ('3e_Team1',
           {'actor_id': 3,
-           'actor_type': 'Archetypes.Teams.Team1',
-           'data': {'Engine.TeamInfo:Score': 1},
+           'class_name': 'Archetypes.Teams.Team1',
+           'properties': {'Engine.TeamInfo:Score': 1},
            'new': False,
            'startpos': 2053839}),
                """
-        if len(self.replay.header.get('Goals', [])) < self.replay.header.get('Team0Score', 0) + self.replay.header.get('Team1Score', 0):
-            for index, frame in self.replay.netstream.items():
-                for _, actor in frame.actors.items():
-                    if 'data' not in actor:
+        if len(self.replay['meta']['properties'].get('Goals', [])) < self.replay['meta']['properties'].get('Team0Score', 0) + self.replay['meta']['properties'].get('Team1Score', 0):
+            for index, frame in enumerate(self.replay['frames']):
+                for _, actor in frame['replications'].items():
+                    if 'properties' not in actor:
                         continue
 
                     if (
-                        'Engine.TeamInfo:Score' in actor['data'] and
-                        'TAGame.Team_TA:GameEvent' not in actor['data'] and
-                        actor['actor_type'].startswith('Archetypes.Teams.Team')
+                        'Engine.TeamInfo:Score' in actor['properties'] and
+                        'TAGame.Team_TA:GameEvent' not in actor['properties'] and
+                        actor['object_name'].startswith('Archetypes.Teams.Team')
                     ):
-                        if 'Goals' not in self.replay.header:
-                            self.replay.header['Goals'] = []
+                        if 'Goals' not in self.replay['meta']['properties']:
+                            self.replay['meta']['properties']['Goals'] = []
 
-                        self.replay.header['Goals'].append({
+                        self.replay['meta']['properties']['Goals'].append({
                             'PlayerName': 'Unknown player (own goal?)',
-                            'PlayerTeam': actor['actor_type'].replace('Archetypes.Teams.Team', ''),
+                            'PlayerTeam': actor['object_name'].replace('Archetypes.Teams.Team', ''),
                             'frame': index
                         })
 
         # Extract the goal information.
-        if 'Goals' in self.replay.header:
-            for goal in self.replay.header['Goals']:
+        if 'Goals' in self.replay['meta']['properties']:
+            for goal in self.replay['meta']['properties']['Goals']:
                 self._extract_goal_data(goal['frame'])
 
-        if 'NumFrames' in self.replay.header:
+        if 'NumFrames' in self.replay['meta']['properties']:
             assert len(self.team_metadata) == 2
 
         for player in self.actors.copy():
@@ -154,9 +139,9 @@ class Parser(object):
         # Restructure the data so that it's chunkable.
         frame_data = []
 
-        for frame in range(self.replay.header['NumFrames']):
+        for frame in range(self.replay['meta']['properties']['NumFrames']):
             frame_dict = {
-                'time': self.replay.netstream[frame].current,
+                'time': self.replay['frames'][frame]['time'],
                 'actors': []
             }
 
@@ -177,7 +162,6 @@ class Parser(object):
 
         self._get_boost_data()
         self._get_seconds_remaining()
-        # pprint(self.boost_data)
 
         small_actors = {}
 
@@ -188,7 +172,7 @@ class Parser(object):
 
         final_data = {
             'frame_data': frame_data,
-            'goals': self.replay.header.get('Goals', []),
+            'goals': self.replay['meta']['properties'].get('Goals', []),
             'boost': self.boost_data,
             'seconds_mapping': self.seconds_mapping,
             'actors': self.actors,
@@ -201,17 +185,17 @@ class Parser(object):
     def _get_match_metadata(self, frame):
         # Search through the frames looking for some game replication info.
         game_info = [
-            value for name, value in frame.actors.items()
+            value for value in frame['replications']
             if (
-                'GameReplicationInfoArchetype' in name and
-                'Engine.GameReplicationInfo:ServerName' in value['data']
+                'GameReplicationInfoArchetype' in value['object_name'] and
+                'Engine.GameReplicationInfo:ServerName' in value['properties']
             )
         ]
 
         if not game_info:
             return
 
-        game_info = game_info[0]['data']
+        game_info = game_info[0]['properties']
 
         self.match_metadata = {
             'server_name': game_info['Engine.GameReplicationInfo:ServerName'],
@@ -221,20 +205,20 @@ class Parser(object):
     def _get_team_metadata(self, frame):
         # Search through the frame looking for team info.
         team_info = [
-            value for name, value in frame.actors.items()
-            if 'Archetypes.Teams.Team' in value.get('actor_type', '') and value['new']
+            value for value in frame['replications']
+            if 'Archetypes.Teams.Team' in value.get('object_name', '') and value['state'] == 'opening'
         ]
 
         if not team_info:
             return
 
         for team in team_info:
-            self.team_metadata[team['actor_id']] = team['actor_type'].replace('Archetypes.Teams.Team', '')
+            self.team_metadata[team['actor_id']] = team['object_name'].replace('Archetypes.Teams.Team', '')
 
     def _extract_goal_data(self, base_index, search_index=None):
         # If the player name is unique within the actor set, then don't bother
         # searching through frames for the data.
-        for goal in self.replay.header['Goals']:
+        for goal in self.replay['meta']['properties']['Goals']:
             if goal['frame'] == base_index:
                 player = [
                     actor_id
@@ -253,27 +237,27 @@ class Parser(object):
         if not search_index:
             search_index = base_index
 
-            if base_index not in self.replay.netstream:
+            if base_index >= len(self.replay['frames']):
                 search_index = base_index - 1
 
-        frame = self.replay.netstream.get(search_index, None)
+        frame = self.replay['frames'][search_index]
 
         scorer = None
 
         if frame:
             players = [
                 value
-                for name, value in frame.actors.items()
-                if value['actor_type'] == 'TAGame.Default__PRI_TA'
+                for value in frame['replications']
+                if value['object_name'] == 'TAGame.Default__PRI_TA'
             ]
 
             # Figure out who scored.
             for value in players:
-                if 'TAGame.PRI_TA:MatchGoals' in value['data']:
+                if 'TAGame.PRI_TA:MatchGoals' in value['properties']:
                     scorer = value['actor_id']
                     break
 
-                if 'TAGame.PRI_TA:MatchAssists' in value['data']:
+                if 'TAGame.PRI_TA:MatchAssists' in value['properties']:
                     # print('we have the assister!', value['actor_id'])
                     pass
 
@@ -290,7 +274,7 @@ class Parser(object):
             elif search_index - base_index > 0:
                 next_index = base_index + (search_index - base_index + 1) * -1
 
-            if next_index not in self.replay.netstream:
+            if next_index >= len(self.replay['frames']):
                 if next_index < 0:
                     next_index = abs(search_index) + 1
                 else:
@@ -299,11 +283,10 @@ class Parser(object):
             self._extract_goal_data(base_index, next_index)
             return
 
-        # print('Found goal', search_index - base_index)
         self.goal_metadata[base_index] = scorer
 
     def _get_actors(self):
-        for index, frame in self.replay.netstream.items():
+        for index, frame in enumerate(self.replay['frames']):
             # We can attempt to get the match metadata during this loop and
             # save us having to loop the netstream more than once.
             if not self.match_metadata:
@@ -315,8 +298,8 @@ class Parser(object):
             # Find the player actor objects.
             players = [
                 value
-                for name, value in frame.actors.items()
-                if value['actor_type'] == 'TAGame.Default__PRI_TA'
+                for value in frame['replications']
+                if value['object_name'] == 'TAGame.Default__PRI_TA'
             ]
 
             for value in players:
@@ -324,8 +307,8 @@ class Parser(object):
                 Example `value`:
 
                 {'actor_id': 2,
-                 'actor_type': 'TAGame.Default__PRI_TA',
-                 'data': {'Engine.PlayerReplicationInfo:Ping': 24,
+                 'class_name': 'TAGame.Default__PRI_TA',
+                 'properties': {'Engine.PlayerReplicationInfo:Ping': 24,
                           'Engine.PlayerReplicationInfo:PlayerID': 656,
                           'Engine.PlayerReplicationInfo:PlayerName': "AvD Sub'n",
                           'Engine.PlayerReplicationInfo:Team': (True, 6),
@@ -348,23 +331,23 @@ class Parser(object):
                  'startpos': 102988}
                  """
 
-                if 'data' not in value:
+                if 'properties' not in value:
                     continue
 
-                if 'Engine.PlayerReplicationInfo:bWaitingPlayer' in value['data']:
+                if 'Engine.PlayerReplicationInfo:bWaitingPlayer' in value['properties']:
                     continue
 
                 team_id = None
                 actor_id = value['actor_id']
 
-                if 'Engine.PlayerReplicationInfo:Team' in value['data']:
-                    team_id = value['data']['Engine.PlayerReplicationInfo:Team'][1]
+                if 'Engine.PlayerReplicationInfo:Team' in value['properties']:
+                    team_id = value['properties']['Engine.PlayerReplicationInfo:Team']['contents'][1]
 
                 if actor_id in self.actors:
                     if team_id is not None:
                         if self.actors[actor_id]['team'] != team_id:
                             if actor_id in self.actor_metadata:
-                                self.actor_metadata[actor_id]['Engine.PlayerReplicationInfo:Team'] = value['data']['Engine.PlayerReplicationInfo:Team']
+                                self.actor_metadata[actor_id]['Engine.PlayerReplicationInfo:Team'] = value['properties']['Engine.PlayerReplicationInfo:Team']
 
                             if team_id != -1:
                                 self.actors[actor_id]['team'] = team_id
@@ -373,43 +356,42 @@ class Parser(object):
                             # self.actors[actor_id]['team'] = team_id
                             self.actors[actor_id]['left'] = index
 
-                elif 'TAGame.PRI_TA:ClientLoadout' in value['data']:
-                    player_name = value['data'].get('Engine.PlayerReplicationInfo:PlayerName', None)
+                elif 'TAGame.PRI_TA:ClientLoadout' in value['properties']:
+                    player_name = value['properties'].get('Engine.PlayerReplicationInfo:PlayerName', None)
 
                     self.actors[actor_id] = {
                         'type': 'player',
                         'join': index,
-                        'left': self.replay.header['NumFrames'],
+                        'left': self.replay['meta']['properties']['NumFrames'],
                         'name': player_name,
                         'team': team_id,
                     }
 
                     if actor_id not in self.actor_metadata:
-                        self.actor_metadata[actor_id] = value['data']
+                        self.actor_metadata[actor_id] = value['properties']
 
                 # See if our current data value has any new fields.
                 if actor_id not in self.actor_metadata:
-                    self.actor_metadata[actor_id] = value['data']
+                    self.actor_metadata[actor_id] = value['properties']
                 else:
-                    for key, value in value['data'].items():
+                    for key, value in value['properties'].items():
                         if key not in self.actor_metadata[actor_id] or self.actor_metadata[actor_id].get(key, None) is None:
                             self.actor_metadata[actor_id][key] = value
 
             # Get the ball data (if any).
             ball = [
                 value
-                for name, value in frame.actors.items()
+                for value in frame['replications']
                 if (
-                    value['actor_type'] == 'Archetypes.Ball.Ball_Default' and
-                    'TAGame.RBActor_TA:ReplicatedRBState' in value.get('data', {})
+                    value['object_name'] == 'Archetypes.Ball.Ball_Default' and
+                    'TAGame.RBActor_TA:ReplicatedRBState' in value.get('properties', {})
                 )
             ]
 
             if ball:
-                # pprint(ball)
                 ball = ball[0]
 
-                if ball['actor_id'] not in self.actors and 'TAGame.RBActor_TA:ReplicatedRBState' in ball['data']:
+                if ball['actor_id'] not in self.actors and 'TAGame.RBActor_TA:ReplicatedRBState' in ball['properties']:
                     self.actors[ball['actor_id']] = {
                         'type': 'ball'
                     }
@@ -417,25 +399,25 @@ class Parser(object):
             # Get the camera data (if any)
             cameras = [
                 value
-                for name, value in frame.actors.items()
-                if value['actor_type'] == 'TAGame.Default__CameraSettingsActor_TA' and
-                'TAGame.CameraSettingsActor_TA:PRI' in value.get('data', {}) and
-                'TAGame.CameraSettingsActor_TA:ProfileSettings' in value.get('data', {})
+                for value in frame['replications']
+                if value['object_name'] == 'TAGame.Default__CameraSettingsActor_TA' and
+                'TAGame.CameraSettingsActor_TA:PRI' in value.get('properties', {}) and
+                'TAGame.CameraSettingsActor_TA:ProfileSettings' in value.get('properties', {})
             ]
 
             if len(cameras) > 0:
                 for camera in cameras:
-                    actor_id = camera['data']['TAGame.CameraSettingsActor_TA:PRI'][1]
+                    actor_id = camera['properties']['TAGame.CameraSettingsActor_TA:PRI'][1]
 
                     if 'TAGame.PRI_TA:CameraSettings' not in self.actor_metadata[actor_id]:
-                        self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['data']['TAGame.CameraSettingsActor_TA:ProfileSettings']
+                        self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['properties']['TAGame.CameraSettingsActor_TA:ProfileSettings']
 
             # Figure out if the cars are locked in position at this point.
             # TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining
             """
             {'actor_id': 3,
-             'actor_type': 'Archetypes.GameEvent.GameEvent_Soccar',
-             'data': {'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining': 3,
+             'class_name': 'Archetypes.GameEvent.GameEvent_Soccar',
+             'properties': {'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining': 3,
                       'id': 3,
                       'state': 'existing'},
              'new': False,
@@ -445,9 +427,9 @@ class Parser(object):
 
             game_events = [
                 value
-                for name, value in frame.actors.items()
-                if value['actor_type'] == 'Archetypes.GameEvent.GameEvent_Soccar' and
-                'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value.get('data', {})
+                for value in frame['replications']
+                if value['object_name'] == 'Archetypes.GameEvent.GameEvent_Soccar' and
+                'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value.get('properties', {})
             ]
 
             if len(game_events):
@@ -466,8 +448,8 @@ class Parser(object):
         # Do we have a new car object? Assign it to the user.
         """
         {'actor_id': 7,
-         'actor_type': 'Archetypes.Car.Car_Default',
-         'data': {'Engine.Pawn:PlayerReplicationInfo': (True, 4),
+         'class_name': 'Archetypes.Car.Car_Default',
+         'properties': {'Engine.Pawn:PlayerReplicationInfo': (True, 4),
                   'TAGame.Car_TA:TeamPaint': {'CustomColorID': 90,
                                               'CustomFinishID': 270,
                                               'Team': 0,
@@ -484,8 +466,8 @@ class Parser(object):
          'new': False,
          'startpos': 4230}
         {'actor_id': 8,
-         'actor_type': 'Archetypes.CarComponents.CarComponent_Boost',
-         'data': {'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount': 85,
+         'class_name': 'Archetypes.CarComponents.CarComponent_Boost',
+         'properties': {'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount': 85,
                   'TAGame.CarComponent_TA:Vehicle': (True, 7)},
          'new': False,
          'startpos': 4537}
@@ -494,38 +476,36 @@ class Parser(object):
         self.boost_actors = {}
         self.cars = {}
 
-        for index, frame in self.replay.netstream.items():
-            # pprint(frame.actors.items())
-
-            for name, value in frame.actors.items():
+        for index, frame in enumerate(self.replay['frames']):
+            for value in frame['replications']:
                 actor_id = value['actor_id']
 
                 # Get any cars.
-                if value['actor_type'] == 'Archetypes.Car.Car_Default':
-                    if 'data' not in value:
+                if value['object_name'] == 'Archetypes.Car.Car_Default':
+                    if 'properties' not in value:
                         continue
 
-                    if 'Engine.Pawn:PlayerReplicationInfo' in value['data']:
-                        player_id = value['data']['Engine.Pawn:PlayerReplicationInfo'][1]
+                    if 'Engine.Pawn:PlayerReplicationInfo' in value['properties']:
+                        player_id = value['properties']['Engine.Pawn:PlayerReplicationInfo']['contents'][1]
                         self.cars[actor_id] = player_id
 
                 # Get any boost objects.
-                if value['actor_type'] == 'Archetypes.CarComponents.CarComponent_Boost':
+                if value['object_name'] == 'Archetypes.CarComponents.CarComponent_Boost':
                     if actor_id not in self.boost_actors:
                         self.boost_actors[actor_id] = {}
 
-                    if 'data' not in value:
+                    if 'properties' not in value:
                         continue
 
-                    if 'TAGame.CarComponent_TA:Vehicle' in value['data']:
-                        car_id = value['data']['TAGame.CarComponent_TA:Vehicle'][1]
+                    if 'TAGame.CarComponent_TA:Vehicle' in value['properties']:
+                        car_id = value['properties']['TAGame.CarComponent_TA:Vehicle']['contents'][1]
                         self.boost_actors[actor_id] = car_id
 
-                    if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value['data']:
+                    if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value['properties']:
                         if actor_id not in self.boost_data:
                             self.boost_data[actor_id] = {}
 
-                        self.boost_data[actor_id][index] = value['data']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']
+                        self.boost_data[actor_id][index] = value['properties']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['contents']
 
         # Data structure:
         #
@@ -542,13 +522,13 @@ class Parser(object):
     def _get_seconds_remaining(self):
         self.seconds_mapping = {}
 
-        for index, frame in self.replay.netstream.items():
-            for name, value in frame.actors.items():
-                if 'data' not in value:
+        for index, frame in enumerate(self.replay['frames']):
+            for value in frame['replications']:
+                if 'properties' not in value:
                     continue
 
-                if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value['data']:
-                    self.seconds_mapping[index] = value['data']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']
+                if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value['properties']:
+                    self.seconds_mapping[index] = value['properties']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']
 
     def _get_player_position_data(self, player_id):
         player = self.actors[player_id]
@@ -560,7 +540,7 @@ class Parser(object):
         if player['type'] == 'player':
             for index in range(player['join'], player['left']):
                 try:
-                    frame = self.replay.netstream[index]
+                    frame = self.replay['frames'][index]
                 except KeyError:
                     # Handle truncated network data.
                     break
@@ -578,26 +558,24 @@ class Parser(object):
                 assert stop is False
 
                 # First we need to find the player's car object.
-                for actor in frame.actors:
-                    actor_obj = frame.actors[actor]
-
-                    if 'data' not in actor_obj:
+                for actor_obj in frame['replications']:
+                    if 'properties' not in actor_obj:
                         continue
 
-                    engine = actor_obj['data'].get('Engine.Pawn:PlayerReplicationInfo')
+                    engine = actor_obj['properties'].get('Engine.Pawn:PlayerReplicationInfo')
 
                     # This is the correct object for this player.
-                    if engine and engine[1] == player_id:
+                    if engine and engine['contents'][1] == player_id:
                         car_actor_obj = actor_obj['actor_id']
 
                     # If the actor we're looking at is the car object, then get the
                     # position and rotation data for this frame.
                     if actor_obj['actor_id'] == car_actor_obj:
-                        state_data = actor_obj['data'].get('TAGame.RBActor_TA:ReplicatedRBState')
+                        state_data = actor_obj['properties'].get('TAGame.RBActor_TA:ReplicatedRBState')
 
                         if state_data:
-                            x, y, z = state_data['pos']
-                            yaw, pitch, roll = state_data['rot']
+                            x, y, z = state_data['contents'][1]
+                            yaw, pitch, roll = state_data['contents'][2]
 
                             result[index] = {
                                 'x': x,
@@ -609,7 +587,7 @@ class Parser(object):
                             }
 
         elif player['type'] == 'ball':
-            for index, frame in self.replay.netstream.items():
+            for index, frame in enumerate(self.replay['frames']):
                 stop = False
                 for pair in self.disabled_frame_ranges:
                     if pair[0] <= index <= pair[1]:
@@ -623,25 +601,23 @@ class Parser(object):
                 assert stop is False
 
                 # Does this actor exist in the frame data?
-                for actor in frame.actors:
-                    actor_obj = frame.actors[actor]
-
-                    if 'data' not in actor_obj:
+                for actor_obj in frame['replications']:
+                    if 'properties' not in actor_obj:
                         continue
 
                     if actor_obj['actor_id'] != player_id:
                         continue
 
-                    if 'TAGame.RBActor_TA:ReplicatedRBState' not in actor_obj['data']:
+                    if 'TAGame.RBActor_TA:ReplicatedRBState' not in actor_obj['properties']:
                         continue
 
-                    if actor_obj['actor_type'] != 'Archetypes.Ball.Ball_Default':
+                    if actor_obj['object_name'] != 'Archetypes.Ball.Ball_Default':
                         continue
 
-                    state_data = actor_obj['data']['TAGame.RBActor_TA:ReplicatedRBState']
+                    state_data = actor_obj['properties']['TAGame.RBActor_TA:ReplicatedRBState']
 
-                    x, y, z = state_data['pos']
-                    yaw, pitch, roll = state_data['rot']
+                    x, y, z = state_data['contents'][1]
+                    yaw, pitch, roll = state_data['contents'][2]
 
                     result[index] = {
                         'x': x,
