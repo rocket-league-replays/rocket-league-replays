@@ -32,14 +32,14 @@ class Parser(object):
                 self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(obj.file.path), shell=True).decode('utf-8'))
             else:
                 # Download the file from S3.
-                command = 'wget {} -qO {}'.format(
+                command = 'wget {} -qO /tmp/{}'.format(
                     self.file.url,
-                    self.file.name,
+                    self.replay_id,
                 )
 
                 os.system(command)
 
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(self.file.name), shell=True).decode('utf-8'))
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux /tmp/{}'.format(self.replay_id), shell=True).decode('utf-8'))
 
                 # os.remove(self.file.name)
 
