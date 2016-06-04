@@ -5,17 +5,35 @@ from pprint import pprint
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from pyrope import Replay
 
 
 class Parser(object):
 
     def __init__(self, file_path, parse_netstream=False, obj=None):
-        if settings.DEBUG:
-            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(file_path), shell=True).decode('utf-8'))
-        else:
-            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(file_path), shell=True).decode('utf-8'))
+        if not parse_netstream:
+            self.replay = Replay(obj.file.read())
+            self.replay_id = self.replay.header['Id']
 
-        self.replay_id = self.replay['meta']['properties']['Id']
+            # Convert the Pyrope format into the Octane format.
+            replay_temp = {
+                'meta': {
+                    'properties': self.replay.header
+                }
+            }
+
+            if 'PlayerStats' in replay_temp['meta']['properties']:
+                for index, player in enumerate(replay_temp['meta']['properties']['PlayerStats']):
+                    replay_temp['meta']['properties']['PlayerStats'][index]['Platform'] = player['Platform']['OnlinePlatform']
+
+            self.replay = replay_temp
+        else:
+            if settings.DEBUG:
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(file_path), shell=True).decode('utf-8'))
+            else:
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(file_path), shell=True).decode('utf-8'))
+
+            self.replay_id = self.replay['meta']['properties']['Id']
 
         self.actor_metadata = {}
         self.goal_metadata = {}
@@ -31,6 +49,9 @@ class Parser(object):
 
         heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
         location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(self.replay_id)
+
+        if not parse_netstream:
+            return
 
         self._get_actors()
 
