@@ -598,7 +598,7 @@ class Replay(models.Model):
                     import os
 
                     # Download the file from S3.
-                    command = 'wget https://media.rocketleaguereplays.com/uploads/replay_files/{} -qO {}'.format(
+                    command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
                         self.file.name,
                         e.filename,
                     )

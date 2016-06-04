@@ -1,9 +1,11 @@
 import json
+import sys
 import traceback
 
 import requests
 from django.conf import settings
 from django.utils.timezone import now
+from io import StringIO
 
 from .celery import app
 from .models import Replay
@@ -30,32 +32,40 @@ def report_to_slack(replay):
 
 @app.task(name='rocket_league.apps.replays.tasks.process_netstream', ignore_result=False, track_started=True)
 def process_netstream(replay_pk):
-    replay = Replay.objects.get(pk=replay_pk)
+    prev_stdout, prev_stderr, sys.stdout, sys.stderr = sys.stdout, sys.stderr, StringIO(), StringIO()
 
     try:
-        replay.processed = False
-        replay.crashed_heatmap_parser = False
-        replay.save(parse_netstream=True)
+        replay = Replay.objects.get(pk=replay_pk)
 
-        replay.refresh_from_db()
+        try:
+            replay.processed = False
+            replay.crashed_heatmap_parser = False
+            replay.save(parse_netstream=True)
 
-        replay_processed = True
+            replay.refresh_from_db()
 
-        if not replay.location_json_file:
-            replay_processed = False
+            replay_processed = True
 
-        if replay.boostdata_set.count() == 0:
-            replay_processed = False
+            if not replay.location_json_file:
+                replay_processed = False
 
-        if not replay_processed:
+            if replay.boostdata_set.count() == 0:
+                replay_processed = False
+
+            if not replay_processed:
+                replay.crashed_heatmap_parser = True
+                replay.save()
+
+                report_to_slack.apply_async([replay])
+
+        except Exception:
+            replay.refresh_from_db()
             replay.crashed_heatmap_parser = True
             replay.save()
 
             report_to_slack.apply_async([replay])
 
-    except Exception:
-        replay.refresh_from_db()
-        replay.crashed_heatmap_parser = True
-        replay.save()
-
-        report_to_slack.apply_async([replay])
+        return sys.stdout.getvalue(), sys.stderr.getvalue()
+    finally:
+        sys.stdout = prev_stdout
+        sys.stderr = prev_stderr

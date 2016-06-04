@@ -33,15 +33,15 @@ class Parser(object):
             else:
                 # Download the file from S3.
                 command = 'wget {} -qO /tmp/{}'.format(
-                    self.file.url,
-                    self.replay_id,
+                    obj.file.url,
+                    obj.replay_id,
                 )
 
                 os.system(command)
 
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux /tmp/{}'.format(self.replay_id), shell=True).decode('utf-8'))
+                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux /tmp/{}'.format(obj.replay_id), shell=True).decode('utf-8'))
 
-                # os.remove(self.file.name)
+                os.remove('/tmp/{}'.format(obj.replay_id))
 
             self.replay_id = self.replay['meta']['properties']['Id']
 
@@ -438,7 +438,7 @@ class Parser(object):
 
             if len(cameras) > 0:
                 for camera in cameras:
-                    actor_id = camera['properties']['TAGame.CameraSettingsActor_TA:PRI'][1]
+                    actor_id = camera['properties']['TAGame.CameraSettingsActor_TA:PRI']['contents'][1]
 
                     if 'TAGame.PRI_TA:CameraSettings' not in self.actor_metadata[actor_id]:
                         self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['properties']['TAGame.CameraSettingsActor_TA:ProfileSettings']
