@@ -770,7 +770,7 @@ class Replay(models.Model):
                     team=team,
                     actor_id=actor_id,
                     bot='Engine.PlayerReplicationInfo:bBot' in data,
-                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
+                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {'contents': []})['contents'],
                     vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'][1],
                     total_xp=total_xp,
                     platform=data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',

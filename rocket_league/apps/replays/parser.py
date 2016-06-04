@@ -363,7 +363,7 @@ class Parser(object):
                         'type': 'player',
                         'join': index,
                         'left': self.replay['meta']['properties']['NumFrames'],
-                        'name': player_name,
+                        'name': player_name['contents'],
                         'team': team_id,
                     }
 
@@ -528,7 +528,7 @@ class Parser(object):
                     continue
 
                 if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value['properties']:
-                    self.seconds_mapping[index] = value['properties']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']
+                    self.seconds_mapping[index] = value['properties']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['contents']
 
     def _get_player_position_data(self, player_id):
         player = self.actors[player_id]
