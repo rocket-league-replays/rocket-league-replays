@@ -609,7 +609,7 @@ class Replay(models.Model):
 
             player_objects = {}
 
-            parser = Parser(self.file.path, parse_netstream=parse_netstream, obj=self)
+            parser = Parser('', parse_netstream=parse_netstream, obj=self)
 
             Goal.objects.filter(replay=self).delete()
             Player.objects.filter(replay=self).delete()
