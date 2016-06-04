@@ -566,7 +566,7 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(self.file.path, obj=self)
+                self.parser = Parser('', obj=self)
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
