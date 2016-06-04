@@ -696,7 +696,6 @@ class Replay(models.Model):
                         data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
                         data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
                         data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
-
                     )
 
                     # If a console player is playing split-screen, there can
@@ -715,7 +714,7 @@ class Replay(models.Model):
                     if 'Engine.PlayerReplicationInfo:Team' in data:
                         id_parts = [
                             str(data['Engine.PlayerReplicationInfo:Team']['contents'][1]),
-                            data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
+                            data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
                             '0',
                         ]
 
@@ -820,12 +819,15 @@ class Replay(models.Model):
                 if 'TAGame.PRI_TA:PartyLeader' in data:
                     # Get this player object, then get the party leader object.
                     if 'Engine.PlayerReplicationInfo:UniqueId' in data:
+                        unique_id = '{}-{}-{}'.format(
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
+                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
+                        )
+
                         player_obj = Player.objects.get(
                             replay=self,
-                            unique_id='-'.join(
-                                str(x)
-                                for x in data['Engine.PlayerReplicationInfo:UniqueId']
-                            ),
+                            unique_id=unique_id,
                         )
                     else:
                         player_obj = None

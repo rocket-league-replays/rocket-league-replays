@@ -582,6 +582,9 @@ class Parser(object):
 
                 stop = False
                 for pair in self.disabled_frame_ranges:
+                    if len(pair) < 2:
+                        continue
+
                     if pair[0] <= index <= pair[1]:
                         stop = True
                         break
@@ -625,6 +628,9 @@ class Parser(object):
             for index, frame in enumerate(self.replay['frames']):
                 stop = False
                 for pair in self.disabled_frame_ranges:
+                    if len(pair) < 2:
+                        continue
+
                     if pair[0] <= index <= pair[1]:
                         stop = True
                         break
