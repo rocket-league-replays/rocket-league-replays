@@ -170,7 +170,7 @@ class Parser(object):
         # Restructure the data so that it's chunkable.
         frame_data = []
 
-        for frame in range(self.replay['meta']['properties']['NumFrames']):
+        for frame in range(self.replay['meta']['properties'].get('NumFrames', 0)):
             frame_dict = {
                 'time': self.replay['frames'][frame]['time'],
                 'actors': []
@@ -246,7 +246,10 @@ class Parser(object):
         for team in team_info:
             self.team_metadata[team['actor_id']] = team['object_name'].replace('Archetypes.Teams.Team', '')
 
-    def _extract_goal_data(self, base_index, search_index=None):
+    def _extract_goal_data(self, base_index, search_index=None, iteration=None):
+        if not iteration:
+            iteration = 1
+
         # If the player name is unique within the actor set, then don't bother
         # searching through frames for the data.
         for goal in self.replay['meta']['properties']['Goals']:
@@ -298,6 +301,10 @@ class Parser(object):
                 print('Unable to find goal for frame', base_index)
                 return
 
+            if iteration >= 100:
+                print('Unable to find goal for frame', base_index)
+                return
+
             if search_index == base_index:
                 next_index = base_index - 1
             elif search_index - base_index < 0:
@@ -311,7 +318,7 @@ class Parser(object):
                 else:
                     next_index = search_index - 1
 
-            self._extract_goal_data(base_index, next_index)
+            self._extract_goal_data(base_index, next_index, iteration + 1)
             return
 
         self.goal_metadata[base_index] = scorer

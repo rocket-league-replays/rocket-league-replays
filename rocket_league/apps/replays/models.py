@@ -625,7 +625,10 @@ class Replay(models.Model):
                     BoostData.objects.filter(replay=self).delete()
 
             if 'playlist' in parser.match_metadata:
-                self.playlist = parser.match_metadata['playlist']['contents']
+                if type(parser.match_metadata['playlist']) == int:
+                    self.playlist = parser.match_metadata['playlist']
+                elif 'contents' in parser.match_metadata['playlist']:
+                    self.playlist = parser.match_metadata['playlist']['contents']
 
             if 'server_name' in parser.match_metadata:
                 self.server_name = parser.match_metadata['server_name']['contents']
@@ -704,11 +707,18 @@ class Replay(models.Model):
                     # handles that situation.
 
                     while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                        data['Engine.PlayerReplicationInfo:UniqueId'] = (
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
-                            data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2] + 1,
-                        )
+                        if type(data['Engine.PlayerReplicationInfo:UniqueId']) == dict:
+                            data['Engine.PlayerReplicationInfo:UniqueId'] = (
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
+                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2] + 1,
+                            )
+                        else:
+                            data['Engine.PlayerReplicationInfo:UniqueId'] = (
+                                data['Engine.PlayerReplicationInfo:UniqueId'][0],
+                                data['Engine.PlayerReplicationInfo:UniqueId'][1],
+                                data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
+                            )
 
                         unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
                 else:
@@ -728,7 +738,7 @@ class Replay(models.Model):
                     else:
                         id_parts = [
                             '-1',
-                            data.get('Engine.PlayerReplicationInfo:PlayerName', 'Unknown'),
+                            data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
                             '0'
                         ]
 
