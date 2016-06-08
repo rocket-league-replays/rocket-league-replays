@@ -19,7 +19,8 @@
       "extractSharedJs": true,
       "entries": {
         "app": ["./app.js"],
-        "2d-rendering": ["./2d-rendering/main.js"]
+        "2d-rendering": ["./2d-rendering/main.js"],
+        "shots": ["./shots/main.js"]
       },
       "extensions": ["js"]
     },

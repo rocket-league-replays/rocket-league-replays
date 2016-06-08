@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load cache humanize ratings replays site static %}
+
+{% block object_title %}{{ block.super }} - Boost Analysis{% endblock %}
+
+{% block content_primary %}
+    {% include "replays/includes/tabs.html" %}
+
+    {% if replay.title %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h2>{{ replay.title }}</h2>
+            <hr>
+        </div>
+    </div>
+    {% endif %}
+
+    {# {% cache 3600 replay_hitmaps replay.pk %} #}
+    <div class="row">
+        <div class="small-12 columns">
+            <div class="hmp-Outer"></div>
+        </div>
+    </div>
+
+    <script src="{% static 'build/js/shared.js' %}"></script>
+    <script src="{% static 'build/js/shots.js' %}"></script>
+    {# {% endcache %} #}
+
+    <div class="row">
+        <div class="medium-12 columns">
+            <div id="disqus_thread"></div>
+
+            <script>
+                var disqus_config = function () {
+                    this.page.url = 'http{% if request.is_secure %}s{% endif %}://{{ settings.SITE_DOMAIN }}{{ request.path }}';
+                    this.page.identifier = 'replay_{{ replay.pk }}';
+                };
+                (function() { // DON'T EDIT BELOW THIS LINE
+                    var d = document, s = d.createElement('script');
+
+                    s.src = '//rlr.disqus.com/embed.js';
+
+                    s.setAttribute('data-timestamp', +new Date());
+                    (d.head || d.body).appendChild(s);
+                })();
+            </script>
+            <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional_js %}
+{% endblock %}

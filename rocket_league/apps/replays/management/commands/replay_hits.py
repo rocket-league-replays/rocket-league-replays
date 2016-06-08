@@ -40,7 +40,7 @@ class Command(BaseCommand):
         for index, frame in enumerate(parser.replay['frames']):
 
             if index in goals:
-                print(index, 'goal data   ', goals[index])
+                # print(index, 'goal data   ', goals[index])
 
                 # Get the ball position.
                 ball_actor_id = list(filter(lambda x: actors[x]['class_name'] == 'TAGame.Ball_TA', actors))[0]
@@ -49,11 +49,22 @@ class Command(BaseCommand):
 
                 hit_position = last_hits[goals[index]['PlayerTeam']]
                 print(index, 'last hit was', hit_position)
-                print(index, 'distance', distance(actor_positions[ball_actor_id], hit_position))
+                # print(index, 'distance', distance(actor_positions[ball_actor_id], hit_position))
 
                 if goals[index]['PlayerTeam'] == 1:
-                    print('Player X,Player Y,Ball X,Ball Y')
-                    print(hit_position[0], ',', hit_position[1], ',', ball_position[0], ',', ball_position[1])
+                    print("""{{
+  x: [{0}, {3}],
+  y: [{1}, {4}],
+  z: [{2}, {5}],
+  mode: 'lines',
+  line: {{
+    color: '#1f77b4',
+    width: 3
+  }},
+  type: 'scatter3d'
+}},""".format(*hit_position, *ball_position))
+                    # print('Player X,Player Y,Ball X,Ball Y')
+                    # print(hit_position[0], ',', hit_position[1], ',', ball_position[0], ',', ball_position[1])
 
                 # Reset the last hits.
                 last_hits = {
@@ -61,7 +72,7 @@ class Command(BaseCommand):
                     1: None
                 }
 
-                print('')
+                # print('')
 
             for replication in frame['replications']:
                 if replication['state'] == 'opening':
@@ -107,21 +118,21 @@ class Command(BaseCommand):
                         actors
                     ))
 
-                    print(index, 'actor_positions ', actor_positions)
-                    print(index, 'player_cars     ', player_cars)
-                    print(index, 'HitTeamNum      ', hit_team_num)
-                    print(index, 'ball_actor_id   ', ball_actor_id)
-                    print(index, 'team_actor_id   ', team_actor_id)
-                    print(index, 'player_actor_ids', player_actor_ids)
+                    # print(index, 'actor_positions ', actor_positions)
+                    # print(index, 'player_cars     ', player_cars)
+                    # print(index, 'HitTeamNum      ', hit_team_num)
+                    # print(index, 'ball_actor_id   ', ball_actor_id)
+                    # print(index, 'team_actor_id   ', team_actor_id)
+                    # print(index, 'player_actor_ids', player_actor_ids)
 
                     # If there is only one player on the team, they must have
                     # been the hitter of the ball.
                     if len(player_actor_ids) == 1:
                         car = player_cars[player_actor_ids[0]]
 
-                        print(index, 'player position data', actor_positions[car])
-                        print(index, 'ball position data', actor_positions[ball_actor_id])
-                        print(index, 'distance', distance(actor_positions[car], actor_positions[ball_actor_id]))
+                        # print(index, 'player position data', actor_positions[car])
+                        # print(index, 'ball position data', actor_positions[ball_actor_id])
+                        # print(index, 'distance', distance(actor_positions[car], actor_positions[ball_actor_id]))
 
                         last_hits[hit_team_num] = actor_positions[car]
                     elif len(player_actor_ids) == 0:
@@ -129,7 +140,7 @@ class Command(BaseCommand):
                         pprint(actors[2]['properties'])
                         return
 
-                    print('')
+                    # print('')
 
                     # Clean up the actor positions.
                     actor_positions_copy = actor_positions.copy()
