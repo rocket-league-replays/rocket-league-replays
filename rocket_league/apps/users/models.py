@@ -191,6 +191,12 @@ class Profile(models.Model):
             user=self.user,
         ).count() > 0
 
+    @property
+    def clean_twitch_username(self):
+        if 'twitch.tv' in self.twitch_username:
+            return self.twitch_username.split('/')[-1]
+        return self.twitch_username
+
     def get_absolute_url(self):
         if self.has_steam_connected():
             return reverse('users:steam', kwargs={

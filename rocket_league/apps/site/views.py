@@ -5,11 +5,12 @@ from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.utils.timezone import now
-from django.views.generic import RedirectView, TemplateView
+from django.views.generic import ListView, RedirectView, TemplateView
 from social.apps.django_app.default.models import UserSocialAuth
 
 from ..replays.models import Goal, Player, Replay
-from .models import PatronTrial
+from ..users.models import Profile
+from .models import PatronTrial, Patron
 
 
 class StatsView(TemplateView):
@@ -96,3 +97,30 @@ class StartTrialView(LoginRequiredMixin, RedirectView):
             messages.success(self.request, "Your free trial has been activated. You can make full use of all patron benefits for the next 7 days.")
 
         return reverse('replay:playback', kwargs=kwargs)
+
+
+class StreamListView(ListView):
+
+    template_name = 'site/stream_list.html'
+
+    def get_queryset(self):
+        # Get all of the active Patreons, then figure out if they have a Twitch
+        # account listed.
+
+        return Profile.objects.filter(
+            patreon_email_address__in=Patron.objects.filter(
+                pledge_declined_since=None,
+            ).values_list('patron_email', flat=True)
+        ).exclude(
+            twitch_username='',
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super(StreamListView, self).get_context_data(**kwargs)
+
+        context['usernames'] = ','.join([
+            obj.clean_twitch_username
+            for obj in context['object_list']
+        ])
+
+        return context
