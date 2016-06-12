@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     from django.core.management import execute_from_command_line
 
-    version_blacklist = ['0.8.0']
+    version_blacklist = ['0.7.0', '0.8.0']
 
     # Ensure Octane is kept up-to-date.
     if 'runserver' in sys.argv[1]:
