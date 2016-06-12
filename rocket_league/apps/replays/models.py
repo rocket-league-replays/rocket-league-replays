@@ -635,8 +635,8 @@ class Replay(models.Model):
 
             if len(parser.actor_metadata) == 0:
                 # Parse the players the 'old' way.
-                if 'PlayerStats' in parser.replay['meta']['properties']:
-                    for player in parser.replay['meta']['properties']['PlayerStats']:
+                if 'PlayerStats' in parser.replay['Metadata']:
+                    for player in parser.replay['Metadata']['PlayerStats']:
                         Player.objects.get_or_create(
                             replay=self,
                             player_name=player['Name'],
@@ -652,18 +652,18 @@ class Replay(models.Model):
                         )
                 else:
                     # The best we can do is to get the goal scorers and the player.
-                    for goal in parser.replay['meta']['properties'].get('Goals', []):
+                    for goal in parser.replay['Metadata'].get('Goals', []):
                         Player.objects.get_or_create(
                             replay=self,
                             player_name=goal['PlayerName'],
                             team=goal['PlayerTeam'],
                         )
 
-                    if 'PlayerName' in parser.replay['meta']['properties'] and 'PrimaryPlayerTeam' in parser.replay['meta']['properties']:
+                    if 'PlayerName' in parser.replay['Metadata'] and 'PrimaryPlayerTeam' in parser.replay['Metadata']:
                         Player.objects.get_or_create(
                             replay=self,
-                            player_name=parser.replay['meta']['properties']['PlayerName'],
-                            team=parser.replay['meta']['properties']['PrimaryPlayerTeam'],
+                            player_name=parser.replay['Metadata']['PlayerName'],
+                            team=parser.replay['Metadata']['PrimaryPlayerTeam'],
                         )
 
             # Create the player objects.
@@ -879,11 +879,11 @@ class Replay(models.Model):
                         player_obj.party_leader = leader_obj
                         player_obj.save()
 
-            if 'PlayerStats' in parser.replay['meta']['properties']:
+            if 'PlayerStats' in parser.replay['Metadata']:
                 # We can show a leaderboard!
                 self.show_leaderboard = True
 
-                for player in parser.replay['meta']['properties']['PlayerStats']:
+                for player in parser.replay['Metadata']['PlayerStats']:
                     # Attempt to match up this player with a Player object.
                     obj = Player.objects.filter(
                         replay=self,
@@ -917,8 +917,8 @@ class Replay(models.Model):
                             print('Unable to find an object for', player)
 
             # Create the Goal objects.
-            if 'Goals' in parser.replay['meta']['properties']:
-                for index, goal in enumerate(parser.replay['meta']['properties']['Goals']):
+            if 'Goals' in parser.replay['Metadata']:
+                for index, goal in enumerate(parser.replay['Metadata']['Goals']):
                     player = None
 
                     if goal['frame'] in parser.goal_metadata:
@@ -966,7 +966,7 @@ class Replay(models.Model):
                         player=player,
                     )
 
-            data = parser.replay['meta']['properties']
+            data = parser.replay['Metadata']
 
             self.replay_id = data['Id']
             self.player_name = data['PlayerName']
