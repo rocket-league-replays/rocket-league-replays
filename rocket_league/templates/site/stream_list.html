@@ -87,8 +87,8 @@ new Vue({
 
 <div class="row" v-if="active_channel">
     <div class="small-12 columns" style="display: flex;">
-        <iframe src="http://player.twitch.tv/?channel={{ active_channel }}" style="width: calc(100% - 350px)" height="506" frameborder="0"  scrolling="no" allowfullscreen="true"></iframe>
-        <iframe frameborder="0" scrolling="no" id="chat_embed" src="http://www.twitch.tv/{{ active_channel }}/chat" height="506" width="350"></iframe>
+        <iframe :src="`https://player.twitch.tv/?channel=${active_channel}`" style="width: calc(100% - 350px)" height="506" frameborder="0"  scrolling="no" allowfullscreen="true"></iframe>
+        <iframe frameborder="0" scrolling="no" id="chat_embed" :src="`https://www.twitch.tv/${active_channel}/chat`" height="506" width="350"></iframe>
     </div>
 
     <div class="small-12 columns text-center mt-15 mb-30">
