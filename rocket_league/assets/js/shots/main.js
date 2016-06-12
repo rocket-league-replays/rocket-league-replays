@@ -4,7 +4,7 @@ const OrbitControls = require('three-orbit-controls')(THREE)
 
 let renderer
 let scene
-const loader = new THREE.JSONLoader()
+// const loader = new THREE.JSONLoader()
 let currentFrame = -1
 
 if (!Detector.webgl) {
@@ -13,26 +13,26 @@ if (!Detector.webgl) {
   })
 }
 
-function addStadium () {
-  loader.load('https://media.rocketleaguereplays.com/uploads/files/stadium.json', function (geometry) {
-    // create a new material
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xaaffaa,
-      shading: THREE.FlatShading
-    })
+// function addStadium () {
+//   loader.load('https://media.rocketleaguereplays.com/uploads/files/stadium.json', function (geometry) {
+//     // create a new material
+//     const material = new THREE.MeshPhongMaterial({
+//       color: 0xaafxfaa,
+//       shading: THREE.FlatShading
+//     })
 
-    // create a mesh with models geometry and material
-    const mesh = new THREE.Mesh(
-      geometry,
-      material
-    )
+//     // create a mesh with models geometry and material
+//     const mesh = new THREE.Mesh(
+//       geometry,
+//       material
+//     )
 
-    mesh.castShadow = false
-    mesh.receiveShadow = true
+//     mesh.castShadow = false
+//     mesh.receiveShadow = true
 
-    scene.add(mesh)
-  })
-}
+//     scene.add(mesh)
+//   })
+// }
 
 function positionReplayObjects () {
 
@@ -47,14 +47,9 @@ function animate () {
     positionReplayObjects()
   }
 
-  requestAnimationFrame(animate)
-
-  controls.update() // required if controls.enableDamping = true, or if controls.autoRotate = true
-
   render()
-
-  console.log(camera.position)
-  console.log(camera.rotation)
+  controls.update() // required if controls.enableDamping = true, or if controls.autoRotate = true
+  requestAnimationFrame(animate)
 }
 
 function render () {
@@ -73,9 +68,9 @@ const container = document.querySelector('.hmp-Outer')
 container.appendChild(renderer.domElement)
 renderer.domElement.style.width = '100%'
 
-const camera = new THREE.PerspectiveCamera(50, 1248 / 702, 1, 15000)
-camera.position.set(0, 0, 5000)
-camera.rotation.set(1.5, 7, -5)
+const camera = new THREE.PerspectiveCamera(60, container.innerWidth / container.innerHeight, 1, 30000)
+camera.position.set(0, -6000, 1000)
+camera.up = new THREE.Vector3(0, 0, 1)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
@@ -104,5 +99,17 @@ scene.add(light)
 // light = new THREE.AmbientLight(0x222222)
 // scene.add(light)
 
-addStadium()
-animate()
+// addStadium()
+
+const geometry = new THREE.BoxGeometry(150, 75, 75)
+const material = new THREE.MeshPhongMaterial({
+  color: 0x0000ff,
+  shading: THREE.FlatShading
+})
+const mesh = new THREE.Mesh(geometry, material)
+
+mesh.matrixAutoUpdate = true
+mesh.castShadow = true
+mesh.receiveShadow = true
+scene.add(mesh)
+requestAnimationFrame(animate)
