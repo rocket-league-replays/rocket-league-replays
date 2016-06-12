@@ -5,12 +5,14 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.4/vue-resource.min.js"></script>
 
 <script>
+'use strict';
+
 new Vue({
     el: 'main',
     data () {
         return {
             'APIURL': 'https://api.twitch.tv/kraken/streams?game=Rocket+League&stream_type=live',
-            'patron_usernames': '{{ usernames }}',
+            'patron_usernames': JSON.parse('{{ usernames|safe }}'),
             'limit': 100,
             'patron_streams': 0,
             'general_streams': 0,
@@ -19,7 +21,8 @@ new Vue({
                 0: [],
                 1: []
             },
-            'active_channel': window.location.hash.replace(/^#/, '')
+            'active_channel': window.location.hash.replace(/^#/, ''),
+            'loaded': false
         }
     },
     created () {
@@ -28,10 +31,6 @@ new Vue({
     },
 
     ready () {
-        if (this.patron_streams === 0) {
-            this.active_tab = 1
-        }
-
         setInterval(() => {
             this.getData(true)
             this.getData(false)
@@ -43,7 +42,11 @@ new Vue({
             let requestURL = this.APIURL
 
             if (patrons) {
-                requestURL += `&channel=${this.patron_usernames}`
+                let usernames = []
+                this.patron_usernames.forEach((item) => {
+                    usernames.push(item.username)
+                })
+                requestURL += `&channel=${usernames.join(',')}`
                 // this.limit = 100
             } else {
                 // this.limit = 12
@@ -56,11 +59,28 @@ new Vue({
                     // Get the number of 'all' streams.
                     this.patron_streams = response.data._total
                     this.stream_data[0] = response.data.streams
+
+                    if (!this.loaded && this.patron_streams === 0) {
+                        this.active_tab = 1
+                    }
                 } else {
                     this.general_streams = response.data._total
                     this.stream_data[1] = response.data.streams
                 }
             })
+        },
+
+        getPatron (username) {
+            console.log('getPatron', username)
+            let patron = null
+            this.patron_usernames.forEach((item) => {
+                if (item.username.toLowerCase() === username.toLowerCase()) {
+                    console.log('returning', item)
+                    patron = item
+                }
+            })
+
+            return patron
         }
     }
 })
@@ -96,8 +116,20 @@ new Vue({
     </div>
 </div>
 
+<div class="flex-row" v-if="active_tab === 0">
+    <div class="flex-6 mb-20" v-for="stream in stream_data[active_tab]" v-if="getPatron(stream.channel.name).featured">
+        <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name'>
+            <img :src="stream.preview.large" alt="">
+        </a>
+        <h6 class="mt-15 mb-5">
+            <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name' style="word-break: break-word;">{{ stream.channel.status }}</a>
+        </h6>
+        <p>{{ stream.viewers }} viewers on <a :href="stream.channel.url" target="_blank">{{ stream.channel.display_name }}</a></p>
+    </div>
+</div>
+
 <div class="flex-row">
-    <div class="flex-3 mb-20" v-for="stream in stream_data[active_tab]">
+    <div class="flex-3 mb-20" v-for="stream in stream_data[active_tab]" v-if="(active_tab === 0 && !getPatron(stream.channel.name).featured) || active_tab === 1">
         <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name'>
             <img :src="stream.preview.medium" alt="">
         </a>

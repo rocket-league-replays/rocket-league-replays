@@ -1,3 +1,4 @@
+import json
 from datetime import timedelta
 
 from braces.views import LoginRequiredMixin
@@ -5,12 +6,12 @@ from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count
 from django.utils.timezone import now
-from django.views.generic import ListView, RedirectView, TemplateView
+from django.views.generic import RedirectView, TemplateView
 from social.apps.django_app.default.models import UserSocialAuth
 
 from ..replays.models import Goal, Player, Replay
 from ..users.models import Profile
-from .models import PatronTrial, Patron
+from .models import Patron, PatronTrial
 
 
 class StatsView(TemplateView):
@@ -99,9 +100,14 @@ class StartTrialView(LoginRequiredMixin, RedirectView):
         return reverse('replay:playback', kwargs=kwargs)
 
 
-class StreamListView(ListView):
+class StreamListView(TemplateView):
 
     template_name = 'site/stream_list.html'
+
+    def clean_twitch_username(self, username):
+        if 'twitch.tv' in username:
+            return username.split('/')[-1]
+        return username
 
     def get_queryset(self):
         # Get all of the active Patreons, then figure out if they have a Twitch
@@ -110,7 +116,8 @@ class StreamListView(ListView):
         return Profile.objects.filter(
             patreon_email_address__in=Patron.objects.filter(
                 pledge_declined_since=None,
-            ).values_list('patron_email', flat=True)
+                pledge_amount__gte=300,
+            ).values_list('patron_email', flat=True),
         ).exclude(
             twitch_username='',
         )
@@ -118,9 +125,25 @@ class StreamListView(ListView):
     def get_context_data(self, **kwargs):
         context = super(StreamListView, self).get_context_data(**kwargs)
 
-        context['usernames'] = ','.join([
-            obj.clean_twitch_username
-            for obj in context['object_list']
-        ])
+        query = Profile.objects.raw("""SELECT
+  users_profile.id,
+  twitch_username,
+  CASE WHEN site_patron.pledge_amount >= 1000 THEN TRUE ELSE FALSE END featured
+FROM users_profile
+RIGHT JOIN site_patron on users_profile.patreon_email_address = site_patron.patron_email
+WHERE
+  users_profile.twitch_username != '' AND
+  site_patron.pledge_amount >= 300 AND
+  site_patron.pledge_declined_since IS NULL;""")
+
+        context['usernames'] = []
+
+        for row in query:
+            context['usernames'].append({
+                'username': self.clean_twitch_username(row.twitch_username).lower(),
+                'featured': row.featured
+            })
+
+        context['usernames'] = json.dumps(context['usernames'])
 
         return context
