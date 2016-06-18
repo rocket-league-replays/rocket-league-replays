@@ -13,7 +13,7 @@ if __name__ == "__main__":
     version_blacklist = []
 
     # Ensure Octane is kept up-to-date.
-    if 'runserver' in sys.argv[1]:
+    if len(sys.argv) > 1 and 'runserver' in sys.argv[1]:
         octane_release = requests.get('https://api.github.com/repos/tfausak/octane/releases/latest', headers={
             'Authorization': 'Token {}'.format(os.getenv('GITHUB_TOKEN', ''))
         }).json()
