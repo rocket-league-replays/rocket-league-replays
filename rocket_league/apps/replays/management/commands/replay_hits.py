@@ -1,6 +1,11 @@
-from django.core.management.base import BaseCommand
+import json
 import math
+import subprocess
 from pprint import pprint
+
+from django.conf import settings
+from django.core.management.base import BaseCommand
+
 from ...models import Replay
 from ...parser import Parser
 
@@ -21,11 +26,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         replay = Replay.objects.get(pk=options['replay'])
-        parser = Parser(parse_netstream=True, obj=replay)
+
+        if settings.DEBUG:
+            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay.file.path), shell=True).decode('utf-8'))
+        else:
+            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay.file.url), shell=True).decode('utf-8'))
 
         goals = {
             goal['frame']: {'PlayerName': goal['PlayerName'], 'PlayerTeam': goal['PlayerTeam']}
-            for goal in parser.replay['meta']['properties']['Goals']
+            for goal in self.replay['Metadata']['Goals']
         }
 
         last_hits = {
@@ -36,111 +45,87 @@ class Command(BaseCommand):
         actors = {}
         actor_positions = {}
         player_cars = {}
+        ball_angularvelocity = None
+        ball_possession = None
+        confirmed_distances = []
 
-        for index, frame in enumerate(parser.replay['frames']):
+        for index, frame in enumerate(self.replay['Frames']):
+            ball_hit = False
+            confirmed_ball_hit = False
+            ball_spawned = False
 
             if index in goals:
-                # print(index, 'goal data   ', goals[index])
-
                 # Get the ball position.
-                ball_actor_id = list(filter(lambda x: actors[x]['class_name'] == 'TAGame.Ball_TA', actors))[0]
+                ball_actor_id = list(filter(lambda x: actors[x]['Class'] == 'TAGame.Ball_TA', actors))[0]
                 ball_position = actor_positions[ball_actor_id]
-                print(index, 'ball position data', actor_positions[ball_actor_id])
+                # print(index, 'ball position data', actor_positions[ball_actor_id])
 
                 hit_position = last_hits[goals[index]['PlayerTeam']]
-                print(index, 'last hit was', hit_position)
-                # print(index, 'distance', distance(actor_positions[ball_actor_id], hit_position))
+                # print(index, 'last hit was', hit_position)
+                # {type: 'line', dataPoints: [{x: -501, y: 4484}, {x: -679, y: 5155}]},
+                # print("\t\t\t{{type: 'line', dataPoints: [{{x: {}, y: {}}}, {{x: {}, y: {}}}]}},".format(
+                #     hit_position[1],
+                #     hit_position[0],
+                #     ball_position[1],
+                #     ball_position[0],
+                # ))
 
-                if goals[index]['PlayerTeam'] == 1:
-                    print("""{{
+                print("""{{
   x: [{0}, {3}],
   y: [{1}, {4}],
   z: [{2}, {5}],
-  mode: 'lines',
-  line: {{
-    color: '#1f77b4',
-    width: 3
-  }},
   type: 'scatter3d'
 }},""".format(*hit_position, *ball_position))
-                    # print('Player X,Player Y,Ball X,Ball Y')
-                    # print(hit_position[0], ',', hit_position[1], ',', ball_position[0], ',', ball_position[1])
+                # print(index, 'distance', distance(actor_positions[ball_actor_id], hit_position))
 
                 # Reset the last hits.
                 last_hits = {
                     0: None,
                     1: None
                 }
+                # print()
 
-                # print('')
+            # Handle any new actors.
+            for actor_id, value in frame['Spawned'].items():
+                actor_id = int(actor_id)
 
-            for replication in frame['replications']:
-                if replication['state'] == 'opening':
-                    if replication['actor_id'] not in actors:
-                        actors[replication['actor_id']] = replication
-                elif replication['state'] == 'existing':
-                    # Merge the new properties with the existing.
-                    if actors[replication['actor_id']]['properties'] != replication['properties']:
-                        actors[replication['actor_id']]['properties'] = {
-                            **actors[replication['actor_id']]['properties'],
-                            **replication['properties']
-                        }
+                if actor_id not in actors:
+                    actors[actor_id] = value
 
-                    actors[replication['actor_id']]['state'] = 'existing'
-                elif replication['state'] == 'closing':
-                    del actors[replication['actor_id']]
+                if 'Engine.Pawn:PlayerReplicationInfo' in value:
+                    player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                    player_cars[player_actor_id] = actor_id
 
-                if replication['state'] in ['opening', 'existing']:
-                    if 'Engine.Pawn:PlayerReplicationInfo' in replication['properties']:
-                        player_actor_id = replication['properties']['Engine.Pawn:PlayerReplicationInfo']['contents'][1]
-                        player_cars[player_actor_id] = replication['actor_id']
+                if value['Class'] == 'TAGame.Ball_TA':
+                    ball_spawned = True
+
+            # Handle any updates to existing actors.
+            for actor_id, value in frame['Updated'].items():
+                actor_id = int(actor_id)
+
+                # Merge the new properties with the existing.
+                if actors[actor_id] != value:
+                    actors[actor_id] = {**actors[actor_id], **value}
+
+                if 'Engine.Pawn:PlayerReplicationInfo' in value:
+                    player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                    player_cars[player_actor_id] = actor_id
+
+            # Handle removing any destroyed actors.
+            for actor_id in frame['Destroyed']:
+                del actors[actor_id]
+
+            for actor_id, value in {**frame['Spawned'], **frame['Updated']}.items():
+                actor_id = int(actor_id)
 
                 # Look for any position data.
-                if 'TAGame.RBActor_TA:ReplicatedRBState' in replication['properties']:
-                    actor_positions[replication['actor_id']] = replication['properties']['TAGame.RBActor_TA:ReplicatedRBState']['contents'][1]
+                if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
+                    actor_positions[actor_id] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
 
-                if 'TAGame.Ball_TA:HitTeamNum' in replication['properties']:
-                    hit_team_num = replication['properties']['TAGame.Ball_TA:HitTeamNum']['contents']
-
-                    # Get the players which are on this team, then figure out
-                    # where they are, then get their distance to the ball.
-                    ball_actor_id = list(filter(lambda x: actors[x]['class_name'] == 'TAGame.Ball_TA', actors))[0]
-
-                    # Find the team actor ID.
-                    team_actor_id = list(filter(lambda x: actors[x]['object_name'] == 'Archetypes.Teams.Team{}'.format(hit_team_num), actors))[0]
-
-                    # Get the players who are on this team.
-                    player_actor_ids = list(filter(
-                        lambda x:
-                            actors[x]['object_name'] == 'TAGame.Default__PRI_TA' and
-                            'Engine.PlayerReplicationInfo:Team' in actors[x]['properties'] and
-                            actors[x]['properties']['Engine.PlayerReplicationInfo:Team']['contents'][1] == team_actor_id,
-                        actors
-                    ))
-
-                    # print(index, 'actor_positions ', actor_positions)
-                    # print(index, 'player_cars     ', player_cars)
-                    # print(index, 'HitTeamNum      ', hit_team_num)
-                    # print(index, 'ball_actor_id   ', ball_actor_id)
-                    # print(index, 'team_actor_id   ', team_actor_id)
-                    # print(index, 'player_actor_ids', player_actor_ids)
-
-                    # If there is only one player on the team, they must have
-                    # been the hitter of the ball.
-                    if len(player_actor_ids) == 1:
-                        car = player_cars[player_actor_ids[0]]
-
-                        # print(index, 'player position data', actor_positions[car])
-                        # print(index, 'ball position data', actor_positions[ball_actor_id])
-                        # print(index, 'distance', distance(actor_positions[car], actor_positions[ball_actor_id]))
-
-                        last_hits[hit_team_num] = actor_positions[car]
-                    elif len(player_actor_ids) == 0:
-                        pprint(actors)
-                        pprint(actors[2]['properties'])
-                        return
-
-                    # print('')
+                if 'TAGame.Ball_TA:HitTeamNum' in value:
+                    ball_hit = confirmed_ball_hit = True
+                    hit_team_num = value['TAGame.Ball_TA:HitTeamNum']['Value']
+                    ball_possession = hit_team_num
 
                     # Clean up the actor positions.
                     actor_positions_copy = actor_positions.copy()
@@ -151,9 +136,62 @@ class Command(BaseCommand):
                             if actor_position == player_cars[car]:
                                 found = True
 
-                        if not found:
+                        if not found and actor_position != ball_actor_id:
                             del actor_positions[actor_position]
 
-                # if replication['state'] == 'opening' and replication['actor_id'] in actors:
-                #     print('now setting', replication['actor_id'])
-                #     actors[replication['actor_id']] = replication
+            # Work out which direction the ball is travelling and if it has
+            # changed direction or speed.
+            ball = None
+            ball_actor_id = None
+            for actor_id, value in actors.items():
+                if value['Class'] == 'TAGame.Ball_TA':
+                    ball_actor_id = actor_id
+                    ball = value
+                    break
+
+            ball_hit = False
+
+            # Take a look at the ball this frame, has anything changed?
+            new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
+
+            # The ball has *changed direction*, but not necessarily been hit (it
+            # may have bounced).
+
+            if ball_angularvelocity != new_ball_angularvelocity:
+                ball_hit = True
+
+            ball_angularvelocity = new_ball_angularvelocity
+
+            # Calculate the current distances between cars and the ball.
+            # Do we have position data for the ball?
+            if ball_hit and not ball_spawned and ball_actor_id in actor_positions:
+
+                # Iterate over the cars to get the players.
+                lowest_distance = None
+                lowest_distance_car_actor = None
+
+                for player_id, car_actor_id in player_cars.items():
+                    team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
+                    team_data = actors[team_id]
+                    team = int(team_data['Name'].replace('Archetypes.Teams.Team', ''))
+
+                    # Make sure this actor is in on the team which is currently
+                    # in possession.
+
+                    if team != ball_possession:
+                        continue
+
+                    if car_actor_id in actor_positions:
+                        actor_distance = distance(actor_positions[car_actor_id], actor_positions[ball_actor_id])
+
+                        if not confirmed_ball_hit:
+                            if actor_distance > 350:  # Value taken from the max confirmed distance.
+                                continue
+
+                        # Get the player on this team with the lowest distance.
+                        if lowest_distance is None or actor_distance < lowest_distance:
+                            lowest_distance = actor_distance
+                            lowest_distance_car_actor = car_actor_id
+
+                if lowest_distance_car_actor:
+                    last_hits[ball_possession] = actor_positions[lowest_distance_car_actor]
