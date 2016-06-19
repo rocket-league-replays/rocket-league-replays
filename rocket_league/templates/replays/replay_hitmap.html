@@ -18,12 +18,127 @@
     {# {% cache 3600 replay_hitmaps replay.pk %} #}
     <div class="row">
         <div class="small-12 columns">
-            <div class="hmp-Outer"></div>
+            <div id="hmp-Outer" style="width: 100%; height: 802px;"></div>
         </div>
     </div>
 
-    <script src="{% static 'build/js/shared.js' %}"></script>
-    <script src="{% static 'build/js/shots.js' %}"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript">
+    var data = [
+      {
+        x: [-501, -679],
+        y: [4484, 5155],
+        z: [104, 100],
+        type: 'scatter3d'
+      },
+      {
+        x: [-1462, -719],
+        y: [-4078, -5192],
+        z: [144, 501],
+        type: 'scatter3d'
+      },
+      {
+        x: [-1591, -92],
+        y: [-3928, -5172],
+        z: [810, 252],
+        type: 'scatter3d'
+      },
+      {
+        x: [640, -450],
+        y: [-4312, -5185],
+        z: [580, 219],
+        type: 'scatter3d'
+      },
+      {
+        x: [1069, 761],
+        y: [-3918, -5122],
+        z: [18, 96],
+        type: 'scatter3d'
+      },
+      {
+        x: [1049, 546],
+        y: [-4631, -5215],
+        z: [658, 311],
+        type: 'scatter3d'
+      },
+      {
+        x: [-2346, 775],
+        y: [356, -5189],
+        z: [742, 135],
+        type: 'scatter3d'
+      },
+      {
+        x: [-1155, -41],
+        y: [-3078, -5205],
+        z: [469, 383],
+        type: 'scatter3d'
+      },
+      {
+        x: [-475, -275],
+        y: [5000, 5215],
+        z: [173, 300],
+        type: 'scatter3d'
+      },
+      {
+        x: [19, -546],
+        y: [261, -5181],
+        z: [74, 93],
+        type: 'scatter3d'
+      },
+      {
+        x: [3, 789],
+        y: [394, -5165],
+        z: [112, 421],
+        type: 'scatter3d'
+      },
+    ];
+
+    var layout = {
+      scene: {
+        xaxis: {
+          nticks: 10,
+          range: [-4120, 4120]
+        },
+        yaxis: {
+          nticks: 10,
+          range: [-5220, 5220]
+        },
+        zaxis: {
+          nticks: 10,
+          range: [0, 2060]
+        },
+        autosize: true,
+        aspectratio: {
+          x: 8240  / 10440,
+          y: 10440 / 10440,
+          z: 2006  / 10440
+        },
+        camera: {
+          center: {
+            x: 0,
+            y: 0,
+            z: 0
+          },
+          eye: {
+            x: 0,
+            y: 0,
+            z: 1
+          },
+          up: {
+            x: 0,
+            y: 0,
+            z: 1
+          }
+        },
+        width: 1248,
+        height: 702,
+        aspectmode: 'manual',
+      }
+    };
+    Plotly.newPlot('hmp-Outer', data, layout, {
+      displayModeBar: false
+    });
+    </script>
     {# {% endcache %} #}
 
     <div class="row">
