@@ -48,8 +48,17 @@ class Command(BaseCommand):
         ball_angularvelocity = None
         ball_possession = None
         confirmed_distances = []
+        shot_data = []
+
+        location_data = []
+        boost_data = {}
+        heatmap_data = []
+        seconds_mapping = {}
 
         for index, frame in enumerate(self.replay['Frames']):
+            # Add an empty location list for this frame.
+            location_data.append([])
+
             ball_hit = False
             confirmed_ball_hit = False
             ball_spawned = False
@@ -58,32 +67,20 @@ class Command(BaseCommand):
                 # Get the ball position.
                 ball_actor_id = list(filter(lambda x: actors[x]['Class'] == 'TAGame.Ball_TA', actors))[0]
                 ball_position = actor_positions[ball_actor_id]
-                # print(index, 'ball position data', actor_positions[ball_actor_id])
 
+                # XXX: Update this to also register the hitter?
                 hit_position = last_hits[goals[index]['PlayerTeam']]
-                # print(index, 'last hit was', hit_position)
-                # {type: 'line', dataPoints: [{x: -501, y: 4484}, {x: -679, y: 5155}]},
-                # print("\t\t\t{{type: 'line', dataPoints: [{{x: {}, y: {}}}, {{x: {}, y: {}}}]}},".format(
-                #     hit_position[1],
-                #     hit_position[0],
-                #     ball_position[1],
-                #     ball_position[0],
-                # ))
 
-                print("""{{
-  x: [{0}, {3}],
-  y: [{1}, {4}],
-  z: [{2}, {5}],
-  type: 'scatter3d'
-}},""".format(*hit_position, *ball_position))
-                # print(index, 'distance', distance(actor_positions[ball_actor_id], hit_position))
+                shot_data.append({
+                    'player': hit_position,
+                    'ball': ball_position
+                })
 
                 # Reset the last hits.
                 last_hits = {
                     0: None,
                     1: None
                 }
-                # print()
 
             # Handle any new actors.
             for actor_id, value in frame['Spawned'].items():
@@ -115,6 +112,7 @@ class Command(BaseCommand):
             for actor_id in frame['Destroyed']:
                 del actors[actor_id]
 
+            # Loop over actors which have changed in this frame.
             for actor_id, value in {**frame['Spawned'], **frame['Updated']}.items():
                 actor_id = int(actor_id)
 
@@ -122,6 +120,12 @@ class Command(BaseCommand):
                 if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
                     actor_positions[actor_id] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
 
+                    data_dict = {'id': actor_id}
+                    data_dict['x'], data_dict['y'], data_dict['z'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
+                    data_dict['pitch'], data_dict['roll'], data_dict['yaw'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Rotation']
+                    location_data[index].append(data_dict)
+
+                # If this property exists, the ball has changed possession.
                 if 'TAGame.Ball_TA:HitTeamNum' in value:
                     ball_hit = confirmed_ball_hit = True
                     hit_team_num = value['TAGame.Ball_TA:HitTeamNum']['Value']
@@ -138,6 +142,17 @@ class Command(BaseCommand):
 
                         if not found and actor_position != ball_actor_id:
                             del actor_positions[actor_position]
+
+                # Store the boost data for each actor at each frame where it changes.
+                if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
+                    if actor_id not in boost_data:
+                        boost_data[actor_id] = {}
+
+                    boost_data[actor_id][index] = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+
+                # Store the mapping of frame -> clock time.
+                if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value:
+                    seconds_mapping[index] = value['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['Value']
 
             # Work out which direction the ball is travelling and if it has
             # changed direction or speed.
