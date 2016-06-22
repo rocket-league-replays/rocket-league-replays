@@ -28,13 +28,13 @@ class Command(BaseCommand):
         replay = Replay.objects.get(pk=options['replay'])
 
         if settings.DEBUG:
-            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay.file.path), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay.file.path), shell=True).decode('utf-8'))
         else:
-            self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay.file.url), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay.file.url), shell=True).decode('utf-8'))
 
         goals = {
-            goal['frame']: {'PlayerName': goal['PlayerName'], 'PlayerTeam': goal['PlayerTeam']}
-            for goal in self.replay['Metadata']['Goals']
+            goal['frame']['Value']: {'PlayerName': goal['PlayerName']['Value'], 'PlayerTeam': goal['PlayerTeam']['Value']}
+            for goal in replay['Metadata']['Goals']['Value']
         }
 
         last_hits = {
@@ -42,20 +42,22 @@ class Command(BaseCommand):
             1: None
         }
 
-        actors = {}
-        actor_positions = {}
-        player_cars = {}
-        ball_angularvelocity = None
-        ball_possession = None
-        confirmed_distances = []
-        shot_data = []
+        actors = {}  # All actors
+        player_actors = {}  # XXX: This will be used to make the replay.save() easier.
+        actor_positions = {}  # The current position data for all actors. Do we need this?
+        player_cars = {}  # Car -> Player actor ID mappings.
+        ball_angularvelocity = None  # The current angular velocity of the ball.
+        ball_possession = None  # The team currently in possession of the ball.
+        cars_frozen = False  # Whether the cars are frozen in place (3.. 2.. 1..)
+        shot_data = []  # The locations of the player and the ball when goals were scored.
+        unknown_boost_data = {}  # Holding dict for boosts without player data.
 
-        location_data = []
-        boost_data = {}
-        heatmap_data = []
-        seconds_mapping = {}
+        location_data = []  # Used for the location JSON.
+        boost_data = {}  # Used for the boost stats.
+        heatmap_data = {}
+        seconds_mapping = {}  # Frame -> seconds remaining mapping.
 
-        for index, frame in enumerate(self.replay['Frames']):
+        for index, frame in enumerate(replay['Frames']):
             # Add an empty location list for this frame.
             location_data.append([])
 
@@ -145,14 +147,75 @@ class Command(BaseCommand):
 
                 # Store the boost data for each actor at each frame where it changes.
                 if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
+                    boost_value = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+                    assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
+
                     if actor_id not in boost_data:
                         boost_data[actor_id] = {}
 
-                    boost_data[actor_id][index] = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+                    # Sometimes we have a boost component without a reference to
+                    # a car. We don't want to lose that data, so stick it into a
+                    # holding dictionary until we can figure out who it belongs to.
+
+                    if 'TAGame.CarComponent_TA:Vehicle' not in actors[actor_id]:
+                        if actor_id not in unknown_boost_data:
+                            unknown_boost_data[actor_id] = {}
+
+                        unknown_boost_data[actor_id][index] = boost_value
+                    else:
+                        car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['Value'][1]
+
+                        # Find out which player this car belongs to.
+                        try:
+                            player_actor_id = [
+                                player_actor_id
+                                for player_actor_id, car_actor_id in player_cars.items()
+                                if car_actor_id == car_id
+                            ][0]
+
+                            if player_actor_id not in boost_data:
+                                boost_data[player_actor_id] = {}
+
+                            boost_data[player_actor_id][index] = boost_value
+
+                            # Attach any floating data (if we can).
+                            if actor_id in unknown_boost_data:
+                                for frame_index, boost_value in unknown_boost_data[actor_id].items():
+                                    boost_data[player_actor_id][frame_index] = boost_value
+
+                                del unknown_boost_data[actor_id]
+
+                        except IndexError:
+                            pass
 
                 # Store the mapping of frame -> clock time.
                 if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value:
                     seconds_mapping[index] = value['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['Value']
+
+                # See if the cars are frozen in place.
+                if 'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value:
+                    if value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 3:
+                        cars_frozen = True
+                    elif value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 0:
+                        cars_frozen = False
+
+                # Get the camera details.
+                if 'TAGame.CameraSettingsActor_TA:ProfileSettings' in value:
+                    if value['Class'] == 'TAGame.CameraSettingsActor_TA':
+                        # Define some short variable names to stop the next line
+                        # being over 200 characters long.  This block of code
+                        # makes new replays have a camera structure which is
+                        # similar to that of the old replays - where the camera
+                        # settings are directly attached to the player rather
+                        # than a CameraActor (which is what the actor in this
+                        # current loop is).
+
+                        csa = 'TAGame.CameraSettingsActor_TA:PRI'
+                        ps = 'TAGame.CameraSettingsActor_TA:ProfileSettings'
+                        cs = 'TAGame.PRI_TA:CameraSettings'
+
+                        player_actor_id = value[csa]['Value'][1]
+                        actors[player_actor_id][cs] = value[ps]['Value']
 
             # Work out which direction the ball is travelling and if it has
             # changed direction or speed.
@@ -210,3 +273,48 @@ class Command(BaseCommand):
 
                 if lowest_distance_car_actor:
                     last_hits[ball_possession] = actor_positions[lowest_distance_car_actor]
+
+            # Generate the heatmap data for this frame.  Get all of the players
+            # and the ball.
+            if not cars_frozen:
+                moveable_actors = [
+                    (actor_id, value)
+                    for actor_id, value in actors.items()
+                    if value['Class'] in ['TAGame.Ball_TA', 'TAGame.PRI_TA', 'TAGame.Car_TA'] and
+                    (
+                        'TAGame.RBActor_TA:ReplicatedRBState' in value or
+                        'Position' in value
+                    )
+                ]
+
+                for actor_id, value in moveable_actors:
+                    if value['Class'] == 'TAGame.Ball_TA':
+                        actor_id = 'ball'
+                    elif value['Class'] == 'TAGame.Car_TA':
+                        if 'Engine.Pawn:PlayerReplicationInfo' not in value:
+                            continue
+
+                        actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+
+                    if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
+                        key = '{},{}'.format(
+                            value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][0],
+                            value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][1],
+                        )
+                    elif 'Position' in value:
+                        key = '{},{}'.format(
+                            value['Position'][0],
+                            value['Position'][1],
+                        )
+
+                    if actor_id not in heatmap_data:
+                        heatmap_data[actor_id] = {}
+
+                    if key in heatmap_data[actor_id]:
+                        heatmap_data[actor_id][key] += 1
+                    else:
+                        heatmap_data[actor_id][key] = 1
+
+        # pprint(heatmap_data)
+
+        pprint(actors)
