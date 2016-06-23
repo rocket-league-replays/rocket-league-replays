@@ -217,6 +217,12 @@ class Command(BaseCommand):
                         player_actor_id = value[csa]['Value'][1]
                         actors[player_actor_id][cs] = value[ps]['Value']
 
+                if 'Engine.GameReplicationInfo:ServerName' in value:
+                    print(value['Engine.GameReplicationInfo:ServerName']['Value'])
+
+                if 'ProjectX.GRI_X:ReplicatedGamePlaylist' in value:
+                    print(value['ProjectX.GRI_X:ReplicatedGamePlaylist']['Value'])
+
             # Work out which direction the ball is travelling and if it has
             # changed direction or speed.
             ball = None
