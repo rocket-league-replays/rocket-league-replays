@@ -25,12 +25,12 @@ class Command(BaseCommand):
         parser.add_argument('replay', nargs='?', type=int)
 
     def handle(self, *args, **options):
-        replay = Replay.objects.get(pk=options['replay'])
+        replay_obj = Replay.objects.get(pk=options['replay'])
 
         if settings.DEBUG:
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay.file.path), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
         else:
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay.file.url), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
 
         goals = {
             goal['frame']['Value']: {'PlayerName': goal['PlayerName']['Value'], 'PlayerTeam': goal['PlayerTeam']['Value']}
