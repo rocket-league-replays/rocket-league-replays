@@ -57,6 +57,9 @@ class Command(BaseCommand):
         heatmap_data = {}
         seconds_mapping = {}  # Frame -> seconds remaining mapping.
 
+        heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(replay_obj.replay_id)
+        location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(replay_obj.replay_id)
+
         for index, frame in enumerate(replay['Frames']):
             # Add an empty location list for this frame.
             location_data.append([])
@@ -201,7 +204,7 @@ class Command(BaseCommand):
 
                 # Get the camera details.
                 if 'TAGame.CameraSettingsActor_TA:ProfileSettings' in value:
-                    if value['Class'] == 'TAGame.CameraSettingsActor_TA':
+                    if actors[actor_id]['Class'] == 'TAGame.CameraSettingsActor_TA':
                         # Define some short variable names to stop the next line
                         # being over 200 characters long.  This block of code
                         # makes new replays have a camera structure which is
@@ -322,5 +325,4 @@ class Command(BaseCommand):
                         heatmap_data[actor_id][key] = 1
 
         # pprint(heatmap_data)
-
-        pprint(actors)
+        # pprint(actors)
