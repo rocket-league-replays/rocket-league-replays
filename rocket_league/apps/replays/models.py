@@ -1143,6 +1143,9 @@ class Player(models.Model):
         if not self.vehicle_loadout:
             return {}
 
+        if 'Body' in self.vehicle_loadout:
+            return self.vehicle_loadout
+
         return {
             'body': Body.objects.get_or_create(id=self.vehicle_loadout[0])[0]
         }
