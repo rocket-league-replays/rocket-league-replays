@@ -21,6 +21,14 @@ PRIVACY_PRIVATE = 1
 PRIVACY_UNLISTED = 2
 PRIVACY_PUBLIC = 3
 
+PLATFORM_STEAM = 1
+PLATFORM_PSN = 2
+
+PLATFORMS = {
+    'Steam': PLATFORM_STEAM,
+    'PlayStation': PLATFORM_PSN,
+}
+
 
 class Season(models.Model):
 
