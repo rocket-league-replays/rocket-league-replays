@@ -1,12 +1,15 @@
 import json
 import math
 import subprocess
+import time
+from datetime import datetime
 from pprint import pprint
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
-from ...models import Replay
+from ...models import PLATFORMS, Goal, Map, Player, Replay, Season
 from ...parser import Parser
 
 
@@ -32,9 +35,58 @@ class Command(BaseCommand):
         else:
             replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
 
+        Goal.objects.filter(replay=replay_obj).delete()
+        Player.objects.filter(replay=replay_obj).delete()
+
+        assert Goal.objects.filter(replay=replay_obj).count() == 0
+        assert Player.objects.filter(replay=replay_obj).count() == 0
+
+        # Assign the metadata to the replay object.
+        replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
+        replay_obj.team_0_score = replay['Metadata'].get('Team0Score', {'Value': 0})['Value']
+        replay_obj.team_1_score = replay['Metadata'].get('Team1Score', {'Value': 0})['Value']
+        replay_obj.player_name = replay['Metadata']['PlayerName']['Value']
+        replay_obj.player_team = replay['Metadata'].get('PrimaryPlayerTeam', {'Value': 0})['Value']
+        replay_obj.match_type = replay['Metadata']['MatchType']['Value']
+        replay_obj.keyframe_delay = replay['Metadata']['KeyframeDelay']['Value']
+        replay_obj.max_channels = replay['Metadata']['MaxChannels']['Value']
+        replay_obj.max_replay_size_mb = replay['Metadata']['MaxReplaySizeMB']['Value']
+        replay_obj.num_frames = replay['Metadata']['NumFrames']['Value']
+        replay_obj.record_fps = replay['Metadata']['RecordFPS']['Value']
+
+        if replay['Metadata'].get('MapName'):
+            map_obj, created = Map.objects.get_or_create(
+                slug=replay['Metadata']['MapName']['Value'].lower(),
+            )
+        else:
+            map_obj = None
+
+        replay_obj.map = map_obj
+        replay_obj.timestamp = timezone.make_aware(
+            datetime.fromtimestamp(
+                time.mktime(
+                    time.strptime(
+                        replay['Metadata']['Date']['Value'],
+                        '%Y-%m-%d:%H-%M',
+                    )
+                )
+            ),
+            timezone.get_current_timezone()
+        )
+
+        get_season = Season.objects.filter(
+            start_date__lte=replay_obj.timestamp,
+        )
+
+        if get_season:
+            replay_obj.season = get_season[0]
+
+        if 'ReplayName' in replay['Metadata']:
+            replay_obj.title = replay['Metadata']['ReplayName']['Value']
+
         goals = {
             goal['frame']['Value']: {'PlayerName': goal['PlayerName']['Value'], 'PlayerTeam': goal['PlayerTeam']['Value']}
-            for goal in replay['Metadata']['Goals']['Value']
+            for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
         }
 
         last_hits = {
@@ -44,6 +96,7 @@ class Command(BaseCommand):
 
         actors = {}  # All actors
         player_actors = {}  # XXX: This will be used to make the replay.save() easier.
+        goal_actors = {}
         actor_positions = {}  # The current position data for all actors. Do we need this?
         player_cars = {}  # Car -> Player actor ID mappings.
         ball_angularvelocity = None  # The current angular velocity of the ball.
@@ -101,6 +154,9 @@ class Command(BaseCommand):
                 if value['Class'] == 'TAGame.Ball_TA':
                     ball_spawned = True
 
+                if value['Class'] == 'TAGame.PRI_TA':
+                    player_actors[actor_id] = value
+
             # Handle any updates to existing actors.
             for actor_id, value in frame['Updated'].items():
                 actor_id = int(actor_id)
@@ -108,6 +164,9 @@ class Command(BaseCommand):
                 # Merge the new properties with the existing.
                 if actors[actor_id] != value:
                     actors[actor_id] = {**actors[actor_id], **value}
+
+                    if actor_id in player_actors:
+                        player_actors[actor_id] = actors[actor_id]
 
                 if 'Engine.Pawn:PlayerReplicationInfo' in value:
                     player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
@@ -221,10 +280,25 @@ class Command(BaseCommand):
                         actors[player_actor_id][cs] = value[ps]['Value']
 
                 if 'Engine.GameReplicationInfo:ServerName' in value:
-                    print(value['Engine.GameReplicationInfo:ServerName']['Value'])
+                    replay_obj.server_name = value['Engine.GameReplicationInfo:ServerName']['Value']
 
                 if 'ProjectX.GRI_X:ReplicatedGamePlaylist' in value:
-                    print(value['ProjectX.GRI_X:ReplicatedGamePlaylist']['Value'])
+                    replay_obj.playlist = value['ProjectX.GRI_X:ReplicatedGamePlaylist']['Value']
+
+                if 'TAGame.GameEvent_Team_TA:MaxTeamSize' in value:
+                    replay_obj.team_sizes = value['TAGame.GameEvent_Team_TA:MaxTeamSize']['Value']
+
+                if 'TAGame.PRI_TA:MatchGoals' in value:
+                    # Get the closest goal to this frame.
+                    # print(index, actor_id, value['TAGame.PRI_TA:MatchGoals']['Value'])
+                    # goal_frame = min(sorted(goals), key=lambda x: abs(x - index))
+                    # print(goals[goal_frame])
+                    goal_actors[index] = actor_id
+                    # del goals[goal_frame]
+
+                if 'Engine.TeamInfo:Score' in value:
+                    if index not in goal_actors:
+                        goal_actors[index] = actor_id
 
             # Work out which direction the ball is travelling and if it has
             # changed direction or speed.
@@ -258,6 +332,7 @@ class Command(BaseCommand):
                 lowest_distance_car_actor = None
 
                 for player_id, car_actor_id in player_cars.items():
+                    # Get the team.
                     team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
                     team_data = actors[team_id]
                     team = int(team_data['Name'].replace('Archetypes.Teams.Team', ''))
@@ -324,5 +399,69 @@ class Command(BaseCommand):
                     else:
                         heatmap_data[actor_id][key] = 1
 
-        # pprint(heatmap_data)
-        # pprint(actors)
+        def get_team(actor_id):
+            return int(actors[actor_id]['Name'].replace('Archetypes.Teams.Team', ''))
+
+        # Make a dict of all the player actors and then do a bulk_create?
+        for actor_id, value in player_actors.items():
+            system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
+            unique_id = '{System}-{Remote}-{Local}'.format(
+                **value['Engine.PlayerReplicationInfo:UniqueId']['Value']
+            )
+
+            player_actors[actor_id] = Player.objects.create(
+                replay=replay_obj,
+                player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
+                team=get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1]),
+                score=value['TAGame.PRI_TA:MatchScore']['Value'],
+                goals=value['TAGame.PRI_TA:MatchGoals']['Value'],
+                shots=value['TAGame.PRI_TA:MatchShots']['Value'],
+                assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
+                saves=value['TAGame.PRI_TA:MatchSaves']['Value'],
+                platform=PLATFORMS.get(system, system),
+                online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote'],
+                bot=False,  # TODO: Add a check for this.
+                spectator=False,  # TODO: Add a check for this.
+                actor_id=actor_id,
+                unique_id=unique_id,
+                camera_settings=value['TAGame.PRI_TA:CameraSettings'],
+                vehicle_loadout=value['TAGame.PRI_TA:ClientLoadout']['Value'],
+                total_xp=value['TAGame.PRI_TA:TotalXP']['Value'],
+            )
+
+        # Create the goals.
+        goal_objects = []
+
+        for index, actor_id in goal_actors.items():
+            # Use the player_actors dict rather than the full actors dict as
+            # players who leave the game get removed from the latter.
+
+            if actor_id in player_actors:
+                goal_objects.append(Goal(
+                    replay=replay_obj,
+                    number=len(goal_objects) + 1,
+                    player=player_actors[actor_id],
+                    frame=index,
+                ))
+
+            # This actor is most likely the team object, meaning the goal was an
+            # own goal scored without any of the players on the benefiting team
+            # hitting the ball.
+
+            elif actor_id in actors:
+                if actors[actor_id]['Class'] == 'TAGame.Team_Soccar_TA':
+                    own_goal_player, created = Player.objects.get_or_create(
+                        replay=replay_obj,
+                        player_name='Unknown player (own goal?)',
+                        team=get_team(actor_id),
+                    )
+
+                    goal_objects.append(Goal(
+                        replay=replay_obj,
+                        number=len(goal_objects) + 1,
+                        player=own_goal_player,
+                        frame=index,
+                    ))
+
+        Goal.objects.bulk_create(goal_objects)
+        replay_obj.save()
