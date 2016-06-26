@@ -3,16 +3,17 @@ import os
 import sys
 
 import requests
+from distutils.version import StrictVersion
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "rocket_league.settings.local")
 
     from django.core.management import execute_from_command_line
 
-    version_blacklist = ['0.7.0', '0.8.0']
+    version_blacklist = []
 
     # Ensure Octane is kept up-to-date.
-    if 'runserver' in sys.argv[1]:
+    if len(sys.argv) > 1 and 'runserver' in sys.argv[1]:
         octane_release = requests.get('https://api.github.com/repos/tfausak/octane/releases/latest', headers={
             'Authorization': 'Token {}'.format(os.getenv('GITHUB_TOKEN', ''))
         }).json()
@@ -30,9 +31,13 @@ if __name__ == "__main__":
         if len(current_binaries) > 0:
             current_version = current_binaries[0].split('-')[1]
 
-        print('GH: {}. RLR: {}'.format(octane_release['name'], current_version))
+        print('GH: {}. RLR: {}. Update? {}'.format(
+            octane_release['name'],
+            current_version,
+            'Yes' if StrictVersion(octane_release['name']) > StrictVersion(current_version) else 'No'
+        ))
 
-        if tuple(octane_release['name'].split('.')) > tuple(current_version.split('.')):
+        if StrictVersion(octane_release['name']) > StrictVersion(current_version):
             if octane_release['name'] in version_blacklist:
                 print('Skipping this version.')
             else:

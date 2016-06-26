@@ -79,7 +79,8 @@
     "style-loader": "^0.13.0",
     "stylelint": "^5.0.1",
     "stylelint-statement-max-nesting-depth": "^2.0.0",
-    "three": "^0.75.0",
+    "three": "git+https://github.com/mrdoob/three.js.git",
+    "three-orbit-controls": "^72.0.0",
     "vinyl-source-stream": "~1.1.0",
     "webpack": "^1.10.1",
     "webpack-bundle-tracker": "0.0.8"

@@ -46,6 +46,26 @@ export function loadGameData (url) {  // eslint-disable-line no-unused-vars
       }
 
       if (response_data.boost !== undefined) {
+        if (Object.keys(response_data.boost).indexOf('values') !== -1) {
+          const newBoostData = {}
+
+          // Rework this old-style data to look like the new data.
+          Object.keys(response_data.boost.values).forEach((item) => {
+            // Get the player ID.
+            const player_id = response_data.boost.cars[response_data.boost.actors[item]].toString()
+
+            if (Object.keys(newBoostData).indexOf(player_id) === -1) {
+              newBoostData[player_id] = {}
+            }
+
+            Object.keys(response_data.boost.values[item]).forEach((value_item) => {
+              newBoostData[player_id][value_item] = response_data.boost.values[item][value_item]
+            })
+          })
+
+          response_data.boost = newBoostData
+        }
+
         setBoostData(response_data.boost)
       }
 
@@ -75,13 +95,14 @@ export function positionReplayObjects () {
   }
 
   // Is there any boost data for this frame?
-  Object.keys(boostData.values).forEach(function (item) {
-    if (boostData.values[item][currentFrame] !== undefined) {
+  // console.log(boostData)
+  Object.keys(boostData).forEach(function (item) {
+    if (boostData[item][currentFrame] !== undefined) {
       // Which player is this?
-      const player_id = boostData.cars[boostData.actors[item]]
+      const player_id = item
 
       // Current in-game (and %) value.
-      const value = Math.ceil(boostData.values[item][currentFrame] * (100 / 255))
+      const value = Math.ceil(boostData[item][currentFrame] * (100 / 255))
 
       const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
 
@@ -98,16 +119,16 @@ export function positionReplayObjects () {
     } else {
       // Search for boost values within the next 74 frames.
       for (let i = currentFrame; i < currentFrame + 74; i++) {
-        if (boostData.values[item][i] !== undefined) {
+        if (boostData[item][i] !== undefined) {
           // Which player is this?
-          const player_id = boostData.cars[boostData.actors[item]]
+          const player_id = item
           const boostEl = document.querySelector(`.sim-Boost_Inner-player${player_id}`)
 
           if (boostEl) {
             const frameDiff = i - currentFrame
             // Boost decreases at a rate of ~255/74 per frame.
             const currentValue = boostEl.innerText / (100 / 255)
-            const nextValue = boostData.values[item][i]
+            const nextValue = boostData[item][i]
 
             // We only care about boost values going down.
             if (nextValue < currentValue) {
@@ -126,7 +147,7 @@ export function positionReplayObjects () {
                 continue
               }
 
-              const rawValue = boostData.values[item][i] + (frameDiff * (255 / 74))
+              const rawValue = boostData[item][i] + (frameDiff * (255 / 74))
 
               if (rawValue < 0 || rawValue > 255) {
                 throw new RangeError(`BoostRangeError: Value of ${rawValue} is not within the range of 0-255`)
@@ -188,7 +209,12 @@ export function positionReplayObjects () {
     }
   })
 
-  frameData[currentFrame].actors.forEach(function (actor, index) {
+  let frame_actor_iterator = frameData[currentFrame]
+  if (frameData[currentFrame].actors !== undefined) {
+    frame_actor_iterator = frameData[currentFrame].actors
+  }
+
+  frame_actor_iterator.forEach(function (actor, index) {
     // Does this car already exist in the scene.
     const objectName = `car-${actor.id}`
     const carObject = scene.getObjectByName(objectName)
@@ -196,9 +222,9 @@ export function positionReplayObjects () {
     if (carObject === undefined) {
       // Add the car.
       console.log(`[${objectName}] Calling addCar`)
-      if (actor.type === 'player') {
+      if (actor.type === 'player' || actorData[actor.id] !== undefined) {
         addCar(objectName, actor)
-      } else if (actor.type === 'ball') {
+      } else if (actor.type === 'ball' || actorData[actor.id] === undefined) {
         addBall(objectName, actor)
       }
     } else {

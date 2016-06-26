@@ -1,679 +1,713 @@
 import json
-import os
+import math
 import subprocess
+import time
+from datetime import datetime
 
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from pyrope import Replay
+from django.utils import timezone
+from pyrope import Replay as Pyrope
 
 
-class Parser(object):
+def distance(pos1, pos2):
+    xd = pos2[0] - pos1[0]
+    yd = pos2[1] - pos1[1]
+    zd = pos2[2] - pos1[2]
 
-    def __init__(self, parse_netstream=False, obj=None):
-        if not parse_netstream:
-            self.replay = Replay(obj.file.read())
-            self.replay_id = self.replay.header['Id']
+    return math.sqrt(xd * xd + yd * yd + zd * zd)
 
-            # Convert the Pyrope format into the Octane format.
-            replay_temp = {
-                'meta': {
-                    'properties': self.replay.header
-                }
+
+# Convert the Pyrope data structure to the Octane structure.
+def _pyrope_to_octane(replay):
+    data = {}
+
+    simple_keys = [
+        'MaxChannels', 'Team0Score', 'Team1Score', 'PlayerName', 'KeyframeDelay',
+        'MaxReplaySizeMB', 'NumFrames', 'MatchType', 'MapName', 'ReplayName',
+        'PrimaryPlayerTeam', 'Id', 'TeamSize', 'RecordFPS', 'Date'
+    ]
+
+    for key in simple_keys:
+        data[key] = {
+            'Value': replay.header.get(key, 0)
+        }
+
+    if 'PlayerStats' in replay.header:
+        data['PlayerStats'] = {
+            'Value': []
+        }
+
+        for player in replay.header['PlayerStats']:
+            player_data = {}
+            simple_keys = [
+                'Goals', 'Saves', 'OnlineID', 'Shots', 'Score', 'Team', 'bBot',
+                'Assists', 'Name'
+            ]
+
+            for key in simple_keys:
+                player_data[key] = player[key]
+
+            player_data['Platform'] = {
+                'Value': [
+                    'OnlinePlatform',
+                    player['Platform']['OnlinePlatform']
+                ]
             }
 
-            if 'PlayerStats' in replay_temp['meta']['properties']:
-                for index, player in enumerate(replay_temp['meta']['properties']['PlayerStats']):
-                    replay_temp['meta']['properties']['PlayerStats'][index]['Platform'] = player['Platform']['OnlinePlatform']
+            data['PlayerStats']['Value'].append(player_data)
 
-            self.replay = replay_temp
-        else:
-            if settings.DEBUG:
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(obj.file.path), shell=True).decode('utf-8'))
+    if 'Goals' in replay.header:
+        data['Goals'] = {
+            'Value': []
+        }
+
+        for goal in replay.header['Goals']:
+            goal_data = {}
+            keys = ['frame', 'PlayerName', 'PlayerTeam']
+
+            for key in keys:
+                goal_data[key] = {
+                    'Value': goal[key]
+                }
+
+            data['Goals']['Value'].append(goal_data)
+
+    return {
+        'Metadata': data
+    }
+
+
+def _parse_header(replay_obj, replay):
+    from .models import BoostData, Goal, Map, Player, Season
+
+    Goal.objects.filter(replay=replay_obj).delete()
+    Player.objects.filter(replay=replay_obj).delete()
+    BoostData.objects.filter(replay=replay_obj).delete()
+
+    assert Goal.objects.filter(replay=replay_obj).count() == 0
+    assert Player.objects.filter(replay=replay_obj).count() == 0
+    assert BoostData.objects.filter(replay=replay_obj).count() == 0
+
+    # Assign the metadata to the replay object.
+    replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
+    replay_obj.team_0_score = replay['Metadata'].get('Team0Score', {'Value': 0})['Value']
+    replay_obj.team_1_score = replay['Metadata'].get('Team1Score', {'Value': 0})['Value']
+    replay_obj.player_name = replay['Metadata']['PlayerName']['Value']
+    replay_obj.player_team = replay['Metadata'].get('PrimaryPlayerTeam', {'Value': 0})['Value']
+    replay_obj.match_type = replay['Metadata']['MatchType']['Value']
+    replay_obj.keyframe_delay = replay['Metadata']['KeyframeDelay']['Value']
+    replay_obj.max_channels = replay['Metadata']['MaxChannels']['Value']
+    replay_obj.max_replay_size_mb = replay['Metadata']['MaxReplaySizeMB']['Value']
+    replay_obj.num_frames = replay['Metadata']['NumFrames']['Value']
+    replay_obj.record_fps = replay['Metadata']['RecordFPS']['Value']
+
+    if replay['Metadata'].get('MapName'):
+        map_obj, created = Map.objects.get_or_create(
+            slug=replay['Metadata']['MapName']['Value'].lower(),
+        )
+    else:
+        map_obj = None
+
+    replay_obj.map = map_obj
+    replay_obj.timestamp = timezone.make_aware(
+        datetime.fromtimestamp(
+            time.mktime(
+                time.strptime(
+                    replay['Metadata']['Date']['Value'],
+                    '%Y-%m-%d:%H-%M',
+                )
+            )
+        ),
+        timezone.get_current_timezone()
+    )
+
+    get_season = Season.objects.filter(
+        start_date__lte=replay_obj.timestamp,
+    )
+
+    if get_season:
+        replay_obj.season = get_season[0]
+
+    if 'ReplayName' in replay['Metadata']:
+        replay_obj.title = replay['Metadata']['ReplayName']['Value']
+
+    return replay_obj, replay
+
+
+def parse_replay_header(replay_id):
+    from .models import Replay, Player, Goal
+
+    replay_obj = Replay.objects.get(pk=replay_id)
+
+    replay = Pyrope(replay_obj.file.read())
+
+    replay = _pyrope_to_octane(replay)
+    replay_obj, replay = _parse_header(replay_obj, replay)
+
+    # Create the player objects.
+    if 'PlayerStats' in replay['Metadata']:
+        for player in replay['Metadata']['PlayerStats']['Value']:
+            Player.objects.get_or_create(
+                replay=replay_obj,
+                player_name=player['Name'],
+                platform=player['Platform'],
+                saves=player['Saves'],
+                score=player['Score'],
+                goals=player['Goals'],
+                shots=player['Shots'],
+                team=player['Team'],
+                assists=player['Assists'],
+                bot=player['bBot'],
+                online_id=player['OnlineID'],
+            )
+    else:
+        # The best we can do is to get the goal scorers and the player.
+        for goal in replay['Metadata'].get('Goals', []):
+            Player.objects.get_or_create(
+                replay=replay_obj,
+                player_name=goal['PlayerName'],
+                team=goal['PlayerTeam'],
+            )
+
+        if 'PlayerName' in replay['Metadata']:
+            team = 0
+
+            if 'PrimaryPlayerTeam' in replay['Metadata']:
+                team = replay['Metadata']['PrimaryPlayerTeam']['Value']
+
+            Player.objects.get_or_create(
+                replay=replay_obj,
+                player_name=replay['Metadata']['PlayerName'],
+                team=team,
+            )
+
+    # Create the goal objects.
+    if 'Goals' in replay['Metadata']:
+        for index, goal in enumerate(replay['Metadata']['Goals']['Value']):
+            player = None
+
+            players = Player.objects.filter(
+                replay=replay_obj,
+                player_name=goal['PlayerName']['Value'],
+                team=goal['PlayerTeam']['Value']
+            )
+
+            if players.count() > 0:
+                player = players[0]
             else:
-                # Download the file from S3.
-                command = 'wget {} -qO /tmp/{}'.format(
-                    obj.file.url,
-                    obj.replay_id,
+                player = Player.objects.create(
+                    replay=replay_obj,
+                    player_name=goal['PlayerName']['Value'],
+                    team=goal['PlayerTeam']['Value']
                 )
 
-                os.system(command)
+            try:
+                goal_obj = Goal.objects.get(
+                    replay=replay_obj,
+                    frame=goal['frame']['Value'],
+                    number=index + 1,
+                    player=player,
+                )
 
-                self.replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux /tmp/{}'.format(obj.replay_id), shell=True).decode('utf-8'))
+                goal_obj.delete()
+            except Goal.DoesNotExist:
+                pass
 
-                os.remove('/tmp/{}'.format(obj.replay_id))
+            Goal.objects.create(
+                replay=replay_obj,
+                frame=goal['frame']['Value'],
+                number=index + 1,
+                player=player,
+            )
 
-            self.replay_id = self.replay['meta']['properties']['Id']
+    replay_obj.processed = True
+    replay_obj.crashed_heatmap_parser = True
+    replay_obj.save()
 
-        self.actor_metadata = {}
-        self.goal_metadata = {}
-        self.match_metadata = {}
-        self.team_metadata = {}
-        self.actors = {}
-        self.cars = {}
-        self.boost_data = {}
-        self.heatmap_json_filename = None
-        self.disabled_frame_ranges = []
 
-        assert len(self.team_metadata) == 0
+def parse_replay_netstream(replay_id):
+    from .models import PLATFORMS, BoostData, Goal, Player, Replay
 
-        heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(self.replay_id)
-        location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(self.replay_id)
+    replay_obj = Replay.objects.get(pk=replay_id)
 
-        if not parse_netstream:
-            return
+    if settings.DEBUG:
+        replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
+    else:
+        replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
 
-        self._get_actors()
+    replay_obj, replay = _parse_header(replay_obj, replay)
 
-        # If the number of goals in the header doesn't match the number of goals
-        # in the game, try to get the missing goal data from the netstream.
+    goals = {
+        goal['frame']['Value']: {'PlayerName': goal['PlayerName']['Value'], 'PlayerTeam': goal['PlayerTeam']['Value']}
+        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
+    }
 
-        """
-         ('3e_Team1',
-          {'actor_id': 3,
-           'class_name': 'Archetypes.Teams.Team1',
-           'properties': {'Engine.TeamInfo:Score': 1},
-           'new': False,
-           'startpos': 2053839}),
-               """
-        if len(self.replay['meta']['properties'].get('Goals', [])) < self.replay['meta']['properties'].get('Team0Score', 0) + self.replay['meta']['properties'].get('Team1Score', 0):
-            for index, frame in enumerate(self.replay['frames']):
-                for actor in frame['replications']:
-                    if 'properties' not in actor:
-                        continue
+    last_hits = {
+        0: None,
+        1: None
+    }
 
-                    if (
-                        'Engine.TeamInfo:Score' in actor['properties'] and
-                        'TAGame.Team_TA:GameEvent' not in actor['properties'] and
-                        actor['object_name'].startswith('Archetypes.Teams.Team')
-                    ):
-                        if 'Goals' not in self.replay['meta']['properties']:
-                            self.replay['meta']['properties']['Goals'] = []
+    actors = {}  # All actors
+    player_actors = {}  # XXX: This will be used to make the replay.save() easier.
+    goal_actors = {}
+    team_data = {}
+    actor_positions = {}  # The current position data for all actors. Do we need this?
+    player_cars = {}  # Car -> Player actor ID mappings.
+    ball_angularvelocity = None  # The current angular velocity of the ball.
+    ball_possession = None  # The team currently in possession of the ball.
+    cars_frozen = False  # Whether the cars are frozen in place (3.. 2.. 1..)
+    shot_data = []  # The locations of the player and the ball when goals were scored.
+    unknown_boost_data = {}  # Holding dict for boosts without player data.
 
-                        self.replay['meta']['properties']['Goals'].append({
-                            'PlayerName': 'Unknown player (own goal?)',
-                            'PlayerTeam': actor['object_name'].replace('Archetypes.Teams.Team', ''),
-                            'frame': index
-                        })
+    location_data = []  # Used for the location JSON.
+    boost_data = {}  # Used for the boost stats.
+    boost_objects = []
+    heatmap_data = {}
+    seconds_mapping = {}  # Frame -> seconds remaining mapping.
 
-        # Extract the goal information.
-        if 'Goals' in self.replay['meta']['properties']:
-            for goal in self.replay['meta']['properties']['Goals']:
-                self._extract_goal_data(goal['frame'])
+    heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(replay_obj.replay_id)
+    location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(replay_obj.replay_id)
 
-        if 'NumFrames' in self.replay['meta']['properties']:
-            assert len(self.team_metadata) == 2
+    for index, frame in enumerate(replay['Frames']):
+        # Add an empty location list for this frame.
+        location_data.append([])
 
-        for player in self.actors.copy():
-            # Get their position data.
-            if 'type' not in self.actors[player]:
-                continue
+        ball_hit = False
+        confirmed_ball_hit = False
+        ball_spawned = False
 
-            if self.actors[player]['type'] == 'player':
-                self.actors[player]['position_data'] = self._get_player_position_data(player)
-            elif self.actors[player]['type'] == 'ball':
-                if 'ball' not in self.actors:
-                    self.actors['ball'] = {
-                        'type': 'ball',
-                        'position_data': {}
-                    }
+        if index in goals:
+            # Get the ball position.
+            ball_actor_id = list(filter(lambda x: actors[x]['Class'] == 'TAGame.Ball_TA', actors))[0]
+            ball_position = actor_positions[ball_actor_id]
 
-                ball_data = self._get_player_position_data(player)
+            # XXX: Update this to also register the hitter?
+            hit_position = last_hits[goals[index]['PlayerTeam']]
 
-                self.actors['ball']['position_data'] = {
-                    **self.actors['ball']['position_data'],
-                    **ball_data
-                }
+            shot_data.append({
+                'player': hit_position,
+                'ball': ball_position
+            })
 
-                del self.actors[player]
-
-        # Compress the location data per (player) actor.
-        compressed_data = {}
-
-        for actor in self.actors:
-            if 'type' not in self.actors[actor]:
-                continue
-
-            compressed_data[actor] = {}
-
-            current_key = ''
-            key = ''
-
-            keys = self.actors[actor]['position_data'].keys()
-
-            if len(keys) == 0:
-                continue
-
-            for frame in range(min(keys), max(keys)):
-                if frame in self.actors[actor]['position_data']:
-                    data = self.actors[actor]['position_data'][frame]
-                    key = '{},{}'.format(data['x'], data['y'])
-
-                if key == current_key:
-                    compressed_data[actor][key] += 1
-                else:
-                    if key not in compressed_data[actor]:
-                        compressed_data[actor][key] = 1
-                    else:
-                        compressed_data[actor][key] += 1
-
-            assert sum([i[1] for i in compressed_data[actor].items()]) == max(self.actors[actor]['position_data'], key=int) - min(self.actors[actor]['position_data'], key=int)
-
-        if default_storage.exists(heatmap_json_filename):
-            default_storage.delete(heatmap_json_filename)
-
-        heatmap_json_filename = default_storage.save(heatmap_json_filename, ContentFile(json.dumps(compressed_data, separators=(',', ':'))))
-
-        self.heatmap_json_filename = heatmap_json_filename
-
-        # Advanced replay parsing.
-        # Restructure the data so that it's chunkable.
-        frame_data = []
-
-        for frame in range(self.replay['meta']['properties'].get('NumFrames', 0)):
-            frame_dict = {
-                'time': self.replay['frames'][frame]['time'],
-                'actors': []
+            # Reset the last hits.
+            last_hits = {
+                0: None,
+                1: None
             }
 
-            for player in self.actors:
-                position_data = self.actors[player]['position_data']
+        # Handle any new actors.
+        for actor_id, value in frame['Spawned'].items():
+            actor_id = int(actor_id)
 
-                if frame in position_data:
-                    frame_dict['actors'].append({
-                        'id': player,
-                        'type': self.actors[player].get('type', 'ball'),
-                        **position_data[frame]
-                    })
+            if actor_id not in actors:
+                actors[actor_id] = value
 
-            frame_data.append(frame_dict)
+            if 'Engine.Pawn:PlayerReplicationInfo' in value:
+                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                player_cars[player_actor_id] = actor_id
 
-        if default_storage.exists(location_json_filename):
-            default_storage.delete(location_json_filename)
+            if value['Class'] == 'TAGame.Ball_TA':
+                ball_spawned = True
 
-        self._get_boost_data()
-        self._get_seconds_remaining()
+            if value['Class'] == 'TAGame.PRI_TA':
+                player_actors[actor_id] = value
+                player_actors[actor_id]['joined'] = index
 
-        small_actors = {}
+            if value['Class'] == 'TAGame.Team_Soccar_TA':
+                team_data[actor_id] = value['Name'].replace('Archetypes.Teams.Team', '')
 
-        for key, value in self.actors.items():
-            small_actors[key] = value
+        # Handle any updates to existing actors.
+        for actor_id, value in frame['Updated'].items():
+            actor_id = int(actor_id)
 
-            del small_actors[key]['position_data']
+            # Merge the new properties with the existing.
+            if actors[actor_id] != value:
+                actors[actor_id] = {**actors[actor_id], **value}
 
-        final_data = {
-            'frame_data': frame_data,
-            'goals': self.replay['meta']['properties'].get('Goals', []),
-            'boost': self.boost_data,
-            'seconds_mapping': self.seconds_mapping,
-            'actors': self.actors,
-            'teams': self.team_metadata
-        }
+                if actor_id in player_actors:
+                    player_actors[actor_id] = actors[actor_id]
 
-        location_json_filename = default_storage.save(location_json_filename, ContentFile(json.dumps(final_data, separators=(',', ':'))))
-        self.location_json_filename = location_json_filename
+            if 'Engine.Pawn:PlayerReplicationInfo' in value:
+                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                player_cars[player_actor_id] = actor_id
 
-    def _get_match_metadata(self, frame):
-        # Search through the frames looking for some game replication info.
-        game_info = [
-            value for value in frame['replications']
-            if (
-                'GameReplicationInfoArchetype' in value['object_name'] and
-                'Engine.GameReplicationInfo:ServerName' in value['properties']
-            )
-        ]
+        # Handle removing any destroyed actors.
+        for actor_id in frame['Destroyed']:
+            del actors[actor_id]
 
-        if not game_info:
-            return
+            if actor_id in player_actors:
+                player_actors[actor_id]['left'] = index
 
-        game_info = game_info[0]['properties']
+        # Loop over actors which have changed in this frame.
+        for actor_id, value in {**frame['Spawned'], **frame['Updated']}.items():
+            actor_id = int(actor_id)
 
-        self.match_metadata = {
-            'server_name': game_info['Engine.GameReplicationInfo:ServerName'],
-            'playlist': game_info.get('ProjectX.GRI_X:ReplicatedGamePlaylist', 0)
-        }
+            # Look for any position data.
+            if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
+                actor_positions[actor_id] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
 
-    def _get_team_metadata(self, frame):
-        # Search through the frame looking for team info.
-        team_info = [
-            value for value in frame['replications']
-            if 'Archetypes.Teams.Team' in value.get('object_name', '') and value['state'] == 'opening'
-        ]
+                # Get the player actor id.
+                real_actor_id = actor_id
 
-        if not team_info:
-            return
+                for player_actor_id, car_actor_id in player_cars.items():
+                    if actor_id == car_actor_id:
+                        real_actor_id = player_actor_id
+                        break
 
-        for team in team_info:
-            self.team_metadata[team['actor_id']] = team['object_name'].replace('Archetypes.Teams.Team', '')
+                if real_actor_id == actor_id:
+                    real_actor_id = 'ball'
 
-    def _extract_goal_data(self, base_index, search_index=None, iteration=None):
-        if not iteration:
-            iteration = 1
+                data_dict = {'id': real_actor_id}
+                data_dict['x'], data_dict['y'], data_dict['z'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
+                data_dict['yaw'], data_dict['pitch'], data_dict['roll'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Rotation']
+                location_data[index].append(data_dict)
 
-        # If the player name is unique within the actor set, then don't bother
-        # searching through frames for the data.
-        for goal in self.replay['meta']['properties']['Goals']:
-            if goal['frame'] == base_index:
-                player = [
-                    actor_id
-                    for actor_id, data in self.actors.items()
-                    if data['type'] == 'player' and data['name'] == goal['PlayerName']
-                ]
+            # If this property exists, the ball has changed possession.
+            if 'TAGame.Ball_TA:HitTeamNum' in value:
+                ball_hit = confirmed_ball_hit = True
+                hit_team_num = value['TAGame.Ball_TA:HitTeamNum']['Value']
+                ball_possession = hit_team_num
 
-                if len(player) == 1:
-                    self.goal_metadata[base_index] = player[0]
-                    return
+                # Clean up the actor positions.
+                actor_positions_copy = actor_positions.copy()
+                for actor_position in actor_positions_copy:
+                    found = False
 
-                # We found the goal we wanted, we just couldn't find the player,
-                # but break out early as a minor optimisation.
+                    for car in player_cars:
+                        if actor_position == player_cars[car]:
+                            found = True
+
+                    if not found and actor_position != ball_actor_id:
+                        del actor_positions[actor_position]
+
+            # Store the boost data for each actor at each frame where it changes.
+            if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
+                boost_value = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+                assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
+
+                if actor_id not in boost_data:
+                    boost_data[actor_id] = {}
+
+                # Sometimes we have a boost component without a reference to
+                # a car. We don't want to lose that data, so stick it into a
+                # holding dictionary until we can figure out who it belongs to.
+
+                if 'TAGame.CarComponent_TA:Vehicle' not in actors[actor_id]:
+                    if actor_id not in unknown_boost_data:
+                        unknown_boost_data[actor_id] = {}
+
+                    unknown_boost_data[actor_id][index] = boost_value
+                else:
+                    car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['Value'][1]
+
+                    # Find out which player this car belongs to.
+                    try:
+                        player_actor_id = [
+                            player_actor_id
+                            for player_actor_id, car_actor_id in player_cars.items()
+                            if car_actor_id == car_id
+                        ][0]
+
+                        if player_actor_id not in boost_data:
+                            boost_data[player_actor_id] = {}
+
+                        boost_data[player_actor_id][index] = boost_value
+
+                        # Attach any floating data (if we can).
+                        if actor_id in unknown_boost_data:
+                            for frame_index, boost_value in unknown_boost_data[actor_id].items():
+                                boost_data[player_actor_id][frame_index] = boost_value
+
+                            del unknown_boost_data[actor_id]
+
+                    except IndexError:
+                        pass
+
+            # Store the mapping of frame -> clock time.
+            if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value:
+                seconds_mapping[index] = value['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['Value']
+
+            # See if the cars are frozen in place.
+            if 'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value:
+                if value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 3:
+                    cars_frozen = True
+                elif value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 0:
+                    cars_frozen = False
+
+            # Get the camera details.
+            if 'TAGame.CameraSettingsActor_TA:ProfileSettings' in value:
+                if actors[actor_id]['Class'] == 'TAGame.CameraSettingsActor_TA':
+                    # Define some short variable names to stop the next line
+                    # being over 200 characters long.  This block of code
+                    # makes new replays have a camera structure which is
+                    # similar to that of the old replays - where the camera
+                    # settings are directly attached to the player rather
+                    # than a CameraActor (which is what the actor in this
+                    # current loop is).
+
+                    csa = 'TAGame.CameraSettingsActor_TA:PRI'
+                    ps = 'TAGame.CameraSettingsActor_TA:ProfileSettings'
+                    cs = 'TAGame.PRI_TA:CameraSettings'
+
+                    player_actor_id = value[csa]['Value'][1]
+                    actors[player_actor_id][cs] = value[ps]['Value']
+
+            if 'Engine.GameReplicationInfo:ServerName' in value:
+                replay_obj.server_name = value['Engine.GameReplicationInfo:ServerName']['Value']
+
+            if 'ProjectX.GRI_X:ReplicatedGamePlaylist' in value:
+                replay_obj.playlist = value['ProjectX.GRI_X:ReplicatedGamePlaylist']['Value']
+
+            if 'TAGame.GameEvent_Team_TA:MaxTeamSize' in value:
+                replay_obj.team_sizes = value['TAGame.GameEvent_Team_TA:MaxTeamSize']['Value']
+
+            if 'TAGame.PRI_TA:MatchGoals' in value:
+                # Get the closest goal to this frame.
+                # print(index, actor_id, value['TAGame.PRI_TA:MatchGoals']['Value'])
+                # goal_frame = min(sorted(goals), key=lambda x: abs(x - index))
+                # print(goals[goal_frame])
+                goal_actors[index] = actor_id
+                # del goals[goal_frame]
+
+            if 'Engine.TeamInfo:Score' in value:
+                if index not in goal_actors:
+                    goal_actors[index] = actor_id
+
+        # Work out which direction the ball is travelling and if it has
+        # changed direction or speed.
+        ball = None
+        ball_actor_id = None
+        for actor_id, value in actors.items():
+            if value['Class'] == 'TAGame.Ball_TA':
+                ball_actor_id = actor_id
+                ball = value
                 break
 
-        if not search_index:
-            search_index = base_index
+        ball_hit = False
 
-            if base_index >= len(self.replay['frames']):
-                search_index = base_index - 1
+        # Take a look at the ball this frame, has anything changed?
+        new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
 
-        frame = self.replay['frames'][search_index]
+        # The ball has *changed direction*, but not necessarily been hit (it
+        # may have bounced).
 
-        scorer = None
+        if ball_angularvelocity != new_ball_angularvelocity:
+            ball_hit = True
 
-        if frame:
-            players = [
-                value
-                for value in frame['replications']
-                if value['object_name'] == 'TAGame.Default__PRI_TA'
-            ]
+        ball_angularvelocity = new_ball_angularvelocity
 
-            # Figure out who scored.
-            for value in players:
-                if 'TAGame.PRI_TA:MatchGoals' in value['properties']:
-                    scorer = value['actor_id']
-                    break
+        # Calculate the current distances between cars and the ball.
+        # Do we have position data for the ball?
+        if ball_hit and not ball_spawned and ball_actor_id in actor_positions:
 
-                if 'TAGame.PRI_TA:MatchAssists' in value['properties']:
-                    # print('we have the assister!', value['actor_id'])
-                    pass
+            # Iterate over the cars to get the players.
+            lowest_distance = None
+            lowest_distance_car_actor = None
 
-        # Search in the closest frames, then gradually expand the search.
-        if scorer is None:
-            if search_index < base_index - 100:
-                print('Unable to find goal for frame', base_index)
-                return
+            for player_id, car_actor_id in player_cars.items():
+                # Get the team.
+                team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
+                team_actor = actors[team_id]
+                team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
 
-            if iteration >= 100:
-                print('Unable to find goal for frame', base_index)
-                return
+                # Make sure this actor is in on the team which is currently
+                # in possession.
 
-            if search_index == base_index:
-                next_index = base_index - 1
-            elif search_index - base_index < 0:
-                next_index = base_index + abs(search_index - base_index)
-            elif search_index - base_index > 0:
-                next_index = base_index + (search_index - base_index + 1) * -1
-
-            if next_index >= len(self.replay['frames']):
-                if next_index < 0:
-                    next_index = abs(search_index) + 1
-                else:
-                    next_index = search_index - 1
-
-            self._extract_goal_data(base_index, next_index, iteration + 1)
-            return
-
-        self.goal_metadata[base_index] = scorer
-
-    def _get_actors(self):
-        for index, frame in enumerate(self.replay['frames']):
-            # We can attempt to get the match metadata during this loop and
-            # save us having to loop the netstream more than once.
-            if not self.match_metadata:
-                self._get_match_metadata(frame)
-
-            if len(self.team_metadata) < 2:
-                self._get_team_metadata(frame)
-
-            # Find the player actor objects.
-            players = [
-                value
-                for value in frame['replications']
-                if value['object_name'] == 'TAGame.Default__PRI_TA'
-            ]
-
-            for value in players:
-                """
-                Example `value`:
-
-                {'actor_id': 2,
-                 'class_name': 'TAGame.Default__PRI_TA',
-                 'properties': {'Engine.PlayerReplicationInfo:Ping': 24,
-                          'Engine.PlayerReplicationInfo:PlayerID': 656,
-                          'Engine.PlayerReplicationInfo:PlayerName': "AvD Sub'n",
-                          'Engine.PlayerReplicationInfo:Team': (True, 6),
-                          'Engine.PlayerReplicationInfo:UniqueId': (1, 76561198040631598, 0),
-                          'Engine.PlayerReplicationInfo:bReadyToPlay': True,
-                          'TAGame.PRI_TA:CameraSettings': {'dist': 270.0,
-                                                           'fov': 107.0,
-                                                           'height': 110.0,
-                                                           'pitch': -2.0,
-                                                           'stiff': 1.0,
-                                                           'swiv': 4.300000190734863},
-                          'TAGame.PRI_TA:ClientLoadout': (11, [23, 0, 613, 39, 752, 0, 0]),
-                          'TAGame.PRI_TA:ClientLoadoutOnline': (11, 0, 0),
-                          'TAGame.PRI_TA:PartyLeader': (1, 76561198071203042, 0),
-                          'TAGame.PRI_TA:ReplicatedGameEvent': (True, 1),
-                          'TAGame.PRI_TA:Title': 0,
-                          'TAGame.PRI_TA:TotalXP': 9341290,
-                          'TAGame.PRI_TA:bUsingSecondaryCamera': True},
-                 'new': False,
-                 'startpos': 102988}
-                 """
-
-                if 'properties' not in value:
+                if team != ball_possession:
                     continue
 
-                if 'Engine.PlayerReplicationInfo:bWaitingPlayer' in value['properties']:
-                    continue
+                if car_actor_id in actor_positions:
+                    actor_distance = distance(actor_positions[car_actor_id], actor_positions[ball_actor_id])
 
-                team_id = None
-                actor_id = value['actor_id']
+                    if not confirmed_ball_hit:
+                        if actor_distance > 350:  # Value taken from the max confirmed distance.
+                            continue
 
-                if 'Engine.PlayerReplicationInfo:Team' in value['properties']:
-                    team_id = value['properties']['Engine.PlayerReplicationInfo:Team']['contents'][1]
+                    # Get the player on this team with the lowest distance.
+                    if lowest_distance is None or actor_distance < lowest_distance:
+                        lowest_distance = actor_distance
+                        lowest_distance_car_actor = car_actor_id
 
-                if actor_id in self.actors:
-                    if team_id is not None:
-                        if self.actors[actor_id]['team'] != team_id:
-                            if actor_id in self.actor_metadata:
-                                self.actor_metadata[actor_id]['Engine.PlayerReplicationInfo:Team'] = value['properties']['Engine.PlayerReplicationInfo:Team']
+            if lowest_distance_car_actor:
+                last_hits[ball_possession] = actor_positions[lowest_distance_car_actor]
 
-                            if team_id != -1:
-                                self.actors[actor_id]['team'] = team_id
-
-                        if not self.actors[actor_id]['team'] or team_id == -1:
-                            # self.actors[actor_id]['team'] = team_id
-                            self.actors[actor_id]['left'] = index
-
-                elif 'TAGame.PRI_TA:ClientLoadout' in value['properties']:
-                    player_name = value['properties'].get('Engine.PlayerReplicationInfo:PlayerName', None)
-
-                    self.actors[actor_id] = {
-                        'type': 'player',
-                        'join': index,
-                        'left': self.replay['meta']['properties']['NumFrames'],
-                        'name': player_name['contents'] if player_name else '',
-                        'team': team_id,
-                    }
-
-                    if actor_id not in self.actor_metadata:
-                        self.actor_metadata[actor_id] = value['properties']
-
-                # See if our current data value has any new fields.
-                if actor_id not in self.actor_metadata:
-                    self.actor_metadata[actor_id] = value['properties']
-                else:
-                    for key, value in value['properties'].items():
-                        if key not in self.actor_metadata[actor_id] or self.actor_metadata[actor_id].get(key, None) is None:
-                            self.actor_metadata[actor_id][key] = value
-
-            # Get the ball data (if any).
-            ball = [
-                value
-                for value in frame['replications']
-                if (
-                    value['object_name'] == 'Archetypes.Ball.Ball_Default' and
-                    'TAGame.RBActor_TA:ReplicatedRBState' in value.get('properties', {})
+        # Generate the heatmap data for this frame.  Get all of the players
+        # and the ball.
+        if not cars_frozen:
+            moveable_actors = [
+                (actor_id, value)
+                for actor_id, value in actors.items()
+                if value['Class'] in ['TAGame.Ball_TA', 'TAGame.PRI_TA', 'TAGame.Car_TA'] and
+                (
+                    'TAGame.RBActor_TA:ReplicatedRBState' in value or
+                    'Position' in value
                 )
             ]
 
-            if ball:
-                ball = ball[0]
-
-                if ball['actor_id'] not in self.actors and 'TAGame.RBActor_TA:ReplicatedRBState' in ball['properties']:
-                    self.actors[ball['actor_id']] = {
-                        'type': 'ball'
-                    }
-
-            # Get the camera data (if any)
-            cameras = [
-                value
-                for value in frame['replications']
-                if value['object_name'] == 'TAGame.Default__CameraSettingsActor_TA' and
-                'TAGame.CameraSettingsActor_TA:PRI' in value.get('properties', {}) and
-                'TAGame.CameraSettingsActor_TA:ProfileSettings' in value.get('properties', {})
-            ]
-
-            if len(cameras) > 0:
-                for camera in cameras:
-                    actor_id = camera['properties']['TAGame.CameraSettingsActor_TA:PRI']['contents'][1]
-
-                    if 'TAGame.PRI_TA:CameraSettings' not in self.actor_metadata[actor_id]:
-                        self.actor_metadata[actor_id]['TAGame.PRI_TA:CameraSettings'] = camera['properties']['TAGame.CameraSettingsActor_TA:ProfileSettings']
-
-            # Figure out if the cars are locked in position at this point.
-            # TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining
-            """
-            {'actor_id': 3,
-             'class_name': 'Archetypes.GameEvent.GameEvent_Soccar',
-             'properties': {'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining': 3,
-                      'id': 3,
-                      'state': 'existing'},
-             'new': False,
-             'open': True,
-             'startpos': 2864065})
-            """
-
-            game_events = [
-                value
-                for value in frame['replications']
-                if value['object_name'] == 'Archetypes.GameEvent.GameEvent_Soccar' and
-                'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value.get('properties', {})
-            ]
-
-            if len(game_events):
-                for event in game_events:
-                    if len(self.disabled_frame_ranges) == 0:
-                        self.disabled_frame_ranges.append([])
-
-                    if len(self.disabled_frame_ranges[-1]) == 2:
-                        self.disabled_frame_ranges.append([])
-
-                    self.disabled_frame_ranges[-1].append(index)
-
-    def _get_boost_data(self):
-        # 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount'
-
-        # Do we have a new car object? Assign it to the user.
-        """
-        {'actor_id': 7,
-         'class_name': 'Archetypes.Car.Car_Default',
-         'properties': {'Engine.Pawn:PlayerReplicationInfo': (True, 4),
-                  'TAGame.Car_TA:TeamPaint': {'CustomColorID': 90,
-                                              'CustomFinishID': 270,
-                                              'Team': 0,
-                                              'TeamColorID': 3,
-                                              'TeamFinishID': 270},
-                  'TAGame.RBActor_TA:ReplicatedRBState': {'flag': False,
-                                                          'pos': (0, -4608, 43),
-                                                          'rot': (-1.000030518509476,
-                                                                  -0.500015259254738,
-                                                                  -1.000030518509476),
-                                                          'vec1': (0, 0, -162),
-                                                          'vec2': (0, 0, 0)},
-                  'TAGame.Vehicle_TA:ReplicatedThrottle': 255},
-         'new': False,
-         'startpos': 4230}
-        {'actor_id': 8,
-         'class_name': 'Archetypes.CarComponents.CarComponent_Boost',
-         'properties': {'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount': 85,
-                  'TAGame.CarComponent_TA:Vehicle': (True, 7)},
-         'new': False,
-         'startpos': 4537}
-         """
-
-        self.boost_actors = {}
-        self.cars = {}
-
-        for index, frame in enumerate(self.replay['frames']):
-            for value in frame['replications']:
-                actor_id = value['actor_id']
-
-                # Get any cars.
-                if value['object_name'] == 'Archetypes.Car.Car_Default':
-                    if 'properties' not in value:
+            for actor_id, value in moveable_actors:
+                if value['Class'] == 'TAGame.Ball_TA':
+                    actor_id = 'ball'
+                elif value['Class'] == 'TAGame.Car_TA':
+                    if 'Engine.Pawn:PlayerReplicationInfo' not in value:
                         continue
 
-                    if 'Engine.Pawn:PlayerReplicationInfo' in value['properties']:
-                        player_id = value['properties']['Engine.Pawn:PlayerReplicationInfo']['contents'][1]
-                        self.cars[actor_id] = player_id
+                    actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
 
-                # Get any boost objects.
-                if value['object_name'] == 'Archetypes.CarComponents.CarComponent_Boost':
-                    if actor_id not in self.boost_actors:
-                        self.boost_actors[actor_id] = {}
+                if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
+                    key = '{},{}'.format(
+                        value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][0],
+                        value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][1],
+                    )
+                elif 'Position' in value:
+                    key = '{},{}'.format(
+                        value['Position'][0],
+                        value['Position'][1],
+                    )
 
-                    if 'properties' not in value:
-                        continue
+                if actor_id not in heatmap_data:
+                    heatmap_data[actor_id] = {}
 
-                    if 'TAGame.CarComponent_TA:Vehicle' in value['properties']:
-                        car_id = value['properties']['TAGame.CarComponent_TA:Vehicle']['contents'][1]
-                        self.boost_actors[actor_id] = car_id
+                if key in heatmap_data[actor_id]:
+                    heatmap_data[actor_id][key] += 1
+                else:
+                    heatmap_data[actor_id][key] = 1
 
-                    if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value['properties']:
-                        if actor_id not in self.boost_data:
-                            self.boost_data[actor_id] = {}
+    def get_team(actor_id):
+        return int(actors[actor_id]['Name'].replace('Archetypes.Teams.Team', ''))
 
-                        boost_value = value['properties']['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['contents']
+    player_objects = {}
 
-                        assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
+    # Make a dict of all the player actors and then do a bulk_create?
+    for actor_id, value in player_actors.items():
+        system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
+        unique_id = '{System}-{Remote}-{Local}'.format(
+            **value['Engine.PlayerReplicationInfo:UniqueId']['Value']
+        )
 
-                        self.boost_data[actor_id][index] = boost_value
+        player_objects[actor_id] = Player.objects.create(
+            replay=replay_obj,
+            player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
+            team=get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1]),
+            score=value['TAGame.PRI_TA:MatchScore']['Value'],
+            goals=value['TAGame.PRI_TA:MatchGoals']['Value'],
+            shots=value['TAGame.PRI_TA:MatchShots']['Value'],
+            assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
+            saves=value['TAGame.PRI_TA:MatchSaves']['Value'],
+            platform=PLATFORMS.get(system, system),
+            online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote'],
+            bot=False,  # TODO: Add a check for this.
+            spectator=False,  # TODO: Add a check for this.
+            actor_id=actor_id,
+            unique_id=unique_id,
+            camera_settings=value['TAGame.PRI_TA:CameraSettings'],
+            vehicle_loadout=value['TAGame.PRI_TA:ClientLoadout']['Value'],
+            total_xp=value['TAGame.PRI_TA:TotalXP']['Value'],
+        )
 
-        # Data structure:
-        #
-        # value key = booster id (in values)
-        # booster id maps to a car (in actors)
-        # cars map to players (in card)
+        # Store the boost data for this player.
+        for boost_frame, boost_value in boost_data[actor_id].items():
+            boost_objects.append(BoostData(
+                replay=replay_obj,
+                player=player_objects[actor_id],
+                frame=boost_frame,
+                value=boost_value,
+            ))
 
-        self.boost_data = {
-            'values': self.boost_data,
-            'actors': self.boost_actors,
-            'cars': self.cars,
+    BoostData.objects.bulk_create(boost_objects)
+
+    # Create the goals.
+    goal_objects = []
+
+    for index, actor_id in goal_actors.items():
+        # Use the player_objects dict rather than the full actors dict as
+        # players who leave the game get removed from the latter.
+
+        if actor_id in player_actors:
+            goal_objects.append(Goal(
+                replay=replay_obj,
+                number=len(goal_objects) + 1,
+                player=player_objects[actor_id],
+                frame=index,
+            ))
+
+        # This actor is most likely the team object, meaning the goal was an
+        # own goal scored without any of the players on the benefiting team
+        # hitting the ball.
+
+        elif actor_id in actors:
+            if actors[actor_id]['Class'] == 'TAGame.Team_Soccar_TA':
+                own_goal_player, created = Player.objects.get_or_create(
+                    replay=replay_obj,
+                    player_name='Unknown player (own goal?)',
+                    team=get_team(actor_id),
+                )
+
+                goal_objects.append(Goal(
+                    replay=replay_obj,
+                    number=len(goal_objects) + 1,
+                    player=own_goal_player,
+                    frame=index,
+                ))
+
+    Goal.objects.bulk_create(goal_objects)
+
+    # Generate heatmap and location JSON files.
+
+    # Put together the heatmap file.
+    replay_obj.heatmap_json_file = default_storage.save(
+        heatmap_json_filename,
+        ContentFile(json.dumps(heatmap_data, separators=(',', ':')))
+    )
+
+    # Put together the location JSON file.
+
+    # Get rid of any boost data keys which have an empty value.
+    for actor_id, data in boost_data.copy().items():
+        if not data:
+            del boost_data[actor_id]
+
+    goal_data = [
+        {
+            'PlayerName': goal['PlayerName']['Value'],
+            'PlayerTeam': goal['PlayerTeam']['Value'],
+            'frame': goal['frame']['Value'],
         }
+        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
+    ]
 
-    def _get_seconds_remaining(self):
-        self.seconds_mapping = {}
+    # Trim down the actors to just the information we care about.
+    player_data = {
+        actor_id: {
+            'type': 'player',
+            'join': data['joined'],
+            'left': data.get('left', replay['Metadata']['NumFrames']['Value']),
+            'team': data['Engine.PlayerReplicationInfo:Team']['Value'][1],
+            'name': data['Engine.PlayerReplicationInfo:PlayerName']['Value']
+        }
+        for actor_id, data in player_actors.items()
+    }
 
-        for index, frame in enumerate(self.replay['frames']):
-            for value in frame['replications']:
-                if 'properties' not in value:
-                    continue
+    final_data = {
+        'frame_data': location_data,
+        'goals': goal_data,
+        'boost': boost_data,
+        'seconds_mapping': seconds_mapping,
+        'actors': player_data,
+        'teams': team_data,
+    }
 
-                if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value['properties']:
-                    self.seconds_mapping[index] = value['properties']['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['contents']
+    replay_obj.location_json_file = default_storage.save(
+        location_json_filename,
+        ContentFile(json.dumps(final_data, separators=(',', ':')))
+    )
 
-    def _get_player_position_data(self, player_id):
-        player = self.actors[player_id]
-        result = {}
+    replay_obj.shot_data = shot_data
+    replay_obj.processed = True
+    replay_obj.crashed_heatmap_parser = False
 
-        car_actor_obj = None
+    replay_obj.excitement_factor = replay_obj.calculate_excitement_factor()
+    replay_obj.average_rating = replay_obj.calculate_average_rating()
 
-        # TODO: Refactor this to only loop the netstream once.
-        if player['type'] == 'player':
-            for index in range(player['join'], player['left']):
-                try:
-                    frame = self.replay['frames'][index]
-                except KeyError:
-                    # Handle truncated network data.
-                    break
-
-                stop = False
-                for pair in self.disabled_frame_ranges:
-                    if len(pair) < 2:
-                        continue
-
-                    if pair[0] <= index <= pair[1]:
-                        stop = True
-                        break
-
-                if stop:
-                    continue
-                # Give it away, give it away, give it away now..
-
-                assert stop is False
-
-                # First we need to find the player's car object.
-                for actor_obj in frame['replications']:
-                    if 'properties' not in actor_obj:
-                        continue
-
-                    engine = actor_obj['properties'].get('Engine.Pawn:PlayerReplicationInfo')
-
-                    # This is the correct object for this player.
-                    if engine and engine['contents'][1] == player_id:
-                        car_actor_obj = actor_obj['actor_id']
-
-                    # If the actor we're looking at is the car object, then get the
-                    # position and rotation data for this frame.
-                    if actor_obj['actor_id'] == car_actor_obj:
-                        state_data = actor_obj['properties'].get('TAGame.RBActor_TA:ReplicatedRBState')
-
-                        if state_data:
-                            x, y, z = state_data['contents'][1]
-                            yaw, pitch, roll = state_data['contents'][2]
-
-                            result[index] = {
-                                'x': x,
-                                'y': y,
-                                'z': z,
-                                'pitch': pitch,
-                                'roll': roll,
-                                'yaw': yaw
-                            }
-
-        elif player['type'] == 'ball':
-            for index, frame in enumerate(self.replay['frames']):
-                stop = False
-                for pair in self.disabled_frame_ranges:
-                    if len(pair) < 2:
-                        continue
-
-                    if pair[0] <= index <= pair[1]:
-                        stop = True
-                        break
-
-                if stop:
-                    continue
-                # Give it away, give it away, give it away now..
-
-                assert stop is False
-
-                # Does this actor exist in the frame data?
-                for actor_obj in frame['replications']:
-                    if 'properties' not in actor_obj:
-                        continue
-
-                    if actor_obj['actor_id'] != player_id:
-                        continue
-
-                    if 'TAGame.RBActor_TA:ReplicatedRBState' not in actor_obj['properties']:
-                        continue
-
-                    if actor_obj['object_name'] != 'Archetypes.Ball.Ball_Default':
-                        continue
-
-                    state_data = actor_obj['properties']['TAGame.RBActor_TA:ReplicatedRBState']
-
-                    x, y, z = state_data['contents'][1]
-                    yaw, pitch, roll = state_data['contents'][2]
-
-                    result[index] = {
-                        'x': x,
-                        'y': y,
-                        'z': z,
-                        'pitch': pitch,
-                        'roll': roll,
-                        'yaw': yaw
-                    }
-
-        return result
+    replay_obj.save()
