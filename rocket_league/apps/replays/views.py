@@ -189,11 +189,6 @@ class ReplayPlaybackView(ReplayUUIDMixin):
     template_name_suffix = '_playback'
 
 
-class ReplayGoalHitmapView(ReplayUUIDMixin):
-    model = Replay
-    template_name_suffix = '_hitmap'
-
-
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
     model = Replay
     fields = ['file']

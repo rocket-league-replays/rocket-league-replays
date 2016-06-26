@@ -20,12 +20,5 @@
                 Boost Analysis <em class="icon-crown-plus"></em>
             </a>
         </div>
-
-        {% url 'replay:goal-hitmap' replay_id=object.uuid as url %}
-        <div class="lyt-Tabs_Item {% if request.path == url %}lyt-Tabs_Item-active{% endif %}">
-            <a href="{{ url }}" class="lyt-Tabs_Action">
-                Goal Hitmap
-            </a>
-        </div>
     </div>
 </div>

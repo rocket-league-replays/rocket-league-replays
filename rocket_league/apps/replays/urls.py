@@ -17,8 +17,6 @@ urlpatterns = patterns(
     url(r'^(?P<pk>\d+)/boost-analysis/$', views.ReplayBoostAnalysisView.as_view(), name='boost-analysis'),
     url(r'^(?P<replay_id>[a-f0-9]{8}-?4[a-f0-9]{3}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})/boost-analysis/$', views.ReplayBoostAnalysisView.as_view(), name='boost-analysis'),
 
-    url(r'^(?P<replay_id>[a-f0-9]{8}-?4[a-f0-9]{3}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})/goal-hitmap/$', views.ReplayGoalHitmapView.as_view(), name='goal-hitmap'),
-
     url(r'^upload/$', views.ReplayCreateView.as_view(), name='upload'),
     url(r'^delete/(?P<pk>\d+)/$', views.ReplayDeleteView.as_view(), name='delete'),
     url(r'^update/(?P<pk>\d+)/$', views.ReplayUpdateView.as_view(), name='update'),
