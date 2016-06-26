@@ -238,6 +238,11 @@ class Replay(models.Model):
         null=True,
     )
 
+    shot_data = JSONField(
+        blank=True,
+        null=True,
+    )
+
     excitement_factor = models.FloatField(
         default=0.00,
     )
