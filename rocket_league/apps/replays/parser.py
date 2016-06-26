@@ -170,11 +170,11 @@ def parse_replay_header(replay_id):
             )
     else:
         # The best we can do is to get the goal scorers and the player.
-        for goal in replay['Metadata'].get('Goals', []):
+        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']:
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=goal['PlayerName'],
-                team=goal['PlayerTeam'],
+                player_name=goal['PlayerName']['Value'],
+                team=goal['PlayerTeam']['Value'],
             )
 
         if 'PlayerName' in replay['Metadata']:
@@ -185,7 +185,7 @@ def parse_replay_header(replay_id):
 
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=replay['Metadata']['PlayerName'],
+                player_name=replay['Metadata']['PlayerName']['Value'],
                 team=team,
             )
 
@@ -392,6 +392,7 @@ def parse_replay_netstream(replay_id):
             # Store the boost data for each actor at each frame where it changes.
             if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
                 boost_value = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+                print(actor_id, boost_value)
                 assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
 
                 if actor_id not in boost_data:
@@ -618,7 +619,7 @@ def parse_replay_netstream(replay_id):
         )
 
         # Store the boost data for this player.
-        for boost_frame, boost_value in boost_data[actor_id].items():
+        for boost_frame, boost_value in boost_data.get(actor_id, {}).items():
             boost_objects.append(BoostData(
                 replay=replay_obj,
                 player=player_objects[actor_id],
