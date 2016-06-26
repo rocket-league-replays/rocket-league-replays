@@ -6,11 +6,12 @@ from datetime import datetime
 from pprint import pprint
 
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from ...models import PLATFORMS, Goal, Map, Player, Replay, Season
-from ...parser import Parser
 
 
 def distance(pos1, pos2):
@@ -97,6 +98,7 @@ class Command(BaseCommand):
         actors = {}  # All actors
         player_actors = {}  # XXX: This will be used to make the replay.save() easier.
         goal_actors = {}
+        team_data = {}
         actor_positions = {}  # The current position data for all actors. Do we need this?
         player_cars = {}  # Car -> Player actor ID mappings.
         ball_angularvelocity = None  # The current angular velocity of the ball.
@@ -156,6 +158,10 @@ class Command(BaseCommand):
 
                 if value['Class'] == 'TAGame.PRI_TA':
                     player_actors[actor_id] = value
+                    player_actors[actor_id]['joined'] = index
+
+                if value['Class'] == 'TAGame.Team_Soccar_TA':
+                    team_data[actor_id] = value['Name'].replace('Archetypes.Teams.Team', '')
 
             # Handle any updates to existing actors.
             for actor_id, value in frame['Updated'].items():
@@ -176,6 +182,9 @@ class Command(BaseCommand):
             for actor_id in frame['Destroyed']:
                 del actors[actor_id]
 
+                if actor_id in player_actors:
+                    player_actors[actor_id]['left'] = index
+
             # Loop over actors which have changed in this frame.
             for actor_id, value in {**frame['Spawned'], **frame['Updated']}.items():
                 actor_id = int(actor_id)
@@ -184,9 +193,20 @@ class Command(BaseCommand):
                 if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
                     actor_positions[actor_id] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
 
-                    data_dict = {'id': actor_id}
+                    # Get the player actor id.
+                    real_actor_id = actor_id
+
+                    for player_actor_id, car_actor_id in player_cars.items():
+                        if actor_id == car_actor_id:
+                            real_actor_id = player_actor_id
+                            break
+
+                    if real_actor_id == actor_id:
+                        real_actor_id = 'ball'
+
+                    data_dict = {'id': real_actor_id}
                     data_dict['x'], data_dict['y'], data_dict['z'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
-                    data_dict['pitch'], data_dict['roll'], data_dict['yaw'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Rotation']
+                    data_dict['yaw'], data_dict['pitch'], data_dict['roll'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Rotation']
                     location_data[index].append(data_dict)
 
                 # If this property exists, the ball has changed possession.
@@ -334,8 +354,8 @@ class Command(BaseCommand):
                 for player_id, car_actor_id in player_cars.items():
                     # Get the team.
                     team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
-                    team_data = actors[team_id]
-                    team = int(team_data['Name'].replace('Archetypes.Teams.Team', ''))
+                    team_actor = actors[team_id]
+                    team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
 
                     # Make sure this actor is in on the team which is currently
                     # in possession.
@@ -402,6 +422,8 @@ class Command(BaseCommand):
         def get_team(actor_id):
             return int(actors[actor_id]['Name'].replace('Archetypes.Teams.Team', ''))
 
+        player_objects = {}
+
         # Make a dict of all the player actors and then do a bulk_create?
         for actor_id, value in player_actors.items():
             system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
@@ -409,7 +431,7 @@ class Command(BaseCommand):
                 **value['Engine.PlayerReplicationInfo:UniqueId']['Value']
             )
 
-            player_actors[actor_id] = Player.objects.create(
+            player_objects[actor_id] = Player.objects.create(
                 replay=replay_obj,
                 player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
                 team=get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1]),
@@ -433,14 +455,14 @@ class Command(BaseCommand):
         goal_objects = []
 
         for index, actor_id in goal_actors.items():
-            # Use the player_actors dict rather than the full actors dict as
+            # Use the player_objects dict rather than the full actors dict as
             # players who leave the game get removed from the latter.
 
             if actor_id in player_actors:
                 goal_objects.append(Goal(
                     replay=replay_obj,
                     number=len(goal_objects) + 1,
-                    player=player_actors[actor_id],
+                    player=player_objects[actor_id],
                     frame=index,
                 ))
 
@@ -464,4 +486,56 @@ class Command(BaseCommand):
                     ))
 
         Goal.objects.bulk_create(goal_objects)
+
+        # Generate heatmap and location JSON files.
+
+        # Put together the heatmap file.
+        replay_obj.heatmap_json_file = default_storage.save(
+            heatmap_json_filename,
+            ContentFile(json.dumps(heatmap_data, separators=(',', ':')))
+        )
+
+        # Put together the location JSON file.
+
+        # Get rid of any boost data keys which have an empty value.
+        for actor_id, data in boost_data.copy().items():
+            if not data:
+                del boost_data[actor_id]
+
+        goal_data = [
+            {
+                'PlayerName': goal['PlayerName']['Value'],
+                'PlayerTeam': goal['PlayerTeam']['Value'],
+                'frame': goal['frame']['Value'],
+            }
+            for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
+        ]
+
+        # Trim down the actors to just the information we care about.
+        player_data = {
+            actor_id: {
+                'type': 'player',
+                'join': data['joined'],
+                'left': data.get('left', replay['Metadata']['NumFrames']['Value']),
+                'team': data['Engine.PlayerReplicationInfo:Team']['Value'][1],
+                'name': data['Engine.PlayerReplicationInfo:PlayerName']['Value']
+            }
+            for actor_id, data in player_actors.items()
+        }
+
+        final_data = {
+            'frame_data': location_data,
+            'goals': goal_data,
+            'boost': boost_data,
+            'seconds_mapping': seconds_mapping,
+            'actors': player_data,
+            'teams': team_data,
+        }
+
+        replay_obj.location_json_file = default_storage.save(
+            location_json_filename,
+            ContentFile(json.dumps(final_data, separators=(',', ':')))
+        )
+
+        replay_obj.shot_data = shot_data
         replay_obj.save()
