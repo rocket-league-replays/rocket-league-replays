@@ -715,6 +715,7 @@ def parse_replay_netstream(replay_id):
 
     replay_obj.shot_data = shot_data
     replay_obj.processed = True
+    replay_obj.show_leaderboard = True
     replay_obj.crashed_heatmap_parser = False
 
     replay_obj.excitement_factor = replay_obj.calculate_excitement_factor()
