@@ -419,7 +419,8 @@
       {
         x: [{{ goal.player.0 }}, {{ goal.ball.0 }}],
         y: [{{ goal.player.1 }}, {{ goal.ball.1 }}],
-        z: [{{ goal.player.2 }}, {{ goal.ball.2 }}]
+        z: [{{ goal.player.2 }}, {{ goal.ball.2 }}],
+        label: "Goal {% get_goal_number goal.frame %}"
       }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ];
@@ -493,7 +494,7 @@
     data.forEach(function (item, index) {
       xy.options.data.push({
         type: 'line',
-        name: `Goal ${index + 1}`,
+        name: item.label,
         dataPoints: [
           { y: item.x[0], x: item.y[0] },
           { y: item.x[1], x: item.y[1] },

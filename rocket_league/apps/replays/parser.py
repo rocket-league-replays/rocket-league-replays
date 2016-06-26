@@ -294,7 +294,8 @@ def parse_replay_netstream(replay_id):
 
             shot_data.append({
                 'player': hit_position,
-                'ball': ball_position
+                'ball': ball_position,
+                'frame': index
             })
 
             # Reset the last hits.
