@@ -392,7 +392,6 @@ def parse_replay_netstream(replay_id):
             # Store the boost data for each actor at each frame where it changes.
             if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
                 boost_value = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
-                print(actor_id, boost_value)
                 assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
 
                 if actor_id not in boost_data:
@@ -473,11 +472,7 @@ def parse_replay_netstream(replay_id):
 
             if 'TAGame.PRI_TA:MatchGoals' in value:
                 # Get the closest goal to this frame.
-                # print(index, actor_id, value['TAGame.PRI_TA:MatchGoals']['Value'])
-                # goal_frame = min(sorted(goals), key=lambda x: abs(x - index))
-                # print(goals[goal_frame])
                 goal_actors[index] = actor_id
-                # del goals[goal_frame]
 
             if 'Engine.TeamInfo:Score' in value:
                 if index not in goal_actors:
