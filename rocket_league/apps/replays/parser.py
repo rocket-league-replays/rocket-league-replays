@@ -31,8 +31,14 @@ def _pyrope_to_octane(replay):
 
     for key in simple_keys:
         data[key] = {
-            'Value': replay.header.get(key, 0)
+            'Value': replay.header.get(key, '')
         }
+
+    integers = ['Team0Score', 'Team1Score', 'NumFrames', 'PrimaryPlayerTeam']
+
+    for key in integers:
+        if data[key]['Value'] == '':
+            data[key]['Value'] = 0
 
     if 'PlayerStats' in replay.header:
         data['PlayerStats'] = {
