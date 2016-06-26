@@ -1,7 +1,4 @@
-import codecs
 import re
-import time
-from datetime import datetime
 from itertools import zip_longest
 
 import bitstring
@@ -15,7 +12,8 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import now
 from social.apps.django_app.default.fields import JSONField
 
-from .parser import Parser
+from pyrope import Replay as Pyrope
+from .parser import parse_replay_header, parse_replay_netstream
 
 PRIVACY_PRIVATE = 1
 PRIVACY_UNLISTED = 2
@@ -580,21 +578,21 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(obj=self)
+                replay = Pyrope(self.file.read())
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
             # Check if this replay has already been uploaded.
-            replay = Replay.objects.filter(
-                replay_id=self.parser.replay_id,
+            replays = Replay.objects.filter(
+                replay_id=replay.header['Id'],
             )
 
-            if replay.count() > 0:
+            if replays.count() > 0:
                 raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
-                    replay[0].get_absolute_url()
+                    replays[0].get_absolute_url()
                 )))
 
-            self.replay_id = self.parser.replay_id
+            self.replay_id = replay.header['Id']
 
     def save(self, *args, **kwargs):
         parse_netstream = False
@@ -605,430 +603,11 @@ class Replay(models.Model):
         super(Replay, self).save(*args, **kwargs)
 
         if self.file and not self.processed:
-            try:
-                self.file.seek(0)
-            except FileNotFoundError as e:
-                if settings.DEBUG:
-                    import os
-
-                    # Download the file from S3.
-                    command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
-                        self.file.name,
-                        e.filename,
-                    )
-
-                    os.system(command)
-
-                    self.file.seek(0)
-
-            player_objects = {}
-
-            parser = Parser(parse_netstream=parse_netstream, obj=self)
-
-            Goal.objects.filter(replay=self).delete()
-            Player.objects.filter(replay=self).delete()
-
             if parse_netstream:
-                self.heatmap_json_file = parser.heatmap_json_filename
-
-                if hasattr(parser, 'location_json_filename'):
-                    self.location_json_file = parser.location_json_filename
-
-                if hasattr(parser, 'boost_data'):
-                    BoostData.objects.filter(replay=self).delete()
-
-            if 'playlist' in parser.match_metadata:
-                if type(parser.match_metadata['playlist']) == int:
-                    self.playlist = parser.match_metadata['playlist']
-                elif 'contents' in parser.match_metadata['playlist']:
-                    self.playlist = parser.match_metadata['playlist']['contents']
-
-            if 'server_name' in parser.match_metadata:
-                self.server_name = parser.match_metadata['server_name']['contents']
-
-            if len(parser.actor_metadata) == 0:
-                # Parse the players the 'old' way.
-                if 'PlayerStats' in parser.replay['Metadata']:
-                    for player in parser.replay['Metadata']['PlayerStats']:
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=player['Name'],
-                            platform=player['Platform'],
-                            saves=player['Saves'],
-                            score=player['Score'],
-                            goals=player['Goals'],
-                            shots=player['Shots'],
-                            team=player['Team'],
-                            assists=player['Assists'],
-                            bot=player['bBot'],
-                            online_id=player['OnlineID'],
-                        )
-                else:
-                    # The best we can do is to get the goal scorers and the player.
-                    for goal in parser.replay['Metadata'].get('Goals', []):
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=goal['PlayerName'],
-                            team=goal['PlayerTeam'],
-                        )
-
-                    if 'PlayerName' in parser.replay['Metadata'] and 'PrimaryPlayerTeam' in parser.replay['Metadata']:
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=parser.replay['Metadata']['PlayerName'],
-                            team=parser.replay['Metadata']['PrimaryPlayerTeam'],
-                        )
-
-            # Create the player objects.
-            for actor_id, data in parser.actor_metadata.items():
-                """
-                 6: {'Engine.PlayerReplicationInfo:Ping': 5,
-                 'Engine.PlayerReplicationInfo:PlayerID': 481,
-                 'Engine.PlayerReplicationInfo:PlayerName': 'Fishcake',
-                 'Engine.PlayerReplicationInfo:Team': (True, 1),
-                 'Engine.PlayerReplicationInfo:UniqueId': (1, 76561197981862109, 0),
-                 'Engine.PlayerReplicationInfo:bReadyToPlay': True,
-                 'TAGame.PRI_TA:CameraSettings': {'dist': 400.0,
-                                                  'fov': 99.0,
-                                                  'height': 70.0,
-                                                  'pitch': -7.0,
-                                                  'stiff': 0.5,
-                                                  'swiv': 10.0},
-                 'TAGame.PRI_TA:CameraYaw': 181,
-                 'TAGame.PRI_TA:ClientLoadout': (11, [597, 0, 609, 626, 0, 0, 0]),
-                 'TAGame.PRI_TA:PartyLeader': (1, 76561198008869772, 0),
-                 'TAGame.PRI_TA:ReplicatedGameEvent': (True, 2),
-                 'TAGame.PRI_TA:TotalXP': 1174620,
-                 'TAGame.PRI_TA:bUsingSecondaryCamera': True},
-                """
-
-                # Sometimes actor objects can come across with just a player
-                # name. We can't really do much with those, so ignore them.
-                if len(data) == 1:
-                    continue
-
-                # Geneate the unique ID string.
-                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                    unique_id = '{}-{}-{}'.format(
-                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
-                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
-                        data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
-                    )
-
-                    # If a console player is playing split-screen, there can
-                    # sometimes be two actors with the same 'unique id', so this
-                    # handles that situation.
-
-                    while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                        if type(data['Engine.PlayerReplicationInfo:UniqueId']) == dict:
-                            data['Engine.PlayerReplicationInfo:UniqueId'] = (
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2] + 1,
-                            )
-                        else:
-                            data['Engine.PlayerReplicationInfo:UniqueId'] = (
-                                data['Engine.PlayerReplicationInfo:UniqueId'][0],
-                                data['Engine.PlayerReplicationInfo:UniqueId'][1],
-                                data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
-                            )
-
-                        unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
-                else:
-                    if 'Engine.PlayerReplicationInfo:Team' in data:
-                        id_parts = [
-                            str(data['Engine.PlayerReplicationInfo:Team']['contents'][1]),
-                            data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
-                            '0',
-                        ]
-
-                        unique_id = '-'.join(id_parts)
-
-                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                            id_parts[2] = str(int(id_parts[2]) + 1)
-                            unique_id = '-'.join(id_parts)
-
-                    else:
-                        id_parts = [
-                            '-1',
-                            data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
-                            '0'
-                        ]
-
-                        unique_id = '-'.join(id_parts)
-
-                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                            id_parts[2] = str(int(id_parts[2]) + 1)
-                            unique_id = '-'.join(id_parts)
-
-                if 'TAGame.PRI_TA:TotalXP' in data:
-                    if data['TAGame.PRI_TA:TotalXP']['contents'] >= 0:
-                        total_xp = data['TAGame.PRI_TA:TotalXP']['contents']
-                    else:
-                        total_xp = 0
-                else:
-                    total_xp = 0
-
-                # Try to work out the player's team.
-                if 'Engine.PlayerReplicationInfo:Team' in data:
-                    team_id = data['Engine.PlayerReplicationInfo:Team']['contents'][1]
-                    if team_id in parser.team_metadata:
-                        team = parser.team_metadata[team_id]
-                    elif team_id == -1:
-                        # Can we find any information in the data which might
-                        # link this player to an actual team?
-                        try:
-                            team = parser.team_metadata[parser.actors[actor_id]['team']]
-                        except:
-                            team = -1
-                    else:
-                        team = -1
-                else:
-                    team = -1
-
-                if data.get('TAGame.PRI_TA:CameraSettings', None) and type(data['TAGame.PRI_TA:CameraSettings']) == dict:
-                    data['TAGame.PRI_TA:CameraSettings']['contents'] = {
-                        'dist': data['TAGame.PRI_TA:CameraSettings']['contents'][0],
-                        'fov': data['TAGame.PRI_TA:CameraSettings']['contents'][1],
-                        'height': data['TAGame.PRI_TA:CameraSettings']['contents'][2],
-                        'pitch': data['TAGame.PRI_TA:CameraSettings']['contents'][3],
-                        'stiff': data['TAGame.PRI_TA:CameraSettings']['contents'][4],
-                        'swiv': data['TAGame.PRI_TA:CameraSettings']['contents'][5]
-                    }
-
-                platform = ''
-                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                    if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
-                        platform = data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0]
-                    else:
-                        platform = data['Engine.PlayerReplicationInfo:UniqueId'][0]
-
-                online_id = ''
-                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                    if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
-                        online_id = data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents']
-                    else:
-                        online_id = data['Engine.PlayerReplicationInfo:UniqueId'][1]
-
-                if platform == 2 and online_id != '':
-                    online_id = codecs.decode(online_id[:32], 'hex').rstrip(b'\x00')
-
-                obj = Player.objects.create(
-                    replay=self,
-                    unique_id=unique_id,
-                    player_name=data.get('Engine.PlayerReplicationInfo:PlayerName', {'contents': 'Unknown'})['contents'],
-                    team=team,
-                    actor_id=actor_id,
-                    bot='Engine.PlayerReplicationInfo:bBot' in data,
-                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {'contents': []})['contents'],
-                    vehicle_loadout=data.get('TAGame.PRI_TA:ClientLoadout', {'contents': [[], []]})['contents'],
-                    total_xp=total_xp,
-                    platform=platform,
-                    online_id=online_id,
-                    spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
-                )
-
-                player_objects[actor_id] = obj
-
-                # If this player had any boost data, then lets store that too.
-                if hasattr(parser, 'boost_data') and 'values' in parser.boost_data:
-                    boost_objects = []
-
-                    for key, boost_data in parser.boost_data['values'].items():
-                        boost_actor_id = None
-
-                        if parser.boost_data['actors'][key] != {} and parser.boost_data['actors'][key] in parser.boost_data['cars']:
-                            boost_actor_id = parser.boost_data['cars'][parser.boost_data['actors'][key]]
-
-                        if boost_actor_id != actor_id:
-                            continue
-
-                        for frame, value in boost_data.items():
-                            boost_objects.append(BoostData(
-                                replay=self,
-                                player=obj,
-                                frame=frame,
-                                value=abs(value),
-                            ))
-
-                    BoostData.objects.bulk_create(boost_objects)
-
-            # If any players had a party leader, try to link them up.
-            for player in parser.actor_metadata:
-                data = parser.actor_metadata[player]
-
-                if 'TAGame.PRI_TA:PartyLeader' in data:
-                    # Get this player object, then get the party leader object.
-                    if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                        if 'contents' in data['Engine.PlayerReplicationInfo:UniqueId']:
-                            unique_id = '{}-{}-{}'.format(
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][0],
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][1]['contents'],
-                                data['Engine.PlayerReplicationInfo:UniqueId']['contents'][2],
-                            )
-                        else:
-                            unique_id = '{}-{}-{}'.format(
-                                data['Engine.PlayerReplicationInfo:UniqueId'][0],
-                                data['Engine.PlayerReplicationInfo:UniqueId'][1],
-                                data['Engine.PlayerReplicationInfo:UniqueId'][2],
-                            )
-
-                        player_obj = Player.objects.get(
-                            replay=self,
-                            unique_id=unique_id,
-                        )
-                    else:
-                        player_obj = None
-
-                    try:
-                        leader_obj = Player.objects.get(
-                            replay=self,
-                            unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
-                        )
-                    except Player.DoesNotExist:
-                        leader_obj = None
-
-                    if player_obj != leader_obj:
-                        player_obj.party_leader = leader_obj
-                        player_obj.save()
-
-            if 'PlayerStats' in parser.replay['Metadata']:
-                # We can show a leaderboard!
-                self.show_leaderboard = True
-
-                for player in parser.replay['Metadata']['PlayerStats']:
-                    # Attempt to match up this player with a Player object.
-                    obj = Player.objects.filter(
-                        replay=self,
-                        player_name=player['Name'],
-                        team=player['Team'],
-                        bot=player['bBot'],
-                    )
-
-                    if not obj:
-                        # Try with just the player name.
-                        obj = Player.objects.filter(
-                            replay=self,
-                            player_name=player['Name'],
-                        )
-
-                    if obj and obj.count() == 1:
-                        obj.update(
-                            saves=player['Saves'],
-                            score=player['Score'],
-                            goals=player['Goals'],
-                            shots=player['Shots'],
-                            assists=player['Assists'],
-                        )
-                    else:
-                        # Unless this player actually did something, we don't
-                        # really care if we can't assign their stats.
-
-                        keys = ['Goals', 'Saves', 'Shots', 'Score']
-
-                        if sum(player.get(key, 0) for key in keys) > 0:
-                            print('Unable to find an object for', player)
-
-            # Create the Goal objects.
-            if 'Goals' in parser.replay['Metadata']:
-                for index, goal in enumerate(parser.replay['Metadata']['Goals']):
-                    player = None
-
-                    if goal['frame'] in parser.goal_metadata:
-                        actor_id = parser.goal_metadata[goal['frame']]
-
-                        if actor_id in player_objects:
-                            player = player_objects[actor_id]
-                        else:
-                            player = Player.objects.get(
-                                replay=self,
-                                actor_id=parser.goal_metadata[goal['frame']],
-                            )
-                    else:
-                        players = Player.objects.filter(
-                            replay=self,
-                            player_name=goal['PlayerName'],
-                            team=goal['PlayerTeam']
-                        )
-
-                        if players.count() > 0:
-                            player = players[0]
-                        else:
-                            player = Player.objects.create(
-                                replay=self,
-                                player_name=goal['PlayerName'],
-                                team=goal['PlayerTeam']
-                            )
-
-                    try:
-                        goal_obj = Goal.objects.get(
-                            replay=self,
-                            frame=goal['frame'],
-                            number=index + 1,
-                            player=player,
-                        )
-
-                        goal_obj.delete()
-                    except Goal.DoesNotExist:
-                        pass
-
-                    Goal.objects.create(
-                        replay=self,
-                        frame=goal['frame'],
-                        number=index + 1,
-                        player=player,
-                    )
-
-            data = parser.replay['Metadata']
-
-            self.replay_id = data['Id']
-            self.player_name = data['PlayerName']
-            self.player_team = data.get('PrimaryPlayerTeam', 0)
-
-            if data.get('MapName'):
-                map_obj, created = Map.objects.get_or_create(
-                    slug=data['MapName'].lower(),
-                )
+                # Header parse?
+                parse_replay_netstream(self.pk)
             else:
-                map_obj = None
-
-            self.map = map_obj
-            self.timestamp = datetime.fromtimestamp(
-                time.mktime(
-                    time.strptime(
-                        data['Date'],
-                        '%Y-%m-%d:%H-%M'
-                    )
-                )
-            )
-
-            get_season = Season.objects.filter(
-                start_date__lte=self.timestamp,
-            )
-
-            if get_season:
-                self.season = get_season[0]
-
-            if 'ReplayName' in data:
-                self.title = data['ReplayName']
-
-            self.team_sizes = data['TeamSize']
-            self.team_0_score = data.get('Team0Score', 0)
-            self.team_1_score = data.get('Team1Score', 0)
-            self.match_type = data['MatchType']
-            self.server_name = data.get('ServerName', '')
-
-            # Parser V2 values
-            self.keyframe_delay = data['KeyframeDelay']
-            self.max_channels = data['MaxChannels']
-            self.max_replay_size_mb = data['MaxReplaySizeMB']
-            self.num_frames = data.get('NumFrames', 0)
-            self.record_fps = data['RecordFPS']
-
-            self.excitement_factor = self.calculate_excitement_factor()
-            self.average_rating = self.calculate_average_rating()
-            self.processed = True
-            self.save()
+                parse_replay_header(self.pk)
 
 
 class Player(models.Model):
