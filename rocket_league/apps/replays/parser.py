@@ -494,50 +494,51 @@ def parse_replay_netstream(replay_id):
         ball_hit = False
 
         # Take a look at the ball this frame, has anything changed?
-        new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
+        if 'TAGame.RBActor_TA:ReplicatedRBState' in ball:
+            new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
 
-        # The ball has *changed direction*, but not necessarily been hit (it
-        # may have bounced).
+            # The ball has *changed direction*, but not necessarily been hit (it
+            # may have bounced).
 
-        if ball_angularvelocity != new_ball_angularvelocity:
-            ball_hit = True
+            if ball_angularvelocity != new_ball_angularvelocity:
+                ball_hit = True
 
-        ball_angularvelocity = new_ball_angularvelocity
+            ball_angularvelocity = new_ball_angularvelocity
 
-        # Calculate the current distances between cars and the ball.
-        # Do we have position data for the ball?
-        if ball_hit and not ball_spawned and ball_actor_id in actor_positions:
+            # Calculate the current distances between cars and the ball.
+            # Do we have position data for the ball?
+            if ball_hit and not ball_spawned and ball_actor_id in actor_positions:
 
-            # Iterate over the cars to get the players.
-            lowest_distance = None
-            lowest_distance_car_actor = None
+                # Iterate over the cars to get the players.
+                lowest_distance = None
+                lowest_distance_car_actor = None
 
-            for player_id, car_actor_id in player_cars.items():
-                # Get the team.
-                team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
-                team_actor = actors[team_id]
-                team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+                for player_id, car_actor_id in player_cars.items():
+                    # Get the team.
+                    team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
+                    team_actor = actors[team_id]
+                    team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
 
-                # Make sure this actor is in on the team which is currently
-                # in possession.
+                    # Make sure this actor is in on the team which is currently
+                    # in possession.
 
-                if team != ball_possession:
-                    continue
+                    if team != ball_possession:
+                        continue
 
-                if car_actor_id in actor_positions:
-                    actor_distance = distance(actor_positions[car_actor_id], actor_positions[ball_actor_id])
+                    if car_actor_id in actor_positions:
+                        actor_distance = distance(actor_positions[car_actor_id], actor_positions[ball_actor_id])
 
-                    if not confirmed_ball_hit:
-                        if actor_distance > 350:  # Value taken from the max confirmed distance.
-                            continue
+                        if not confirmed_ball_hit:
+                            if actor_distance > 350:  # Value taken from the max confirmed distance.
+                                continue
 
-                    # Get the player on this team with the lowest distance.
-                    if lowest_distance is None or actor_distance < lowest_distance:
-                        lowest_distance = actor_distance
-                        lowest_distance_car_actor = car_actor_id
+                        # Get the player on this team with the lowest distance.
+                        if lowest_distance is None or actor_distance < lowest_distance:
+                            lowest_distance = actor_distance
+                            lowest_distance_car_actor = car_actor_id
 
-            if lowest_distance_car_actor:
-                last_hits[ball_possession] = actor_positions[lowest_distance_car_actor]
+                if lowest_distance_car_actor:
+                    last_hits[ball_possession] = actor_positions[lowest_distance_car_actor]
 
         # Generate the heatmap data for this frame.  Get all of the players
         # and the ball.
@@ -592,22 +593,25 @@ def parse_replay_netstream(replay_id):
             **value['Engine.PlayerReplicationInfo:UniqueId']['Value']
         )
 
+        # if 'TAGame.PRI_TA:PersistentCamera' in value:
+        #     pprint(actors[value['TAGame.PRI_TA:PersistentCamera']['Value'][1]])
+
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
             player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
             team=get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1]),
-            score=value['TAGame.PRI_TA:MatchScore']['Value'],
-            goals=value['TAGame.PRI_TA:MatchGoals']['Value'],
-            shots=value['TAGame.PRI_TA:MatchShots']['Value'],
+            score=value.get('TAGame.PRI_TA:MatchScore', {'Value': 0})['Value'],
+            goals=value.get('TAGame.PRI_TA:MatchGoals', {'Value': 0})['Value'],
+            shots=value.get('TAGame.PRI_TA:MatchShots', {'Value': 0})['Value'],
             assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
-            saves=value['TAGame.PRI_TA:MatchSaves']['Value'],
+            saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
             platform=PLATFORMS.get(system, system),
             online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote'],
             bot=False,  # TODO: Add a check for this.
             spectator=False,  # TODO: Add a check for this.
             actor_id=actor_id,
             unique_id=unique_id,
-            camera_settings=value['TAGame.PRI_TA:CameraSettings'],
+            camera_settings=value.get('TAGame.PRI_TA:CameraSettings', None),
             vehicle_loadout=value['TAGame.PRI_TA:ClientLoadout']['Value'],
             total_xp=value['TAGame.PRI_TA:TotalXP']['Value'],
         )
