@@ -3,7 +3,6 @@ import math
 import subprocess
 import time
 from datetime import datetime
-from pprint import pprint
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -11,7 +10,7 @@ from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from ...models import PLATFORMS, Goal, Map, Player, Replay, Season
+from ...models import PLATFORMS, BoostData, Goal, Map, Player, Replay, Season
 
 
 def distance(pos1, pos2):
@@ -38,6 +37,7 @@ class Command(BaseCommand):
 
         Goal.objects.filter(replay=replay_obj).delete()
         Player.objects.filter(replay=replay_obj).delete()
+        BoostData.objects.filter(replay=replay_obj).delete()
 
         assert Goal.objects.filter(replay=replay_obj).count() == 0
         assert Player.objects.filter(replay=replay_obj).count() == 0
@@ -109,6 +109,7 @@ class Command(BaseCommand):
 
         location_data = []  # Used for the location JSON.
         boost_data = {}  # Used for the boost stats.
+        boost_objects = []
         heatmap_data = {}
         seconds_mapping = {}  # Frame -> seconds remaining mapping.
 
@@ -451,6 +452,17 @@ class Command(BaseCommand):
                 total_xp=value['TAGame.PRI_TA:TotalXP']['Value'],
             )
 
+            # Store the boost data for this player.
+            for boost_frame, boost_value in boost_data[actor_id].items():
+                boost_objects.append(BoostData(
+                    replay=replay_obj,
+                    player=player_objects[actor_id],
+                    frame=boost_frame,
+                    value=boost_value,
+                ))
+
+        BoostData.objects.bulk_create(boost_objects)
+
         # Create the goals.
         goal_objects = []
 
@@ -538,4 +550,6 @@ class Command(BaseCommand):
         )
 
         replay_obj.shot_data = shot_data
+        replay_obj.processed = True
+        replay_obj.crashed_heatmap_parser = False
         replay_obj.save()
