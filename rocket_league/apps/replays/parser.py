@@ -97,6 +97,7 @@ def _parse_header(replay_obj, replay):
     assert BoostData.objects.filter(replay=replay_obj).count() == 0
 
     # Assign the metadata to the replay object.
+    replay_obj.replay_id = replay['Metadata']['Id']['Value']
     replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
     replay_obj.team_0_score = replay['Metadata'].get('Team0Score', {'Value': 0})['Value']
     replay_obj.team_1_score = replay['Metadata'].get('Team1Score', {'Value': 0})['Value']
@@ -229,7 +230,7 @@ def parse_replay_header(replay_id):
             )
 
     replay_obj.processed = True
-    replay_obj.crashed_heatmap_parser = True
+    replay_obj.crashed_heatmap_parser = False
     replay_obj.save()
 
 
