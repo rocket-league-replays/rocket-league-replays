@@ -587,8 +587,10 @@ def parse_replay_netstream(replay_id):
     # Make a dict of all the player actors and then do a bulk_create?
     for actor_id, value in player_actors.items():
         system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
-        unique_id = '{System}-{Remote}-{Local}'.format(
-            **value['Engine.PlayerReplicationInfo:UniqueId']['Value']
+        unique_id = '{system}-{remote}-{local}'.format(
+            system=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System'],
+            remote=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
+            local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
         )
 
         # if 'TAGame.PRI_TA:PersistentCamera' in value:
@@ -604,7 +606,7 @@ def parse_replay_netstream(replay_id):
             assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
             saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
             platform=PLATFORMS.get(system, system),
-            online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote'],
+            online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
             bot=False,  # TODO: Add a check for this.
             spectator=False,  # TODO: Add a check for this.
             actor_id=actor_id,
