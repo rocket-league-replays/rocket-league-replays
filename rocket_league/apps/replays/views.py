@@ -95,21 +95,28 @@ class ReplayUUIDMixin(DetailView):
             obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
             resolved_url = resolve(request.path)
 
-            return redirect(
-                'replay:{}'.format(
-                    resolved_url.url_name
-                ),
-                permanent=True,
-                replay_id=re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
-            )
+            if obj.replay_id:
+                return redirect(
+                    'replay:{}'.format(
+                        resolved_url.url_name
+                    ),
+                    permanent=True,
+                    replay_id=re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
+                )
 
         return super(ReplayUUIDMixin, self).dispatch(request, *args, **kwargs)
 
     def get_object(self):
-        replay_id = self.kwargs['replay_id'].replace('-', '').upper()
+        replay_id = ''
+
+        if 'replay_id' in self.kwargs:
+            replay_id = self.kwargs['replay_id'].replace('-', '').upper()
 
         try:
-            obj = get_object_or_404(Replay, replay_id=replay_id)
+            if 'replay_id' in self.kwargs:
+                obj = get_object_or_404(Replay, replay_id=replay_id)
+            elif 'pk' in self.kwargs:
+                obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
         except Replay.MultipleObjectsReturned:
             replays = Replay.objects.filter(
                 replay_id=replay_id,
