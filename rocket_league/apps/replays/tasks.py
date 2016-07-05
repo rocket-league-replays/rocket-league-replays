@@ -42,7 +42,7 @@ def process_netstream(self, replay_pk):
             replay.crashed_heatmap_parser = False
             replay.save(parse_netstream=True)
 
-            replay.refresh_from_db()
+            replay = Replay.objects.get(pk=replay_pk)
 
             replay_processed = True
 
@@ -62,7 +62,7 @@ def process_netstream(self, replay_pk):
                 })
 
         except Exception:
-            replay.refresh_from_db()
+            replay = Replay.objects.get(pk=replay_pk)
             replay.crashed_heatmap_parser = True
             replay.save()
 
