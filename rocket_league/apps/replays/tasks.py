@@ -57,8 +57,6 @@ def process_netstream(self, replay_pk):
 
             self.update_state(state='FAILURE')
 
-            raise Ignore()
-
     except Exception:
         replay = Replay.objects.get(pk=replay_pk)
         replay.processed = True
@@ -66,5 +64,3 @@ def process_netstream(self, replay_pk):
         replay.save()
 
         self.update_state(state='FAILURE')
-
-        raise Ignore()
