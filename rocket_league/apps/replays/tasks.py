@@ -30,8 +30,8 @@ def report_to_slack(replay):
     })
 
 
-@app.task(name='rocket_league.apps.replays.tasks.process_netstream', ignore_result=False, track_started=True)
-def process_netstream(replay_pk):
+@app.task(bind=True, name='rocket_league.apps.replays.tasks.process_netstream', ignore_result=False, track_started=True)
+def process_netstream(self, replay_pk):
     prev_stdout, prev_stderr, sys.stdout, sys.stderr = sys.stdout, sys.stderr, StringIO(), StringIO()
 
     try:
@@ -56,16 +56,21 @@ def process_netstream(replay_pk):
                 replay.crashed_heatmap_parser = True
                 replay.save()
 
-                report_to_slack.apply_async([replay])
+                self.update_state(state='FAILURE', meta={
+                    'stdout': sys.stdout.getvalue(),
+                    'stderr': sys.stderr.getvalue()
+                })
 
         except Exception:
             replay.refresh_from_db()
             replay.crashed_heatmap_parser = True
             replay.save()
 
-            report_to_slack.apply_async([replay])
+            self.update_state(state='FAILURE', meta={
+                'stdout': sys.stdout.getvalue(),
+                'stderr': sys.stderr.getvalue()
+            })
 
-        return sys.stdout.getvalue(), sys.stderr.getvalue()
     finally:
         sys.stdout = prev_stdout
         sys.stderr = prev_stderr
