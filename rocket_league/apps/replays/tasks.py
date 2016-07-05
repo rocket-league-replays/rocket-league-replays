@@ -3,6 +3,7 @@ import sys
 import traceback
 
 import requests
+from celery.exceptions import Ignore
 from django.conf import settings
 from django.utils.timezone import now
 from io import StringIO
@@ -32,45 +33,38 @@ def report_to_slack(replay):
 
 @app.task(bind=True, name='rocket_league.apps.replays.tasks.process_netstream', ignore_result=False, track_started=True)
 def process_netstream(self, replay_pk):
-    prev_stdout, prev_stderr, sys.stdout, sys.stderr = sys.stdout, sys.stderr, StringIO(), StringIO()
+    replay = Replay.objects.get(pk=replay_pk)
 
     try:
+        replay.processed = False
+        replay.crashed_heatmap_parser = False
+        replay.save(parse_netstream=True)
+
         replay = Replay.objects.get(pk=replay_pk)
 
-        try:
-            replay.processed = False
-            replay.crashed_heatmap_parser = False
-            replay.save(parse_netstream=True)
+        replay_processed = True
 
-            replay = Replay.objects.get(pk=replay_pk)
+        if not replay.location_json_file:
+            replay_processed = False
 
-            replay_processed = True
+        if replay.boostdata_set.count() == 0:
+            replay_processed = False
 
-            if not replay.location_json_file:
-                replay_processed = False
-
-            if replay.boostdata_set.count() == 0:
-                replay_processed = False
-
-            if not replay_processed:
-                replay.crashed_heatmap_parser = True
-                replay.save()
-
-                self.update_state(state='FAILURE', meta={
-                    'stdout': sys.stdout.getvalue(),
-                    'stderr': sys.stderr.getvalue()
-                })
-
-        except Exception:
-            replay = Replay.objects.get(pk=replay_pk)
+        if not replay_processed:
             replay.crashed_heatmap_parser = True
+            replay.processed = True
             replay.save()
 
-            self.update_state(state='FAILURE', meta={
-                'stdout': sys.stdout.getvalue(),
-                'stderr': sys.stderr.getvalue()
-            })
+            self.update_state(state='FAILURE')
 
-    finally:
-        sys.stdout = prev_stdout
-        sys.stderr = prev_stderr
+            raise Ignore()
+
+    except Exception:
+        replay = Replay.objects.get(pk=replay_pk)
+        replay.processed = True
+        replay.crashed_heatmap_parser = True
+        replay.save()
+
+        self.update_state(state='FAILURE')
+
+        raise Ignore()
