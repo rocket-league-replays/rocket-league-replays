@@ -459,8 +459,9 @@ def parse_replay_netstream(replay_id):
                     ps = 'TAGame.CameraSettingsActor_TA:ProfileSettings'
                     cs = 'TAGame.PRI_TA:CameraSettings'
 
-                    player_actor_id = value[csa]['Value'][1]
-                    actors[player_actor_id][cs] = value[ps]['Value']
+                    if csa in value:
+                        player_actor_id = value[csa]['Value'][1]
+                        actors[player_actor_id][cs] = value[ps]['Value']
 
             if 'Engine.GameReplicationInfo:ServerName' in value:
                 replay_obj.server_name = value['Engine.GameReplicationInfo:ServerName']['Value']
@@ -513,9 +514,12 @@ def parse_replay_netstream(replay_id):
 
                 for player_id, car_actor_id in player_cars.items():
                     # Get the team.
-                    team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
-                    team_actor = actors[team_id]
-                    team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+                    if player_id in actors and actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][0]:
+                        team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
+                        team_actor = actors[team_id]
+                        team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+                    else:
+                        team = -1
 
                     # Make sure this actor is in on the team which is currently
                     # in possession.
@@ -601,7 +605,7 @@ def parse_replay_netstream(replay_id):
 
         team = -1
 
-        if 'Engine.PlayerReplicationInfo:Team' in value:
+        if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value'][0]:
             team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1])
 
         player_objects[actor_id] = Player.objects.create(

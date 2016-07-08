@@ -749,7 +749,6 @@ class Player(models.Model):
 
     class Meta:
         ordering = ('team', '-score', 'player_name')
-        unique_together = [('unique_id', 'replay')]
 
 
 class Goal(models.Model):
