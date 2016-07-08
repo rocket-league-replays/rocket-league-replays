@@ -620,7 +620,7 @@ def parse_replay_netstream(replay_id):
             actor_id=actor_id,
             unique_id=unique_id,
             camera_settings=value.get('TAGame.PRI_TA:CameraSettings', None),
-            vehicle_loadout=value['TAGame.PRI_TA:ClientLoadout']['Value'],
+            vehicle_loadout=value.get('TAGame.PRI_TA:ClientLoadout', {'Value': {}})['Value'],
             total_xp=value.get('TAGame.PRI_TA:TotalXP', {'Value': 0})['Value'],
         )
 
