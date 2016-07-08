@@ -586,34 +586,42 @@ def parse_replay_netstream(replay_id):
 
     # Make a dict of all the player actors and then do a bulk_create?
     for actor_id, value in player_actors.items():
-        system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
-        unique_id = '{system}-{remote}-{local}'.format(
-            system=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System'],
-            remote=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
-            local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
-        )
+        if 'Engine.PlayerReplicationInfo:UniqueId' in value:
+            system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
+            unique_id = '{system}-{remote}-{local}'.format(
+                system=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System'],
+                remote=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
+                local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
+            )
+            online_id = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
+        else:
+            system = 'Unknown'
+            unique_id = ''
+            online_id = ''
 
-        # if 'TAGame.PRI_TA:PersistentCamera' in value:
-        #     pprint(actors[value['TAGame.PRI_TA:PersistentCamera']['Value'][1]])
+        team = -1
+
+        if 'Engine.PlayerReplicationInfo:Team' in value:
+            team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1])
 
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
             player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
-            team=get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1]),
+            team=team,
             score=value.get('TAGame.PRI_TA:MatchScore', {'Value': 0})['Value'],
             goals=value.get('TAGame.PRI_TA:MatchGoals', {'Value': 0})['Value'],
             shots=value.get('TAGame.PRI_TA:MatchShots', {'Value': 0})['Value'],
             assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
             saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
             platform=PLATFORMS.get(system, system),
-            online_id=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
+            online_id=online_id,
             bot=False,  # TODO: Add a check for this.
-            spectator=False,  # TODO: Add a check for this.
+            spectator='Engine.PlayerReplicationInfo:Team' not in value,
             actor_id=actor_id,
             unique_id=unique_id,
             camera_settings=value.get('TAGame.PRI_TA:CameraSettings', None),
             vehicle_loadout=value['TAGame.PRI_TA:ClientLoadout']['Value'],
-            total_xp=value['TAGame.PRI_TA:TotalXP']['Value'],
+            total_xp=value.get('TAGame.PRI_TA:TotalXP', {'Value': 0})['Value'],
         )
 
         # Store the boost data for this player.
@@ -697,6 +705,7 @@ def parse_replay_netstream(replay_id):
             'name': data['Engine.PlayerReplicationInfo:PlayerName']['Value']
         }
         for actor_id, data in player_actors.items()
+        if 'Engine.PlayerReplicationInfo:Team' in data
     }
 
     final_data = {
