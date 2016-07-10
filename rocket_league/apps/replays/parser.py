@@ -608,6 +608,9 @@ def parse_replay_netstream(replay_id):
                 local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
             )
             online_id = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value']
+
+            if system == 'PlayStation' and 'Name' in online_id:
+                online_id = online_id['Name']
         else:
             system = 'Unknown'
             unique_id = ''
