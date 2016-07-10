@@ -79,7 +79,7 @@
                 <tbody>
                     {% for goal in object.goal_set.all %}
                     <tr>
-                        <td>{{ goal.number }}</td>
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ goal.goal_time }}</td>
                         <td>
                             {% if goal.player.team == 0 %}

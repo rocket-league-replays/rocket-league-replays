@@ -3,6 +3,7 @@ import math
 import os
 import subprocess
 import time
+from collections import OrderedDict
 from datetime import datetime
 
 from django.conf import settings
@@ -657,6 +658,7 @@ def parse_replay_netstream(replay_id):
 
     # Create the goals.
     goal_objects = []
+    goal_actors = OrderedDict(sorted(goal_actors.items()))
 
     for index, actor_id in goal_actors.items():
         # Use the player_objects dict rather than the full actors dict as

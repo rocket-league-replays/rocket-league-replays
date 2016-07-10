@@ -865,7 +865,7 @@ class Goal(models.Model):
         )
 
     class Meta:
-        ordering = ['number']
+        ordering = ['frame']
 
 
 class ReplayPack(models.Model):
