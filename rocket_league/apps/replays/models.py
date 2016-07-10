@@ -810,6 +810,10 @@ class Player(models.Model):
                         }
                     )[0]
 
+                    if components[mappings['type']].name == 'Unknown':
+                        components[mappings['type']].name = self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                        components[mappings['type']].save()
+
         return components
 
     def __str__(self):
