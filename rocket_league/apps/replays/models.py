@@ -763,6 +763,11 @@ class Player(models.Model):
             ],
             """
 
+            if len(self.vehicle_loadout) == 9:
+                self.vehicle_loadout = self.vehicle_loadout[1:-1]
+
+            assert len(self.vehicle_loadout) == 7
+
             component_maps = [
                 'body',
                 'decal',
