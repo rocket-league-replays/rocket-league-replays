@@ -1,5 +1,6 @@
 import json
 import math
+import os
 import subprocess
 import time
 from datetime import datetime
@@ -240,6 +241,15 @@ def parse_replay_netstream(replay_id):
     replay_obj = Replay.objects.get(pk=replay_id)
 
     if settings.DEBUG:
+        if not os.path.isfile(replay_obj.file.path):
+            # Download the file.
+            command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
+                replay_obj.file.name,
+                replay_obj.file.path,
+            )
+
+            os.system(command)
+
         replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
     else:
         replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
