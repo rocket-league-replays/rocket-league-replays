@@ -19,7 +19,7 @@ from ...utils.forms import AjaxableResponseMixin
 from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Body,
+from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Component,
                      Goal, Map, Player, Replay, ReplayPack, Season,
                      get_default_season)
 from .tasks import process_netstream
@@ -458,14 +458,14 @@ class GoalViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = serializers.GoalSerializer
 
 
-class BodyViewSet(viewsets.ReadOnlyModelViewSet):
+class ComponentViewSet(viewsets.ReadOnlyModelViewSet):
 
     """
     Returns a list of all of the car bodies available in-game.
     """
 
-    queryset = Body.objects.all()
-    serializer_class = serializers.BodySerializer
+    queryset = Component.objects.all()
+    serializer_class = serializers.ComponentSerializer
 
 
 class LimitedPageNumberPagination(PageNumberPagination):

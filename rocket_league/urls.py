@@ -23,7 +23,7 @@ router.register(r'replay-packs', api_views.ReplayPackViewSet)
 router.register(r'players', api_views.PlayerViewSet)
 router.register(r'goals', api_views.GoalViewSet)
 router.register(r'seasons', api_views.SeasonViewSet)
-router.register(r'bodies', api_views.BodyViewSet)
+router.register(r'components', api_views.ComponentViewSet)
 
 
 urlpatterns = patterns(

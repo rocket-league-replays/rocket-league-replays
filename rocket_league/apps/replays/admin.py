@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db.models import Q
 from djcelery.models import TaskMeta
 
-from .models import (Body, BoostData, Goal, Map, Player, Replay, ReplayPack,
+from .models import (Component, BoostData, Goal, Map, Player, Replay, ReplayPack,
                      Season)
 from .tasks import process_netstream
 
@@ -93,10 +93,10 @@ admin.site.register(ReplayPack, ReplayPackAdmin)
 admin.site.register(Season)
 
 
-class BodyAdmin(admin.ModelAdmin):
+class ComponentAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
 
-admin.site.register(Body, BodyAdmin)
+admin.site.register(Component, ComponentAdmin)
 
 
 class TaskMetaAdmin(admin.ModelAdmin):
