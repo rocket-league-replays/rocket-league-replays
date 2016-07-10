@@ -597,7 +597,7 @@ def parse_replay_netstream(replay_id):
                 remote=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
                 local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
             )
-            online_id = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
+            online_id = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value']
         else:
             system = 'Unknown'
             unique_id = ''
