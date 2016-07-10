@@ -340,6 +340,9 @@ def parse_replay_netstream(replay_id):
         for actor_id, value in frame['Updated'].items():
             actor_id = int(actor_id)
 
+            if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value'][0]:
+                del value['Engine.PlayerReplicationInfo:Team']
+
             # Merge the new properties with the existing.
             if actors[actor_id] != value:
                 actors[actor_id] = {**actors[actor_id], **value}
