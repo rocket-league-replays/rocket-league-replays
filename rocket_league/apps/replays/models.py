@@ -796,7 +796,7 @@ class Player(models.Model):
                 'Decal': {'type': 'decal', 'replace': 'Skin_'},
                 'Wheels': {'type': 'wheels', 'replace': 'WHEEL_'},
                 'RocketTrail': {'type': 'trail', 'replace': 'Boost_'},
-                'Antenna': {'type': 'antenna', 'replace': 'Antenna_'},
+                'Antenna': {'type': 'antenna', 'replace': 'Antenna '},
                 'Topper': {'type': 'topper', 'replace': 'Hat_'},
             }
 
