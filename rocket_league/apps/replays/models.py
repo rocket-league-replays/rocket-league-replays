@@ -731,15 +731,82 @@ class Player(models.Model):
 
     @cached_property
     def vehicle_data(self):
-        if not self.vehicle_loadout:
-            return {}
-
-        if 'Body' in self.vehicle_loadout:
-            return self.vehicle_loadout
-
-        return {
-            'body': Body.objects.get_or_create(id=self.vehicle_loadout[0])[0]
+        """
+        {
+            "RocketTrail": {"Name": "Boost_HolyLight", "Id": 44},
+            "Topper": {"Name": "Hat_Tiara", "Id": 495},
+            "Version": 12,
+            "Wheels": {"Name": "WHEEL_Atlantis", "Id": 359},
+            "Body": {"Name": "Body_Force", "Id": 22},
+            "Antenna": {"Name": null, "Id": 0},
+            "Decal": {"Name": "Skin_Force_Junk", "Id": 1178},
+            "Unknown2": 0,
+            "Unknown1": 0
         }
+        """
+
+        components = {}
+
+        if not self.vehicle_loadout:
+            return components
+
+        if type(self.vehicle_loadout) == list:
+            """
+            [
+              403,  # Body
+              0,    # Decal. 330 = Flames
+              376,  # Wheels. 386 = Christiano, 376 = OEM
+              63,   # Rocket Trail. 578 = Candy Corn
+              0,    # Antenna. 1 = 8-Ball
+              0,    # Topper. 796 = Deadmau5
+              0     #
+            ],
+            """
+
+            component_maps = [
+                'body',
+                'decal',
+                'wheels',
+                'trail',
+                'antenna',
+                'topper',
+            ]
+
+            for index, component in enumerate(self.vehicle_loadout):
+                if component > 0:
+                    try:
+                        components[component_maps[index]] = Component.objects.get_or_create(
+                            type=component_maps[index],
+                            internal_id=component,
+                            defaults={
+                                'name': 'Unknown'
+                            }
+                        )[0]
+                    except Component.DoesNotExist:
+                        pass
+
+        elif type(self.vehicle_loadout) == dict:
+            component_maps = {
+                'Body': {'type': 'body', 'replace': 'Body_'},
+                'Decal': {'type': 'decal', 'replace': 'Skin_'},
+                'Wheels': {'type': 'wheels', 'replace': 'WHEEL_'},
+                'RocketTrail': {'type': 'trail', 'replace': 'Boost_'},
+                'Antenna': {'type': 'antenna', 'replace': 'Boost_'},
+                'Topper': {'type': 'topper', 'replace': 'Hat_'},
+            }
+
+            for component_type, mappings in component_maps.items():
+                if component_type in self.vehicle_loadout and self.vehicle_loadout[component_type]['Name']:
+                    components[mappings['type']] = Component.objects.get_or_create(
+                        type=mappings['type'],
+                        internal_id=self.vehicle_loadout[component_type]['Id'],
+                        defaults={
+                            'name': self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                        }
+                    )[0]
+
+        print(components)
+        return components
 
     def __str__(self):
         return '{} on Team {}'.format(

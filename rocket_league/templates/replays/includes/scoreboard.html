@@ -98,9 +98,22 @@
         </td>
         <td>
             {% if player.vehicle_loadout %}
-            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="{{ player.vehicle_data.body.name }}">
+            {% with data=player.vehicle_data %}
+            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
+                {% if 'body' in data %}
+                    Body: {{ data.body.name }}<br>
+                    {% if data.wheels and data.wheels.name != 'Unknown' %}Wheels: {{ data.wheels.name }}<br>{% endif %}
+                    {% if data.trail and data.trail.name != 'Unknown' %}Trail: {{ data.trail.name }}<br>{% endif %}
+                    {% if data.antenna and data.antenna.name != 'Unknown' %}Antenna: {{ data.antenna.name }}<br>{% endif %}
+                    {% if data.decal and data.decal.name != 'Unknown' %}Decal: {{ data.decal.name }}<br>{% endif %}
+                    {% if data.topper and data.topper.name != 'Unknown' %}Topper: {{ data.topper.name }}{% endif %}
+                {% else %}
+                    {{ player.vehicle_data.body.name }}
+                {% endif %}
+            ">
                 <em class="icon-cab"></em>
             </span>
+            {% endwith %}
             {% endif %}
         </td>
     </tr>
