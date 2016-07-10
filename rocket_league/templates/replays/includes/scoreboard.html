@@ -73,15 +73,19 @@
         <td>
             <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
                 {% if player.camera_settings %}
-                Field of View: {{ player.camera_settings.fov|floatformat:0 }}<br>
-                Height: {{ player.camera_settings.height|floatformat:0 }}<br>
-                Angle: {{ player.camera_settings.pitch|floatformat:0 }}<br>
-                Distance: {{ player.camera_settings.dist|floatformat:0 }}<br>
-                Stiffness: {{ player.camera_settings.stiff|floatformat:2 }}<br>
-                Swivel Speed: {{ player.camera_settings.swiv|floatformat:2 }}<br>
+                {% if player.camera_settings.fov %}Field of View: {{ player.camera_settings.fov|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.height %}Height: {{ player.camera_settings.height|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.pitch %}Angle: {{ player.camera_settings.pitch|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.dist %}Distance: {{ player.camera_settings.dist|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.stiff %}Stiffness: {{ player.camera_settings.stiff|floatformat:2 }}<br>{% endif %}
+                {% if player.camera_settings.swiv %}Swivel Speed: {{ player.camera_settings.swiv|floatformat:2 }}<br>{% endif %}
 
                 {% for k, v in player.camera_settings.items %}
-                    {% if k != 'fov' and k != 'height' and k != 'pitch' and k != 'dist' and k != 'stiff' and k != 'swiv' %}
+                    {% if k == 'FOV' %}
+                        Field of View: {{ v|floatformat:0 }}<br>
+                    {% elif k == 'SwivelSpeed' %}
+                        Swivel Speed: {{ v|floatformat:0 }}<br>
+                    {% elif k != 'fov' and k != 'height' and k != 'pitch' and k != 'dist' and k != 'stiff' and k != 'swiv' %}
                         {{ k }}: {{ v }}<br>
                     {% endif %}
                 {% endfor %}
