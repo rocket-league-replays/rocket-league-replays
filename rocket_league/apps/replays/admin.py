@@ -94,7 +94,8 @@ admin.site.register(Season)
 
 
 class ComponentAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name']
+    list_display = ['internal_id', 'name', 'type']
+    list_filter = ['type']
 
 admin.site.register(Component, ComponentAdmin)
 
