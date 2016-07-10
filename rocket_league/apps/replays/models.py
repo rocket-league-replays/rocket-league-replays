@@ -805,7 +805,6 @@ class Player(models.Model):
                         }
                     )[0]
 
-        print(components)
         return components
 
     def __str__(self):
