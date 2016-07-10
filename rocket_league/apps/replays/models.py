@@ -895,13 +895,22 @@ class BoostData(models.Model):
         # unique_together = [('player', 'frame', 'value')]
 
 
-class Body(models.Model):
+class Component(models.Model):
 
-    id = models.PositiveIntegerField(
-        unique=True,
-        db_index=True,
-        primary_key=True,
+    type = models.CharField(
+        max_length=8,
+        choices=[
+            ('trail', 'Trail'),
+            ('antenna', 'Antenna'),
+            ('wheels', 'Wheels'),
+            ('decal', 'Decal'),
+            ('body', 'Body'),
+            ('topper', 'Topper')
+        ],
+        default='body',
     )
+
+    internal_id = models.PositiveIntegerField()
 
     name = models.CharField(
         max_length=100,
