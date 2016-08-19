@@ -101,7 +101,7 @@ class Replay(models.Model):
 
     title = models.CharField(
         "replay name",
-        max_length=64,
+        max_length=128,
         blank=True,
         null=True,
     )
