@@ -14,3 +14,10 @@ tr.is-current-user,
 tr.is-current-user:nth-of-type(even) {
   background-color: #beb;
 }
+
+.limited-width {
+  max-width: 150px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
