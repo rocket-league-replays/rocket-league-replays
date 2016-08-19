@@ -299,7 +299,7 @@
                             Replay ID:
                         </td>
                         <td>
-                            {{ replay.replay_id }}
+                            {{ replay.replay_id }} {% if user.is_superuser %}({{ replay.pk }}){% endif %}
                         </td>
                     </tr>
 
