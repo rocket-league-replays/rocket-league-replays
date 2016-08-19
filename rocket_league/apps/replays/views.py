@@ -37,7 +37,8 @@ class ReplayListView(FilterView):
 
         qs = qs.exclude(
             Q(processed=False) |
-            Q(replay_id='')
+            Q(replay_id='') |
+            Q(team_sizes=None)
         )
 
         if 'season' not in self.request.GET:
