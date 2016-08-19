@@ -241,19 +241,25 @@ def parse_replay_netstream(replay_id):
 
     replay_obj = Replay.objects.get(pk=replay_id)
 
-    if settings.DEBUG:
-        if not os.path.isfile(replay_obj.file.path):
-            # Download the file.
-            command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
-                replay_obj.file.name,
-                replay_obj.file.path,
-            )
+    try:
+        if settings.DEBUG:
+            if not os.path.isfile(replay_obj.file.path):
+                # Download the file.
+                command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
+                    replay_obj.file.name,
+                    replay_obj.file.path,
+                )
 
-            os.system(command)
+                os.system(command)
 
-        replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
-    else:
-        replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
+        else:
+            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
+    except subprocess.CalledProcessError:
+        # Parsing the file failed.
+        replay_obj.processed = False
+        replay_obj.save()
+        return
 
     replay_obj, replay = _parse_header(replay_obj, replay)
 
