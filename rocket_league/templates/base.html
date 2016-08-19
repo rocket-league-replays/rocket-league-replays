@@ -127,10 +127,12 @@
                                   <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
                                 </a>
                             {% else %}
+                                {% comment %}
                                 <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
                                   {% csrf_token %}
                                   <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
                                 </form>
+                                {% endcomment %}
 
                                 <a href="{% url 'auth_logout' %}">Logout</a>
                             {% endif %}
