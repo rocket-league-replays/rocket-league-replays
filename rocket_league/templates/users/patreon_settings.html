@@ -17,7 +17,16 @@
         <div class="alert-box success">{{ message }}</div>
     {% endfor %}
 
-    <div class="row {% if form.patreon_email_address.errors %}errored{% endif %}">
+    <div class="row {% if form.errors %}errored{% endif %}">
+        <div class="medium-4 columns">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+
+            {% for error in form.username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
         <div class="medium-4 columns">
             {{ form.patreon_email_address.label_tag }}
             {{ form.patreon_email_address }}

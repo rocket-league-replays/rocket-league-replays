@@ -55,6 +55,20 @@ class SettingsView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     def get_object(self):
         return self.request.user.profile
 
+    def get_form_kwargs(self):
+        kwargs = super(SettingsView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        if 'username' in form.changed_data:
+            self.request.user.username = form.cleaned_data['username']
+            self.request.user.save()
+
+        return response
+
 
 class PublicProfileView(DetailView):
     model = User

@@ -91,10 +91,31 @@ class UserSettingsForm(forms.ModelForm):
 
 class PatreonSettingsForm(forms.ModelForm):
 
+    username = User._meta.get_field('username').formfield()
+
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+
         super(PatreonSettingsForm, self).__init__(*args, **kwargs)
 
         self.fields['patreon_email_address'].required = True
+
+        if 'id' in self.initial:
+            self.fields['username'].initial = self.user.username
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+
+        users = User.objects.filter(
+            username=username,
+        ).exclude(
+            pk=self.user.pk,
+        ).count()
+
+        if users > 0:
+            raise forms.ValidationError('This username is already in use.')
+
+        return username
 
     class Meta:
         model = Profile
