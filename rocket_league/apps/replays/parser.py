@@ -284,6 +284,7 @@ def parse_replay_netstream(replay_id):
     cars_frozen = False  # Whether the cars are frozen in place (3.. 2.. 1..)
     shot_data = []  # The locations of the player and the ball when goals were scored.
     unknown_boost_data = {}  # Holding dict for boosts without player data.
+    ball_actor_id = None
 
     location_data = []  # Used for the location JSON.
     boost_data = {}  # Used for the boost stats.
@@ -534,7 +535,11 @@ def parse_replay_netstream(replay_id):
 
                 for player_id, car_actor_id in player_cars.items():
                     # Get the team.
-                    if player_id in actors and actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][0]:
+                    if (
+                        player_id in actors and
+                        'Engine.PlayerReplicationInfo:Team' in actors[player_id] and
+                        actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][0]
+                    ):
                         team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
                         team_actor = actors[team_id]
                         team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
