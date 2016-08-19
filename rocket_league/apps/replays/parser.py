@@ -507,7 +507,7 @@ def parse_replay_netstream(replay_id):
         ball_hit = False
 
         # Take a look at the ball this frame, has anything changed?
-        if 'TAGame.RBActor_TA:ReplicatedRBState' in ball:
+        if ball and 'TAGame.RBActor_TA:ReplicatedRBState' in ball:
             new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
 
             # The ball has *changed direction*, but not necessarily been hit (it
