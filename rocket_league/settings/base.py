@@ -436,6 +436,13 @@ CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 CELERY_IGNORE_RESULT = False
 
+# Prices are in cents (USD)
+PATREON_CROWN_PRICE = 100  # This must be above 0, otherwise everyone gets a crown -- and this isn't Oprah!
+PATREON_SOCIAL_MEDIA_PRICE = 100
+PATREON_PLAYBACK_PRICE = 300
+PATREON_BOOST_PRICE = 300
+PATREON_STREAM_LISTING_PRICE = 300
+
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
     # our real migration files, so point to a nonexistent one, which will make

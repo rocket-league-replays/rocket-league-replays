@@ -1,9 +1,10 @@
 import math
+from collections import OrderedDict
 
 from django import template
+from django.conf import settings
 from django.db.models import F, Count, Max, Sum
 from django.utils.safestring import mark_safe
-from collections import OrderedDict
 
 from ..models import Goal, Player, Replay, get_default_season
 
@@ -332,7 +333,7 @@ def user_in_replay(context):
 @register.assignment_tag(takes_context=True)
 def replay_playback_eligibility(context):
     # If the user is a patron, this overrides everything else.
-    if context['patreon'] >= 300:
+    if context['patreon'] >= settings.PATREON_PLAYBACK_PRICE:
         return True
 
     return context['replay'].eligible_for_playback
@@ -341,7 +342,7 @@ def replay_playback_eligibility(context):
 @register.assignment_tag(takes_context=True)
 def replay_boost_eligibility(context):
     # If the user is a patron, this overrides everything else.
-    if context['patreon'] >= 1000:
+    if context['patreon'] >= settings.PATREON_BOOST_PRICE:
         return True
 
     return context['replay'].eligible_for_boost_analysis

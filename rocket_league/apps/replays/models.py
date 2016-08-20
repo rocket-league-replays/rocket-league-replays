@@ -478,8 +478,8 @@ class Replay(models.Model):
 
     def eligible_for_feature(self, feature):
         features = {
-            'playback': 300,
-            'boost_analysis': 1000,
+            'playback': settings.PATREON_PLAYBACK_PRICE,
+            'boost_analysis': settings.PATREON_BOOST_PRICE,
         }
 
         patreon_amount = features[feature]

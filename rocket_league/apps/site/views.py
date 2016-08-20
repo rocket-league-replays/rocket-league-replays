@@ -2,6 +2,7 @@ import json
 from datetime import timedelta
 
 from braces.views import LoginRequiredMixin
+from django.conf import settings
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count
@@ -116,7 +117,7 @@ class StreamListView(TemplateView):
         return Profile.objects.filter(
             patreon_email_address__in=Patron.objects.filter(
                 pledge_declined_since=None,
-                pledge_amount__gte=300,
+                pledge_amount__gte=settings.PATREON_STREAM_LISTING_PRICE,
             ).values_list('patron_email', flat=True),
         ).exclude(
             twitch_username='',
@@ -128,13 +129,13 @@ class StreamListView(TemplateView):
         query = Profile.objects.raw("""SELECT
   users_profile.id,
   twitch_username,
-  CASE WHEN site_patron.pledge_amount >= 1000 THEN TRUE ELSE FALSE END featured
+  CASE WHEN site_patron.pledge_amount >= {patreon_price} THEN TRUE ELSE FALSE END featured
 FROM users_profile
 RIGHT JOIN site_patron on users_profile.patreon_email_address = site_patron.patron_email
 WHERE
   users_profile.twitch_username != '' AND
-  site_patron.pledge_amount >= 300 AND
-  site_patron.pledge_declined_since IS NULL;""")
+  site_patron.pledge_amount >= {patreon_price} AND
+  site_patron.pledge_declined_since IS NULL;""".format(patreon_price=settings.PATREON_STREAM_LISTING_PRICE))
 
         context['usernames'] = []
 

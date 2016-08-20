@@ -3,7 +3,7 @@
 {# Takes a Player object #}
 {% if player.platform == 'OnlinePlatform_Steam' or player.platform == '1' %}
     {% patreon_pledge_amount steam_id=player.online_id as user_patreon %}
-    {% if user_patreon > 0 %}
+    {% if user_patreon >= settings.PATREON_CROWN_PRICE %}
     <em class="icon-crown" title="This user is supporting Rocket League Replays on Patreon."></em>
     {% endif %}
 {% endif %}
