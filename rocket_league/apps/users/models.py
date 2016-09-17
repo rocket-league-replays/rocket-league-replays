@@ -66,9 +66,9 @@ class Profile(models.Model):
     privacy = models.PositiveIntegerField(
         'replay privacy',
         choices=[
-            (1, 'Private'),
-            (2, 'Unlisted'),
-            (3, 'Public')
+            (1, b'Private'),
+            (2, b'Unlisted'),
+            (3, b'Public')
         ],
         default=3,
     )
@@ -210,59 +210,63 @@ class Profile(models.Model):
 
 class LeagueRating(models.Model):
 
-    steamid = models.CharField(
-        max_length=300,
+    """
+    [
+        {
+            “user_name”: “Rocket_League1”,
+            “player_skills”: [
+                {
+                    “playlist”: 10,
+                    “skill”: 217,
+                    “matches_played”: 2,
+                    “tier”: 0,
+                    “tier_max”: 0,
+                    “division”: 0,
+                }
+            ]
+        }
+    ]
+    """
+
+    platform = models.CharField(
+        max_length=100,
         blank=True,
         null=True,
         db_index=True,
     )
 
-    season = models.ForeignKey(
-        Season,
-        default=get_default_season,
+    online_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        db_index=True,
     )
 
-    duels = models.PositiveIntegerField()
-    duels_division = models.IntegerField(
-        default=-1,
-    )
-    duels_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    duels_mmr = models.FloatField(
+    playlist = models.PositiveIntegerField(
+        choices=[(int(v), bytes(k, 'utf8')) for k, v in settings.PLAYLISTS.items()],
         default=0,
     )
 
-    doubles = models.PositiveIntegerField()
-    doubles_division = models.IntegerField(
-        default=-1,
-    )
-    doubles_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    doubles_mmr = models.FloatField(
+    skill = models.PositiveIntegerField(
         default=0,
     )
 
-    solo_standard = models.PositiveIntegerField()
-    solo_standard_division = models.IntegerField(
-        default=-1,
-    )
-    solo_standard_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    solo_standard_mmr = models.FloatField(
+    matches_played = models.PositiveIntegerField(
         default=0,
     )
 
-    standard = models.PositiveIntegerField()
-    standard_division = models.IntegerField(
-        default=-1,
-    )
-    standard_matches_played = models.PositiveIntegerField(
+    tier = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.TIERS.items()],
         default=0,
     )
-    standard_mmr = models.FloatField(
+
+    tier_max = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.TIERS.items()],
+        default=0,
+    )
+
+    division = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.DIVISIONS.items()],
         default=0,
     )
 
@@ -272,6 +276,7 @@ class LeagueRating(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
+        unique_together = [['platform', 'online_id', 'playlist']]
 
 
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
