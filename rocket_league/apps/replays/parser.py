@@ -348,7 +348,7 @@ def parse_replay_netstream(replay_id):
         for actor_id, value in frame['Updated'].items():
             actor_id = int(actor_id)
 
-            if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value'][0]:
+            if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
                 del value['Engine.PlayerReplicationInfo:Team']
 
             # Merge the new properties with the existing.
@@ -359,7 +359,7 @@ def parse_replay_netstream(replay_id):
                     player_actors[actor_id] = actors[actor_id]
 
             if 'Engine.Pawn:PlayerReplicationInfo' in value:
-                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value']['Int']
                 player_cars[player_actor_id] = actor_id
 
         # Handle removing any destroyed actors.
@@ -429,7 +429,7 @@ def parse_replay_netstream(replay_id):
 
                     unknown_boost_data[actor_id][index] = boost_value
                 else:
-                    car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['Value'][1]
+                    car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['Value']['Int']
 
                     # Find out which player this car belongs to.
                     try:
@@ -481,7 +481,7 @@ def parse_replay_netstream(replay_id):
                     cs = 'TAGame.PRI_TA:CameraSettings'
 
                     if csa in value:
-                        player_actor_id = value[csa]['Value'][1]
+                        player_actor_id = value[csa]['Value']['Int']
                         actors[player_actor_id][cs] = value[ps]['Value']
 
             if 'Engine.GameReplicationInfo:ServerName' in value:
@@ -538,9 +538,9 @@ def parse_replay_netstream(replay_id):
                     if (
                         player_id in actors and
                         'Engine.PlayerReplicationInfo:Team' in actors[player_id] and
-                        actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][0]
+                        actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
                     ):
-                        team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value'][1]
+                        team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
                         team_actor = actors[team_id]
                         team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
                     else:
@@ -587,7 +587,7 @@ def parse_replay_netstream(replay_id):
                     if 'Engine.Pawn:PlayerReplicationInfo' not in value:
                         continue
 
-                    actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
+                    actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value']['Int']
 
                 if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
                     key = '{},{}'.format(
@@ -633,8 +633,8 @@ def parse_replay_netstream(replay_id):
 
         team = -1
 
-        if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value'][0]:
-            team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value'][1])
+        if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
+            team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value']['Int'])
 
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
@@ -734,7 +734,7 @@ def parse_replay_netstream(replay_id):
             'type': 'player',
             'join': data['joined'],
             'left': data.get('left', replay['Metadata']['NumFrames']['Value']),
-            'team': data['Engine.PlayerReplicationInfo:Team']['Value'][1],
+            'team': data['Engine.PlayerReplicationInfo:Team']['Value']['Int'],
             'name': data['Engine.PlayerReplicationInfo:PlayerName']['Value']
         }
         for actor_id, data in player_actors.items()

@@ -66,7 +66,7 @@ class ReplayAdmin(admin.ModelAdmin):
         return bool(obj.heatmap_json_file)
     has_heatmaps.boolean = True
 
-    list_display = ['__str__', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
+    list_display = ['pk', 'user', 'map', 'team_sizes', 'average_rating', 'timestamp', 'has_heatmaps', 'processed', 'crashed_heatmap_parser']
     list_filter = ['user', 'season', 'team_sizes', 'average_rating', 'processed', 'crashed_heatmap_parser']
     search_fields = ['replay_id']
     # inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
