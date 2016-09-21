@@ -139,7 +139,7 @@ Annoyingly, Patreon requires the access token be refreshed every 30 days, so som
 curl -X POST -F "grant_type=refresh_token" -F "refresh_token=<value>" -F "client_id=<value>" -F "client_secret=<value>" "http://api.patreon.com/oauth2/token"
 ```
 
-The `client_id` and `client_secret` values come from the developers section of the Patreon website, the `refresh_token` comes from the previous refresh response.  This is the reason why the refresh value is stored in the [secrets.py](#secrets-py) file. 
+The `client_id` and `client_secret` values come from the developers section of the Patreon website, the `refresh_token` comes from the previous refresh response.  This is the reason why the refresh value is stored in the [secrets.py](#secretspy) file. 
 
 
 ### Worker servers
