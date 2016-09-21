@@ -35,6 +35,9 @@ new Vue({
             this.getData(true)
             this.getData(false)
         }, 60000)
+
+        Vue.http.headers.common['Client-ID'] = 'n5uztyfrm2ldyizmom2b8gzvbau6w57';
+
     },
 
     methods: {
@@ -71,7 +74,6 @@ new Vue({
         },
 
         getPatron (username) {
-            console.log('getPatron', username)
             let patron = null
             this.patron_usernames.forEach((item) => {
                 if (item.username.toLowerCase() === username.toLowerCase()) {
