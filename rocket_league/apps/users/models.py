@@ -104,48 +104,6 @@ class Profile(models.Model):
                 '{}_division'.format(settings.PLAYLISTS['RankedStandard']): ratings[0].standard_division,
             }
 
-    def rating_diff(self):
-        steam_id = self.user.social_auth.get(provider='steam').uid
-
-        # Do we have ratings from today as well as yesterday?
-        yesterdays_rating = LeagueRating.objects.filter(
-            steamid=steam_id,
-            timestamp__startswith=now().date() - timedelta(days=1),
-            season_id=get_default_season(),
-        ).aggregate(
-            Max('duels'),
-            Max('doubles'),
-            Max('solo_standard'),
-            Max('standard'),
-        )
-
-        todays_ratings = LeagueRating.objects.filter(
-            steamid=steam_id,
-            timestamp__startswith=now().date(),
-            season_id=get_default_season(),
-        ).aggregate(
-            Max('duels'),
-            Max('doubles'),
-            Max('solo_standard'),
-            Max('standard'),
-        )
-
-        response = {}
-
-        if todays_ratings['duels__max'] and yesterdays_rating['duels__max']:
-            response[settings.PLAYLISTS['RankedDuels']] = todays_ratings['duels__max'] - yesterdays_rating['duels__max']
-
-        if todays_ratings['doubles__max'] and yesterdays_rating['doubles__max']:
-            response[settings.PLAYLISTS['RankedDoubles']] = todays_ratings['doubles__max'] - yesterdays_rating['doubles__max']
-
-        if todays_ratings['solo_standard__max'] and yesterdays_rating['solo_standard__max']:
-            response[settings.PLAYLISTS['RankedSoloStandard']] = todays_ratings['solo_standard__max'] - yesterdays_rating['solo_standard__max']
-
-        if todays_ratings['standard__max'] and yesterdays_rating['standard__max']:
-            response[settings.PLAYLISTS['RankedStandard']] = todays_ratings['standard__max'] - yesterdays_rating['standard__max']
-
-        return response
-
     def has_steam_connected(self):
         try:
             self.user.social_auth.get(provider='steam')
