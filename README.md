@@ -64,8 +64,15 @@ You can then view the main parts of the site:
 * Replay pack listing: http://127.0.0.1:8000/replay-packs/
 * API: http://127.0.0.1:8000/api/
 * Streams: http://127.0.0.1:8000/streams/
+* Adminstration system: http://127.0.0.1:8000/admin/
 
-If you need the Javascript code to run, then you should use port 3000 rather than 8000 (with `npm run dev` running at the same time as `runserver`).
+If you need the Javascript code to run, then you should use port 3000 rather than 8000 (with `npm run dev` running at the same time as `runserver`).  To access the adminstration system you will need a login.  The easiest way to get an admin account is to run:
+
+```
+$ python manage.py createsuperuser
+```
+
+Follow the prompts and a user will be created which you can use to log in to the adminstration system.
 
 ### Getting a detailed replay parse
 
