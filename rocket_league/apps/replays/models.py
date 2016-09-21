@@ -22,11 +22,35 @@ PRIVACY_PUBLIC = 3
 PLATFORM_UNKNOWN = 0
 PLATFORM_STEAM = 1
 PLATFORM_PSN = 2
+PLATFORM_XBOX = 4
 
 PLATFORMS = {
     'Unknown': PLATFORM_UNKNOWN,
     'Steam': PLATFORM_STEAM,
     'PlayStation': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+}
+
+PLATFORMS_MAPPINGS = {
+    'unknown': PLATFORM_UNKNOWN,
+    'steam': PLATFORM_STEAM,
+    'Steam': PLATFORM_STEAM,
+    'PlayStation': PLATFORM_PSN,
+    'playstation': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+    'xbox': PLATFORM_XBOX,
+    'OnlinePlatform_PS4': PLATFORM_PSN,
+    'OnlinePlatform_Unknown': PLATFORM_UNKNOWN,
+    'OnlinePlatform_Dingo': PLATFORM_XBOX,
+    'OnlinePlatform_Steam': PLATFORM_STEAM,
+
+    # The next values are used for the official API.
+    PLATFORM_STEAM: 'steam',
+    str(PLATFORM_STEAM): 'steam',
+    PLATFORM_PSN: 'ps4',
+    str(PLATFORM_PSN): 'ps4',
+    PLATFORM_XBOX: 'xboxone',
+    str(PLATFORM_XBOX): 'xboxone',
 }
 
 
