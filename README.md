@@ -76,7 +76,7 @@ Follow the prompts and a user will be created which you can use to log in to the
 
 ### Getting a detailed replay parse
 
-If you want to generate the more complex stats, you'll need to get the application to run the Octane binaries. The easiest way to do this is to open up a Python shell:
+If you want to generate the more complex stats, you'll need to get the application to run the [Octane](https://github.com/tfausak/octane/) binaries. The easiest way to do this is to open up a Python shell:
 
 ```
 $ python manage.py shell_plus
@@ -91,7 +91,7 @@ r.crashed_heatmap_parser = False
 r.save(parse_netstream=True)
 ```
 
-To process a different replay, simply change `pk=1` to reference your replay object.
+To process a different replay, simply change `pk=1` to reference your replay object.  The Octane binaries are automatically updated when you use `runserver`.
 
 ## Development notes
 
