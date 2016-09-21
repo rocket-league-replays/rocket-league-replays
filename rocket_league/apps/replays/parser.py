@@ -100,7 +100,12 @@ def _parse_header(replay_obj, replay):
 
     # Assign the metadata to the replay object.
     replay_obj.replay_id = replay['Metadata']['Id']['Value']
-    replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
+
+    if 'TeamSize' in replay['Metadata']:
+        replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
+    elif 'PlayerStats' in replay['Metadata']:
+        replay_obj.team_sizes = math.ceil(len(replay['Metadata']['PlayerStats']['Value']) / 2)
+
     replay_obj.team_0_score = replay['Metadata'].get('Team0Score', {'Value': 0})['Value']
     replay_obj.team_1_score = replay['Metadata'].get('Team1Score', {'Value': 0})['Value']
     replay_obj.player_name = replay['Metadata']['PlayerName']['Value']
@@ -541,8 +546,12 @@ def parse_replay_netstream(replay_id):
                         actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
                     ):
                         team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
-                        team_actor = actors[team_id]
-                        team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+
+                        try:
+                            team_actor = actors[team_id]
+                            team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+                        except KeyError:
+                            team = -1
                     else:
                         team = -1
 
@@ -609,6 +618,8 @@ def parse_replay_netstream(replay_id):
                     heatmap_data[actor_id][key] = 1
 
     def get_team(actor_id):
+        if actor_id == -1:
+            return -1
         return int(actors[actor_id]['Name'].replace('Archetypes.Teams.Team', ''))
 
     player_objects = {}
