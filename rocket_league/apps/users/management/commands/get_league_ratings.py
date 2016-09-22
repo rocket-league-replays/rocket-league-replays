@@ -6,13 +6,11 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.db.models import Q
 from django.utils.timezone import now
-from social.apps.django_app.default.models import UserSocialAuth
+from rlapi import RocketLeagueAPI
 
 from ....replays.models import (PLATFORM_PSN, PLATFORM_STEAM, PLATFORM_UNKNOWN,
                                 PLATFORM_XBOX, PLATFORMS_MAPPINGS, Player)
 from ....users.models import LeagueRating
-
-from rlapi import RocketLeagueAPI
 
 rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
 
@@ -30,12 +28,15 @@ def file_lock(lock_file):
             os.remove(lock_file)
 
 
+def chunks(input_list, chunk_length):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(input_list), chunk_length):
+        yield input_list[i:i + chunk_length]
+
+
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        # Get all Steam IDs from Player objects, as well as from UserSocialAuth
-        # objects.
-
         with file_lock('/tmp/get_league_ratings.lock'):
             # Fix any messed up platform records.
             """
@@ -74,79 +75,68 @@ class Command(BaseCommand):
                 platform__in=["{'Value': ['OnlinePlatform', 'OnlinePlatform_Unknown']}", "OnlinePlatform_Unknown", None, '']
             ).update(platform=PLATFORM_UNKNOWN)
 
-            # Get any players which have featured in replays in the last 30 days.
-            player_ids = Player.objects.filter(
-                replay__timestamp__gte=now() - timedelta(days=7),
+            # Get any players which have featured in replays in the last X days.
+            # Filter by one platform at a time so we can perform batch calls.
+            base_query = Player.objects.filter(
+                replay__timestamp__gte=now() - timedelta(days=31),
             ).exclude(
                 Q(platform=None) |
                 Q(platform='0') |
                 Q(online_id='0') |
                 Q(bot=True) |
                 Q(spectator=True)
-            ).distinct('platform', 'online_id').values_list('pk', 'platform', 'online_id').order_by('platform', 'online_id')
+            ).distinct('platform', 'online_id').values_list(
+                'pk', 'platform', 'online_id', 'player_name'
+            ).order_by('platform', 'online_id')
 
-            for pk, platform, online_id in player_ids:
-                print(pk, platform, online_id)
-                print(LeagueRating.objects.filter(
+            timestamp = now()
+
+            for platform in [PLATFORM_STEAM, PLATFORM_PSN, PLATFORM_XBOX]:
+                all_player_ids = base_query.filter(
                     platform=platform,
-                    online_id=online_id,
-                ))
+                )
 
-                print(rl.get_player_skills(PLATFORMS_MAPPINGS[platform], online_id))
+                processed = 0
 
-                """
-                [
-                    {
-                        'user_name': 'Konge',
-                        'player_skills': [
-                            {
-                                'playlist': 10,
-                                'tier_max': 0,
-                                'matches_played': 3,
-                                'division': 0,
-                                'skill': 93,
-                                'tier': 0
-                            },
-                            {
-                                'playlist': 11,
-                                'tier_max': 5,
-                                'matches_played': 66,
-                                'division': 1,
-                                'skill': 436,
-                                'tier': 5
-                            },
-                            {
-                                'playlist': 13,
-                                'tier_max': 2,
-                                'matches_played': 27,
-                                'division': 2,
-                                'skill': 178,
-                                'tier': 2
-                            }
-                        ],
-                        'user_id': 76561197960453675
-                    }
-                ]
-                """
-                exit()
+                # Loop over the IDs in chunks of 100.
+                for player_ids in chunks(all_player_ids, 100):
+                    processed += len(player_ids)
 
-            # print(player_ids)
-            exit()
+                    print('Processing {} {} players (making this {} of {} total).'.format(
+                        len(player_ids),
+                        PLATFORMS_MAPPINGS[platform],
+                        processed,
+                        len(all_player_ids),
+                    ))
 
-            social_auth_ids = UserSocialAuth.objects.filter(
-                provider='steam',
-            ).distinct('uid').values_list('uid', flat=True).order_by()
+                    # The `online_id` value for Xbox players is an XUID which we
+                    # can't do anything with, so instead we use the player_name.
+                    if platform == PLATFORM_XBOX:
+                        online_ids = [player[3] for player in player_ids]
+                    elif platform == PLATFORM_STEAM:
+                        online_ids = [int(player[2]) for player in player_ids]
+                    else:
+                        online_ids = [player[2] for player in player_ids]
 
-            steam_ids = []
+                    players = rl.get_player_skills(PLATFORMS_MAPPINGS[platform], online_ids)
 
-            for steam_id in player_ids:
-                steam_ids.append(str(steam_id))
+                    for player in players:
+                        if platform == PLATFORM_STEAM:
+                            online_id = player['user_id']
+                        else:
+                            online_id = player['user_name']
 
-            for steam_id in social_auth_ids:
-                steam_ids.append(str(steam_id))
-
-            steam_ids = set(steam_ids)
-
-            # get_league_data(steam_ids)
-
-            # call_command('clean_league_ratings')
+                        for playlist_data in player['player_skills']:
+                            LeagueRating.objects.update_or_create(
+                                platform=platform,
+                                online_id=online_id,
+                                playlist=playlist_data['playlist'],
+                                defaults={
+                                    'skill': playlist_data['skill'],
+                                    'matches_played': playlist_data['matches_played'],
+                                    'tier': playlist_data['tier'],
+                                    'tier_max': playlist_data['tier_max'],
+                                    'division': playlist_data['division'],
+                                    'timestamp': timestamp,
+                                }
+                            )
