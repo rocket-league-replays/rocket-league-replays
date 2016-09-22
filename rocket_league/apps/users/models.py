@@ -74,35 +74,23 @@ class Profile(models.Model):
     )
 
     def latest_ratings(self):
-        if not self.has_steam_connected():
-            return {}
+        # This method will return the ratings for each of the platforms that the
+        # user has associated with their account.  For most people this will only
+        # be one, but it's useful to handle all cases regardless.
 
-        steam_id = self.user.social_auth.get(provider='steam').uid
+        accounts = []
 
-        ratings = LeagueRating.objects.filter(
-            steamid=steam_id,
-            season_id=get_default_season(),
-        )
+        if self.has_steam_connected():
+            accounts.append(('steam', self.user.social_auth.get(provider='steam').uid))
 
-        if ratings.count() > 1:
-            LeagueRating.objects.filter(
-                steamid=steam_id,
-                season_id=get_default_season(),
-            ).exclude(
-                pk=ratings[0].pk
-            ).delete()
+        account_data = {}
+        for platform, online_id in accounts:
+            account_data[platform] = LeagueRating.objects.filter(
+                platform=platform,
+                online_id=online_id,
+            ).order_by('playlist')
 
-        if ratings:
-            return {
-                settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
-                '{}_division'.format(settings.PLAYLISTS['RankedDuels']): ratings[0].duels_division,
-                settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
-                '{}_division'.format(settings.PLAYLISTS['RankedDoubles']): ratings[0].doubles_division,
-                settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
-                '{}_division'.format(settings.PLAYLISTS['RankedSoloStandard']): ratings[0].solo_standard_division,
-                settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
-                '{}_division'.format(settings.PLAYLISTS['RankedStandard']): ratings[0].standard_division,
-            }
+        return account_data
 
     def has_steam_connected(self):
         try:
