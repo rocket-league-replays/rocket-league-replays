@@ -36,7 +36,49 @@ def chunks(input_list, chunk_length):
 
 class Command(BaseCommand):
 
+    def add_arguments(self, parser):
+        # Positional arguments
+        parser.add_argument('platform', nargs='+', type=str)
+        parser.add_argument('online_id', nargs='+', type=str)
+
+    def handle_individual(self, platform, online_id):
+        players = rl.get_player_skills(platform, online_id)
+
+        if 'detail' in players:
+            print(players['detail'])
+            return
+
+        print(players)
+
+        timestamp = now()
+        platform = PLATFORMS_MAPPINGS[platform]
+
+        for player in players:
+            if platform == PLATFORM_STEAM:
+                online_id = player['user_id']
+            else:
+                online_id = player['user_name']
+
+            for playlist_data in player['player_skills']:
+                LeagueRating.objects.update_or_create(
+                    platform=platform,
+                    online_id=online_id,
+                    playlist=playlist_data['playlist'],
+                    defaults={
+                        'skill': playlist_data['skill'],
+                        'matches_played': playlist_data['matches_played'],
+                        'tier': playlist_data['tier'],
+                        'tier_max': playlist_data['tier_max'],
+                        'division': playlist_data['division'],
+                        'timestamp': timestamp,
+                    }
+                )
+
     def handle(self, *args, **options):
+        if 'platform' in options and 'online_id' in options:
+            self.handle_individual(options['platform'][0], options['online_id'][0])
+            exit()
+
         with file_lock('/tmp/get_league_ratings.lock'):
             # Fix any messed up platform records.
             """
