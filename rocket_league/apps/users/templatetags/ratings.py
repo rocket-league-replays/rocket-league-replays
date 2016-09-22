@@ -1,7 +1,7 @@
 from django import template
 from django.conf import settings
 
-from ...replays.models import PLATFORM_STEAM, get_default_season
+from ...replays.models import PLATFORM_STEAM
 from ..models import LeagueRating
 
 register = template.Library()
@@ -13,14 +13,6 @@ def latest_ratings(context):
         platform=PLATFORM_STEAM,
         online_id=context['steam_id'],
     )
-
-
-@register.assignment_tag
-def get_ratings(uid):
-    return LeagueRating.objects.filter(
-        steamid=uid,
-        season_id=get_default_season(),
-    )[:50]
 
 
 @register.simple_tag
