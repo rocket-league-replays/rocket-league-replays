@@ -1,92 +1,23 @@
 {% load ratings site static %}
 
 {% latest_ratings as ratings %}
-<div class="row text-center">
-    <div class="medium-3 columns">
-        <strong>Solo Duel</strong>
+
+<div class="flex-row text-center">
+    {% for rating in ratings %}
+    <div class="flex-column">
+        <strong>{% playlist_name rating.playlist %}</strong>
 
         <h4>
-            {% if ratings.10 %}
-                {% if ratings.10|league_image %}
-                    {% with ratings.10|string as rating_string %}
-                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% endif %}
-            {% else %}
-                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
-            {% endif %}
+            {% with rating.tier|string as rating_string %}
+                {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
+                    <img src="{% static url %}" alt="{% league_name rating.tier %}" title="{% league_name rating.tier %}">
+                {% endwith %}
+            {% endwith %}
 
-            {% if ratings.10_division != -1 %}
-                <p>{% division_name ratings.10_division %}</p>
+            {% if rating.division != -1 %}
+                <p>{% division_name rating.division %}</p>
             {% endif %}
         </h4>
     </div>
-
-    <div class="medium-3 columns">
-        <strong>Doubles</strong>
-
-        <h4>
-            {% if ratings.11 %}
-                {% if ratings.11|league_image %}
-                    {% with ratings.11|string as rating_string %}
-                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% endif %}
-            {% else %}
-                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
-            {% endif %}
-        </h4>
-
-        {% if ratings.11_division != -1 %}
-            <p>{% division_name ratings.11_division %}</p>
-        {% endif %}
-    </div>
-
-    <div class="medium-3 columns">
-        <strong>Solo Standard</strong>
-
-        <h4>
-            {% if ratings.12 %}
-                {% if ratings.12|league_image %}
-                    {% with ratings.12|string as rating_string %}
-                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% endif %}
-            {% else %}
-                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
-            {% endif %}
-        </h4>
-
-        {% if ratings.12_division != -1 %}
-            <p>{% division_name ratings.12_division %}</p>
-        {% endif %}
-    </div>
-
-    <div class="medium-3 columns">
-        <strong>Standard</strong>
-
-        <h4>
-            {% if ratings.13 %}
-                {% if ratings.13|league_image %}
-                    {% with ratings.13|string as rating_string %}
-                        {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.13 %}" title="{% league_name ratings.13 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% endif %}
-            {% else %}
-                <img src="{% static 'img/tiers/orig/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
-            {% endif %}
-        </h4>
-
-        {% if ratings.13_division != -1 %}
-            <p>{% division_name ratings.13_division %}</p>
-        {% endif %}
-    </div>
+    {% endfor %}
 </div>
