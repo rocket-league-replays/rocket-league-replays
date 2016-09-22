@@ -4,15 +4,15 @@ from itertools import zip_longest
 import bitstring
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import NoReverseMatch, reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from pyrope import Replay as Pyrope
 from social.apps.django_app.default.fields import JSONField
 
-from pyrope import Replay as Pyrope
 from .parser import parse_replay_header, parse_replay_netstream
 
 PRIVACY_PRIVATE = 1
