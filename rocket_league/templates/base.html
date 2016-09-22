@@ -145,86 +145,30 @@
                 </div>
 
                 {% if 'steam' not in backends.not_associated %}
-                {% league_data as data %}
+                    {% for platform, ratings in user.profile.latest_ratings.items %}
+                        {% if ratings %}
+                            <div class="flex-row secondary-navigation" style="justify-content: space-between;">
+                            {% for rating in ratings %}
+                                <div>
+                                {% playlist_name rating.playlist remove_prefix=True %}
 
-                {% if data %}
-                <div class="row secondary-navigation">
-                    <div class="medium-12 columns ranks">
-                                {% if data.10 %}
-                                <span title="This is your rating for ranked duels.">
-                                    Duels:
-
-                                    {% if data.10|league_image %}
-                                        {% with data.10|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.10 %}" title="{% league_name data.10 %}">
-                                            {% endwith %}
+                                {% if rating.tier|league_image %}
+                                    {% with rating.tier|string as rating_string %}
+                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                            <img src="{% static url %}" alt="{% league_name rating.tier %}" title="{% league_name rating.tier %}">
                                         {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.10 %}
-
-                                    {% if data.10_division != -1 %} ({% division_name data.10_division %}){% endif %}
-                                </span>
+                                    {% endwith %}
                                 {% endif %}
 
-                                {% if data.11 %}
-                                <span title="This is your rating for ranked doubles.">
-                                    Doubles:
+                                {% league_name rating.tier %}
 
-                                    {% if data.11|league_image %}
-                                        {% with data.11|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.11 %}" title="{% league_name data.11 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.11 %}
-
-                                    {% if data.11_division != -1 %} ({% division_name data.11_division %}){% endif %}
-                                </span>
-                                {% endif %}
-
-                                {% if data.12 %}
-                                <span title="This is your rating for ranked solo standard.">
-                                    Solo Standard:
-
-                                    {% if data.12|league_image %}
-                                        {% with data.12|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.12 %}" title="{% league_name data.12 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.12 %}
-
-                                    {% if data.12_division != -1 %} ({% division_name data.12_division %}){% endif %}
-                                </span>
-                                {% endif %}
-
-                                {% if data.13 %}
-                                <span title="This is your rating for ranked standard.">
-                                    Standard:
-
-                                    {% if data.13|league_image %}
-                                        {% with data.13|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.13 %}" title="{% league_name data.13 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.13 %}
-
-                                    {% if data.13_division != -1 %} ({% division_name data.13_division %}){% endif %}
-                                </span>
-                                {% endif %}
+                                {% if rating.division != -1 %} ({% division_name rating.division %}){% endif %}
+                                </div>
+                            {% endfor %}
                             </div>
-                        </div>
-                    {% endif %}
-                    {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
             </header>
 
             <main>
