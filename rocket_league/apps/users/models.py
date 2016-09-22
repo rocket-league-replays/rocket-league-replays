@@ -1,11 +1,8 @@
-from datetime import timedelta
-
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
@@ -13,7 +10,7 @@ from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
 from social.backends.steam import USER_INFO
 
-from ..replays.models import Season, get_default_season
+from ..replays.models import PLATFORMS_MAPPINGS
 
 
 class Profile(models.Model):
@@ -81,7 +78,7 @@ class Profile(models.Model):
         accounts = []
 
         if self.has_steam_connected():
-            accounts.append(('steam', self.user.social_auth.get(provider='steam').uid))
+            accounts.append((PLATFORMS_MAPPINGS['steam'], self.user.social_auth.get(provider='steam').uid))
 
         account_data = {}
         for platform, online_id in accounts:
