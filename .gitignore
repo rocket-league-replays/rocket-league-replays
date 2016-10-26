@@ -69,3 +69,7 @@ webpack-stats.json
 .venv-python2
 cars
 patron_sql_tests.sql
+
+# Secrets file
+rocket_league/settings/secrets.py
+
