@@ -421,9 +421,7 @@ class Replay(models.Model):
     def calculate_average_rating(self):
         from ..users.models import LeagueRating
 
-        players = self.player_set.filter(
-            platform__in=['OnlinePlatform_Steam', '1'],
-        ).exclude(
+        players = self.player_set.exclude(
             online_id__isnull=True,
         )
 
