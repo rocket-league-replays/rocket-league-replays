@@ -125,17 +125,30 @@ def _parse_header(replay_obj, replay):
         map_obj = None
 
     replay_obj.map = map_obj
-    replay_obj.timestamp = timezone.make_aware(
-        datetime.fromtimestamp(
-            time.mktime(
-                time.strptime(
-                    replay['Metadata']['Date']['Value'],
-                    '%Y-%m-%d:%H-%M',
+    try:
+        replay_obj.timestamp = timezone.make_aware(
+            datetime.fromtimestamp(
+                time.mktime(
+                    time.strptime(
+                        replay['Metadata']['Date']['Value'],
+                        '%Y-%m-%d:%H-%M',
+                    )
                 )
-            )
-        ),
-        timezone.get_current_timezone()
-    )
+            ),
+            timezone.get_current_timezone()
+        )
+    except ValueError:
+        replay_obj.timestamp = timezone.make_aware(
+            datetime.fromtimestamp(
+                time.mktime(
+                    time.strptime(
+                        replay['Metadata']['Date']['Value'],
+                        '%Y-%m-%d %H-%M-%S',
+                    )
+                )
+            ),
+            timezone.get_current_timezone()
+        )
 
     get_season = Season.objects.filter(
         start_date__lte=replay_obj.timestamp,
