@@ -4,8 +4,9 @@ import os
 import subprocess
 import time
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 
+import pytz
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
@@ -125,6 +126,7 @@ def _parse_header(replay_obj, replay):
         map_obj = None
 
     replay_obj.map = map_obj
+
     try:
         replay_obj.timestamp = timezone.make_aware(
             datetime.fromtimestamp(
@@ -135,6 +137,18 @@ def _parse_header(replay_obj, replay):
                     )
                 )
             ),
+            timezone.get_current_timezone()
+        )
+    except pytz.exceptions.AmbiguousTimeError:
+        replay_obj.timestamp = timezone.make_aware(
+            datetime.fromtimestamp(
+                time.mktime(
+                    time.strptime(
+                        replay['Metadata']['Date']['Value'],
+                        '%Y-%m-%d:%H-%M',
+                    )
+                )
+            ) + timedelta(hours=1),
             timezone.get_current_timezone()
         )
     except ValueError:
