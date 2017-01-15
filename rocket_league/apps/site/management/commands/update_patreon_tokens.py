@@ -15,6 +15,8 @@ class Command(BaseCommand):
 
         tokens = r.json()
 
+        print(tokens)
+
         with open('rocket_league/settings/secrets.py', 'r') as f:
             settings_data = f.read()
 
