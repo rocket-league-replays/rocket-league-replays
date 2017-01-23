@@ -1,7 +1,7 @@
 bcrypt==3.1.2
 awscli==1.11.41
 twython==3.4.0
-django-debug-toolbar==1.4
+django-debug-toolbar==1.6
 onespacemedia-cms==1.12.4
 pathlib==1.0.1
 praw==4.3.0
