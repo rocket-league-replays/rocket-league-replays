@@ -14,7 +14,7 @@ django==1.10.5
 git+https://github.com/onespacemedia/server-management@feature/python-3
 git+https://github.com/danielsamuels/pyrope.git
 git+https://github.com/rocket-league-replays/patreon-python.git
-django-suit==0.2.18
+django-suit==0.2.23
 django-compressor==2.0
 django-reversion==2.0.8
 django-historylinks==1.1.0
