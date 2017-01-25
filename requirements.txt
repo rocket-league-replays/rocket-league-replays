@@ -23,7 +23,7 @@ django-extensions
 django-cachalot
 opbeat
 python-social-auth
-Werkzeug
+Werkzeug==0.11.15
 python-memcached
 celery[redis]
 django-celery
