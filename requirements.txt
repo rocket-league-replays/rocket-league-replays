@@ -21,7 +21,7 @@ django-historylinks
 django-watson==1.1.9
 django-extensions
 django-cachalot
-opbeat
+opbeat==3.5.2
 python-social-auth
 Werkzeug
 python-memcached
