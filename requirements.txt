@@ -1,6 +1,6 @@
 bcrypt
 awscli==1.10.6
-twython==3.3.0
+twython==3.4.0
 django-debug-toolbar==1.4
 onespacemedia-cms==1.12.4
 pathlib==1.0.1
