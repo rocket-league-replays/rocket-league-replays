@@ -22,7 +22,7 @@ django-watson==1.1.9
 django-extensions
 django-cachalot
 opbeat
-python-social-auth
+python-social-auth==0.3.4
 Werkzeug
 python-memcached
 celery[redis]
