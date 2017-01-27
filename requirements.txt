@@ -26,4 +26,4 @@ python-social-auth
 Werkzeug
 python-memcached
 celery[redis]
-django-celery
+django-celery==3.2.1
