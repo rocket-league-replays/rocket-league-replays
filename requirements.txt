@@ -5,7 +5,7 @@ django-debug-toolbar==1.4
 onespacemedia-cms==1.12.4
 pathlib==1.0.1
 praw==3.2.1
-django-braces==1.8.1
+django-braces==1.10.0
 django-cors-headers==1.1.0
 django-filter==0.10.0
 django-rest-swagger==0.3.3
