@@ -20,7 +20,7 @@ django-reversion==1.8.7
 django-historylinks==1.1.0
 django-extensions==1.6.1
 django-cachalot==1.2.1
-opbeat==3.3
+opbeat==3.5.2
 python-social-auth==0.2.14
 Werkzeug==0.11.4
 python-memcached==1.57
