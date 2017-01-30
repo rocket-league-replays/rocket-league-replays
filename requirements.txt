@@ -24,6 +24,6 @@ django-cachalot
 opbeat
 python-social-auth
 Werkzeug
-python-memcached
+python-memcached==1.58
 celery[redis]
 django-celery
