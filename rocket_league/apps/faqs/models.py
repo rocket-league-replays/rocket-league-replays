@@ -4,8 +4,6 @@ from django.db import models
 from cms.apps.pages.models import ContentBase
 from cms.models import SearchMetaBase, HtmlField
 
-import watson
-
 
 class Faqs(ContentBase):
     """ A base for Faq's """
@@ -69,5 +67,3 @@ class Faq(SearchMetaBase):
             self.page.page.get_absolute_url(),
             self.url_title
         )
-
-watson.register(Faq)
