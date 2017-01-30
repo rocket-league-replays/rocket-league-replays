@@ -1,4 +1,4 @@
-bcrypt
+bcrypt==2.0.0
 awscli==1.10.6
 twython==3.3.0
 django-debug-toolbar==1.4
@@ -17,12 +17,12 @@ git+https://github.com/rocket-league-replays/patreon-python.git
 django-suit==0.2.24
 django-compressor==2.0
 django-reversion==1.8.7
-django-historylinks
-django-extensions
-django-cachalot
-opbeat
-python-social-auth
-Werkzeug
-python-memcached
-celery[redis]
-django-celery
+django-historylinks==1.1.0
+django-extensions==1.6.1
+django-cachalot==1.2.1
+opbeat==3.3
+python-social-auth==0.2.14
+Werkzeug==0.11.4
+python-memcached==1.57
+celery[redis]==3.1.23
+django-celery==3.1.17
