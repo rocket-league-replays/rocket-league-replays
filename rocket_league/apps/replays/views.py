@@ -422,6 +422,18 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
             )
         return queryset
 
+    def get_object(self):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        filters = {}
+
+        if 'replay_id' in self.kwargs:
+            filters['replay_id'] = self.kwargs['replay_id']
+        elif 'pk' in self.kwargs:
+            filters['pk'] = self.kwargs['pk']
+
+        return get_object_or_404(queryset, **filters)
+
     def perform_create(self, serializer):
         instance = serializer.save(user=self.request.user)
 

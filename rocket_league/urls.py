@@ -51,6 +51,7 @@ urlpatterns = patterns(
     # There's no favicon here!
     url(r"^favicon.ico$", generic.RedirectView.as_view(url='/static/build/img/icons/favicon.ico', permanent=True)),
 
+    url(r'^(?i)api/replays/(?P<replay_id>[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})/$', api_views.ReplayViewSet.as_view({'get': 'retrieve'})),
     url(r'^api/', include(router.urls)),
     url(r'^api/stream-data/(?P<user_id>\d+)/$', StreamDataAPIView.as_view(), name='stream-data'),
     url(r'^api/latest-replay/(?P<user_id>\d+)/$', api_views.LatestUserReplay.as_view(), name='latest-replay'),
