@@ -267,7 +267,7 @@ class Replay(models.Model):
 
     @cached_property
     def uuid(self):
-        return re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower()
+        return re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower()
 
     def team_x_player_list(self, team):
         return [
@@ -555,7 +555,7 @@ class Replay(models.Model):
     def get_absolute_url(self):
         if self.replay_id:
             return reverse('replay:detail', kwargs={
-                'replay_id': re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower(),
+                'replay_id': re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower(),
             })
 
         return reverse('replay:detail', kwargs={

@@ -89,12 +89,13 @@ class ReplayListView(FilterView):
 class ReplayUUIDMixin(DetailView):
 
     def dispatch(self, request, *args, **kwargs):
-        if 'pk' in kwargs:
-            from django.shortcuts import redirect
-            from django.core.urlresolvers import resolve
+        from django.shortcuts import redirect
+        from django.core.urlresolvers import resolve
 
+        resolved_url = resolve(request.path)
+
+        if 'pk' in kwargs:
             obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
-            resolved_url = resolve(request.path)
 
             if obj.replay_id:
                 return redirect(
@@ -102,8 +103,17 @@ class ReplayUUIDMixin(DetailView):
                         resolved_url.url_name
                     ),
                     permanent=True,
-                    replay_id=re.sub(r'([A-F0-9]{8})(4[A-F0-9]{3})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
+                    replay_id=re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
                 )
+
+        if 'replay_id' in kwargs and '-' not in kwargs['replay_id']:
+            return redirect(
+                'replay:{}'.format(
+                    resolved_url.url_name
+                ),
+                permanent=True,
+                replay_id=re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', kwargs['replay_id'].upper()).lower()
+            )
 
         return super(ReplayUUIDMixin, self).dispatch(request, *args, **kwargs)
 
