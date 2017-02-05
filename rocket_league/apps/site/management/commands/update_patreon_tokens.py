@@ -19,6 +19,9 @@ class Command(BaseCommand):
 
         print(tokens)
 
+        if 'error' in tokens:
+            exit()
+
         with open(os.path.join(settings.SITE_ROOT, 'settings/secrets.py'), 'r') as f:
             settings_data = f.read()
 
