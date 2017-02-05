@@ -1,5 +1,7 @@
-import requests
 import os
+
+import requests
+from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
@@ -17,7 +19,7 @@ class Command(BaseCommand):
 
         print(tokens)
 
-        with open('rocket_league/settings/secrets.py', 'r') as f:
+        with open(os.path.join(settings.SITE_ROOT, 'settings/secrets.py'), 'r') as f:
             settings_data = f.read()
 
         settings_data = settings_data.replace(os.getenv('PATREON_REFRESH_TOKEN'), tokens['refresh_token'])
