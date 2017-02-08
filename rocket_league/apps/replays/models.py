@@ -717,7 +717,7 @@ class Player(models.Model):
         null=True,
     )
 
-    total_xp = models.PositiveIntegerField(
+    total_xp = models.IntegerField(
         default=0,
         blank=True,
         null=True,
