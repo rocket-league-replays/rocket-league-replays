@@ -417,77 +417,26 @@ class Replay(models.Model):
             online_id__isnull=True,
         )
 
-        team_sizes = self.player_set.count() / 2
-
         num_player_ratings = 0
         total_player_ratings = 0
 
-        get_season = Season.objects.filter(
-            start_date__lte=self.timestamp,
-        )
-
         for player in players:
-            # Get the latest rating for this player.
-            ratings = LeagueRating.objects.filter(
-                steamid=player.online_id,
-                season_id=get_season[0].pk if get_season else get_default_season()
-            )
+            try:
+                # Get the latest rating for this player.
+                rating = LeagueRating.objects.get(
+                    platform=player.platform,
+                    online_id=player.online_id,
+                    playlist=self.playlist,
+                )
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels']:
-                    ratings = ratings.exclude(duels=0)
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles']:
-                    ratings = ratings.exclude(doubles=0)
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard']:
-                    ratings = ratings.exclude(solo_standard=0)
-                elif self.playlist == settings.PLAYLISTS['RankedStandard']:
-                    ratings = ratings.exclude(standard=0)
-            else:
-                if team_sizes == 1:
-                    ratings = ratings.exclude(duels=0)
-                elif team_sizes == 2:
-                    ratings = ratings.exclude(doubles=0)
-                elif team_sizes == 3:
-                    ratings = ratings.exclude(solo_standard=0, standard=0)
-
-                ratings = ratings[:1]
-
-            if len(ratings) > 0:
-                rating = ratings[0]
-            else:
+                total_player_ratings += rating.tier
+                num_player_ratings += 1
+            except LeagueRating.DoesNotExist:
+                # Should we get the ratings?
                 continue
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels'] and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles'] and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard'] and rating.solo_standard > 0:
-                    total_player_ratings += rating.solo_standard
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedStandard'] and rating.standard > 0:
-                    total_player_ratings += rating.standard
-                    num_player_ratings += 1
-            else:
-                if team_sizes == 1 and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif team_sizes == 2 and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
-                    if rating.solo_standard > 0 and rating.standard <= 0:
-                        total_player_ratings += rating.solo_standard
-                    elif rating.standard > 0 and rating.solo_standard <= 0:
-                        total_player_ratings += rating.standard
-                    else:
-                        total_player_ratings += (rating.solo_standard + rating.standard) / 2
-                    num_player_ratings += 1
-
         if num_player_ratings > 0:
-            return total_player_ratings / num_player_ratings
+            return math.ceil(total_player_ratings / num_player_ratings)
         return 0
 
     def eligible_for_feature(self, feature):
