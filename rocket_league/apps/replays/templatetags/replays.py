@@ -581,6 +581,11 @@ def boost_chart_data(context, obj=None):
 @register.simple_tag(takes_context=True)
 def get_goal_number(context, frame):
     try:
+        return [shot['frame'] for shot in context['object'].shot_data].index(frame) + 1
+    except ValueError:
+        pass
+
+    try:
         return context['object'].goal_set.get(frame=frame).number
     except:
         return ''
