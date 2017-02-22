@@ -217,6 +217,14 @@ class LeagueRating(models.Model):
         auto_now_add=True,
     )
 
+    def __str__(self):
+        return 'Platform: {}, Online ID: {}, Playlist: {}, Tier: {}'.format(
+            self.platform,
+            self.online_id,
+            self.playlist,
+            self.tier,
+        )
+
     class Meta:
         ordering = ['-timestamp']
         unique_together = [['platform', 'online_id', 'playlist']]
