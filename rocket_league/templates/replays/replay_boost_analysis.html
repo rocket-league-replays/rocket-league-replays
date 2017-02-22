@@ -50,7 +50,9 @@
                             <tr>
                                 <td class="{% if player.team == 0 %}primary{% else %}secondary{% endif %}">
                                     {% with player.get_rating_data as rating_data %}
-                                        <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
+                                        {% if rating_data %}
+                                            <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
+                                        {% endif %}
                                     {% endwith %}
 
                                     {% include 'site/patreon_crown.html' %}

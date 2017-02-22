@@ -26,7 +26,9 @@
         <td>
             <a href="{{ player.get_absolute_url }}">
             {% with player.get_rating_data as rating_data %}
-                <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
+                {% if rating_data %}
+                    <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
+                {% endif %}
             {% endwith %}
 
             {# Is this player a patron of the site? #}
