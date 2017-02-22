@@ -182,7 +182,7 @@ class LeagueRatingManager(models.Manager):
             return_obj = None
 
             for playlist_data in player['player_skills']:
-                obj = LeagueRating.objects.update_or_create(
+                obj, _ = LeagueRating.objects.update_or_create(
                     platform=kwargs['platform'],
                     online_id=online_id,
                     playlist=playlist_data['playlist'],
