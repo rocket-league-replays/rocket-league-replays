@@ -1,10 +1,11 @@
+import math
 import re
 from itertools import zip_longest
 
 import bitstring
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import NoReverseMatch, reverse
+from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.functional import cached_property
@@ -399,22 +400,13 @@ class Replay(models.Model):
 
         # Now we have the swing rating, adjust it by the total number of goals.
         # This gives us a "base value" for each replay and allows replays with
-        # lots of goals but not much swing to get reasonable rating.
-        swing_rating += (self.team_0_score + self.team_1_score) * goal_count_multiplier
+        # lots of goals but not much swing to get reasonable rating. Cap the goal
+        # multiplier at 5.
+        total_goals = self.team_0_score + self.team_1_score
+        if total_goals > 5:
+            total_goals = 5
 
-        # Decay the score based on the number of days since the game was played.
-        # This should keep the replay list fresh. Cap at a set number of days.
-        days_ago = (now().date() - self.timestamp.date()).days
-
-        day_cap = 75
-
-        if days_ago > day_cap:
-            days_ago = day_cap
-
-        # Make sure we're not dividing by zero.
-        if days_ago > 0:
-            days_ago = float(days_ago)
-            swing_rating -= swing_rating * days_ago / 100
+        swing_rating += total_goals * goal_count_multiplier
 
         return swing_rating
 
