@@ -46,6 +46,8 @@ PLATFORMS_MAPPINGS = {
     'OnlinePlatform_Steam': PLATFORM_STEAM,
 
     # The next values are used for the official API.
+    PLATFORM_UNKNOWN: 'unknown',
+    str(PLATFORM_UNKNOWN): 'unknown',
     PLATFORM_STEAM: 'steam',
     str(PLATFORM_STEAM): 'steam',
     PLATFORM_PSN: 'ps4',
