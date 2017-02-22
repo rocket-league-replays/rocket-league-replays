@@ -4,6 +4,7 @@ from itertools import zip_longest
 
 import bitstring
 from django.conf import settings
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -695,6 +696,30 @@ class Player(models.Model):
     )
 
     @cached_property
+    def get_rating_data(self):
+        from ..users.models import LeagueRating
+        from ..users.templatetags.ratings import tier_name
+
+        try:
+            rating = LeagueRating.objects.get(
+                platform=self.platform,
+                online_id=self.online_id,
+                playlist=self.replay.playlist,
+            )
+
+            return {
+                'image': static('img/tiers/icons/{}.png'.format(rating.tier)),
+                'tier_name': tier_name(rating.tier)
+            }
+        except LeagueRating.DoesNotExist:
+            pass
+
+        return {
+            'image': static('img/tiers/icons/0.png'),
+            'tier_name': 'Unranked'
+        }
+
+    @cached_property
     def vehicle_data(self):
         """
         {
@@ -780,6 +805,11 @@ class Player(models.Model):
                         components[mappings['type']].save()
 
         return components
+
+    def get_absolute_url(self):
+        if PLATFORMS_MAPPINGS[self.platform] == 'steam':
+            return reverse('users:steam', args=[self.online_id])
+        return self.platform
 
     def __str__(self):
         return '{} on Team {}'.format(

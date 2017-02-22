@@ -25,7 +25,7 @@ def playlist_name(playlist, remove_prefix=False):
 
 
 @register.simple_tag
-def league_name(tier):
+def tier_name(tier):
     if tier in settings.TIERS:
         return settings.TIERS[tier]
     return tier
