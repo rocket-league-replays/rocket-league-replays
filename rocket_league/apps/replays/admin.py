@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.db.models import Q
 from djcelery.models import TaskMeta
 
 from .models import (Component, BoostData, Goal, Map, Player, Replay, ReplayPack,
@@ -10,6 +9,8 @@ from .tasks import process_netstream
 def reprocess_matches(modeladmin, request, queryset):
     for replay in queryset:
         process_netstream.apply_async([replay.pk], queue=replay.queue_priority)
+
+
 reprocess_matches.short_description = "Reprocess selected matches"
 
 
@@ -17,6 +18,16 @@ def recalculate_average_rating(modeladmin, request, queryset):
     for obj in queryset:
         obj.average_rating = obj.calculate_average_rating()
         obj.save()
+
+
+@admin.register(Player)
+class PlayerAdmin(admin.ModelAdmin):
+    model = Player
+    raw_id_fields = ['replay', 'party_leader']
+
+    list_display = ['player_name', 'replay', 'platform']
+    list_filter = ['platform']
+    search_fields = ['replay__id']
 
 
 class PlayerInlineAdmin(admin.StackedInline):
@@ -60,6 +71,7 @@ class BoostDataInlineAdmin(admin.TabularInline):
         return False
 
 
+@admin.register(Replay)
 class ReplayAdmin(admin.ModelAdmin):
 
     def has_heatmaps(self, obj):
@@ -72,9 +84,8 @@ class ReplayAdmin(admin.ModelAdmin):
     # inlines = [PlayerInlineAdmin, GoalInlineAdmin, BoostDataInlineAdmin]
     actions = [reprocess_matches, recalculate_average_rating]
 
-admin.site.register(Replay, ReplayAdmin)
 
-
+@admin.register(Map)
 class MapAdmin(admin.ModelAdmin):
 
     def replay_count(self, obj):
@@ -82,26 +93,23 @@ class MapAdmin(admin.ModelAdmin):
 
     list_display = ['title', 'slug', 'replay_count']
 
-admin.site.register(Map, MapAdmin)
 
-
+@admin.register(ReplayPack)
 class ReplayPackAdmin(admin.ModelAdmin):
     raw_id_fields = ['replays']
 
-admin.site.register(ReplayPack, ReplayPackAdmin)
 
 admin.site.register(Season)
 
 
+@admin.register(Component)
 class ComponentAdmin(admin.ModelAdmin):
     list_display = ['internal_id', 'name', 'type']
     list_filter = ['type']
 
-admin.site.register(Component, ComponentAdmin)
 
-
+@admin.register(TaskMeta)
 class TaskMetaAdmin(admin.ModelAdmin):
     list_display = ['task_id', 'status', 'date_done']
     list_filter = ['status']
     readonly_fields = ['result', 'meta']
-admin.site.register(TaskMeta, TaskMetaAdmin)
