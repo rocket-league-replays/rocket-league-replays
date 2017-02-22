@@ -155,12 +155,12 @@
                                 {% if rating.tier|league_image %}
                                     {% with rating.tier|string as rating_string %}
                                         {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                            <img src="{% static url %}" alt="{% league_name rating.tier %}" title="{% league_name rating.tier %}">
+                                            <img src="{% static url %}" alt="{% tier_name rating.tier %}" title="{% tier_name rating.tier %}">
                                         {% endwith %}
                                     {% endwith %}
                                 {% endif %}
 
-                                {% league_name rating.tier %}
+                                {% tier_name rating.tier %}
 
                                 {% if rating.division != -1 %} ({% division_name rating.division %}){% endif %}
                                 </div>

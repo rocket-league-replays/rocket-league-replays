@@ -10,7 +10,7 @@
         <h4>
             {% with rating.tier|string as rating_string %}
                 {% with 'img/tiers/orig/'|add:rating_string|add:'.png' as url %}
-                    <img src="{% static url %}" alt="{% league_name rating.tier %}" title="{% league_name rating.tier %}">
+                    <img src="{% static url %}" alt="{% tier_name rating.tier %}" title="{% tier_name rating.tier %}">
                 {% endwith %}
             {% endwith %}
 
