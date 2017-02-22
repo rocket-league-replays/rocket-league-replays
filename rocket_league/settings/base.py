@@ -397,6 +397,8 @@ HUMAN_PLAYLISTS = {
     16: 'Rocket Labs',
 }
 
+RANKED_PLAYLISTS = [10, 11, 12, 13]
+
 TIERS = {
     0: 'Unranked',
     1: 'Prospect I',

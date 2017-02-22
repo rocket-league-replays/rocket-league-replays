@@ -700,8 +700,11 @@ class Player(models.Model):
         from ..users.models import LeagueRating
         from ..users.templatetags.ratings import tier_name
 
+        if self.replay.playlist not in settings.RANKED_PLAYLISTS:
+            return
+
         try:
-            rating = LeagueRating.objects.get(
+            rating = LeagueRating.objects.get_or_request(
                 platform=self.platform,
                 online_id=self.online_id,
                 playlist=self.replay.playlist,

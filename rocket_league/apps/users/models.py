@@ -1,3 +1,5 @@
+import os
+
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -6,11 +8,12 @@ from django.db import models
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
+from rlapi import RocketLeagueAPI
 from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
 from social.backends.steam import USER_INFO
 
-from ..replays.models import PLATFORMS_MAPPINGS
+from ..replays.models import PLATFORM_STEAM, PLATFORMS_MAPPINGS
 
 
 class Profile(models.Model):
@@ -151,6 +154,58 @@ class Profile(models.Model):
         })
 
 
+class LeagueRatingManager(models.Manager):
+
+    # {'online_id': '76561198181829054', 'platform': '1', 'playlist': 1}
+    def get_or_request(self, *args, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            if (
+                'playlist' not in kwargs or
+                    'online_id' not in kwargs or
+                    'platform' not in kwargs or
+                    kwargs['playlist'] not in settings.RANKED_PLAYLISTS
+            ):
+                raise
+
+            # Get the rating from the API.
+            rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+            player = rl.get_player_skills(PLATFORMS_MAPPINGS[kwargs['platform']], kwargs['online_id'])[0]
+
+            if kwargs['platform'] == PLATFORM_STEAM:
+                online_id = player['user_id']
+            else:
+                online_id = player['user_name']
+
+            timestamp = now()
+            return_obj = None
+
+            for playlist_data in player['player_skills']:
+                obj = LeagueRating.objects.update_or_create(
+                    platform=kwargs['platform'],
+                    online_id=online_id,
+                    playlist=playlist_data['playlist'],
+                    defaults={
+                        'skill': playlist_data['skill'],
+                        'matches_played': playlist_data['matches_played'],
+                        'tier': playlist_data['tier'],
+                        'tier_max': playlist_data['tier_max'],
+                        'division': playlist_data['division'],
+                        'timestamp': timestamp,
+                    }
+                )
+
+                if playlist_data['playlist'] == kwargs['playlist']:
+                    return_obj = obj
+
+                if return_obj:
+                    return return_obj
+
+                raise
+        raise
+
+
 class LeagueRating(models.Model):
 
     """
@@ -216,6 +271,8 @@ class LeagueRating(models.Model):
     timestamp = models.DateTimeField(
         auto_now_add=True,
     )
+
+    objects = LeagueRatingManager()
 
     def __str__(self):
         return 'Platform: {}, Online ID: {}, Playlist: {}, Tier: {}'.format(
