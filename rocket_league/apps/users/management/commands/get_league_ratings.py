@@ -37,9 +37,21 @@ def chunks(input_list, chunk_length):
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
-        # Positional arguments
-        parser.add_argument('platform', nargs='+', type=str)
-        parser.add_argument('online_id', nargs='+', type=str)
+        parser.add_argument(
+            '--platform',
+            type=str,
+            nargs='+',
+            action='store',
+            required=False,
+        )
+
+        parser.add_argument(
+            '--online_id',
+            type=str,
+            nargs='+',
+            action='store',
+            required=False,
+        )
 
     def handle_individual(self, platform, online_id):
         players = rl.get_player_skills(platform, online_id)
@@ -75,7 +87,7 @@ class Command(BaseCommand):
                 )
 
     def handle(self, *args, **options):
-        if 'platform' in options and 'online_id' in options:
+        if options['platform'] and options['online_id']:
             self.handle_individual(options['platform'][0], options['online_id'][0])
             exit()
 
