@@ -383,6 +383,15 @@ def parse_replay_netstream(replay_id):
             if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
                 del value['Engine.PlayerReplicationInfo:Team']
 
+            # If an actor is getting their team value nuked, store what it was
+            # so we can use it later on.
+            if (
+                'Engine.PlayerReplicationInfo:Team' in value and
+                value['Engine.PlayerReplicationInfo:Team']['Value']['Int'] == -1 and
+                actors[actor_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int'] != -1
+            ):
+                actors[actor_id]['Engine.PlayerReplicationInfo:CachedTeam'] = actors[actor_id]['Engine.PlayerReplicationInfo:Team']
+
             # Merge the new properties with the existing.
             if actors[actor_id] != value:
                 actors[actor_id] = {**actors[actor_id], **value}
@@ -674,6 +683,10 @@ def parse_replay_netstream(replay_id):
         if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
             team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value']['Int'])
 
+        # Attempt to get the team ID from our cache.
+        if team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in value:
+            team = get_team(value['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int'])
+
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
             player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
@@ -685,7 +698,7 @@ def parse_replay_netstream(replay_id):
             saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
             platform=PLATFORMS.get(system, system),
             online_id=online_id,
-            bot=False,  # TODO: Add a check for this.
+            bot=value.get('Engine.PlayerReplicationInfo:bBot', {'Value': False})['Value'],
             spectator='Engine.PlayerReplicationInfo:Team' not in value,
             actor_id=actor_id,
             unique_id=unique_id,
