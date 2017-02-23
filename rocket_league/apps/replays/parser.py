@@ -706,7 +706,16 @@ def parse_replay_netstream(replay_id):
                 if other_team != -1:
                     # There's nothing more we can do.
                     tdk = list(team_data.keys())
-                    team = get_team(tdk[(tdk.index(other_team) - 1) * 1])
+                    team_id = tdk[(tdk.index(other_team) - 1) * 1]
+                    team = get_team(team_id)
+
+                    player_actors[actor_id]['Engine.PlayerReplicationInfo:Team'] = {
+                        'Type': 'FlaggedInt',
+                        'Value': {
+                            'Flag': True,
+                            'Int': team_id,
+                        }
+                    }
 
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
