@@ -687,6 +687,27 @@ def parse_replay_netstream(replay_id):
         if team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in value:
             team = get_team(value['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int'])
 
+        if team == -1:
+            # If this is a 1v1 and the other player has a team, then put this
+            # player on the opposite team.
+            if len(player_actors) == 2:
+                pak = list(player_actors.keys())
+                other_player = player_actors[pak[(pak.index(actor_id) - 1) * -1]]
+
+                other_team = -1
+
+                if 'Engine.PlayerReplicationInfo:Team' in other_player and other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
+                    other_team = other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']
+
+                # Attempt to get the team ID from our cache.
+                if other_team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in other_player:
+                    other_team = other_player['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int']
+
+                if other_team != -1:
+                    # There's nothing more we can do.
+                    tdk = list(team_data.keys())
+                    team = get_team(tdk[(tdk.index(other_team) - 1) * 1])
+
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
             player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
