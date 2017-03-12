@@ -4,22 +4,6 @@
 {% block title %}{{ steam_info.personaname }} - {{ block.super }}{% endblock %}
 
 {% block content_primary %}
-{% comment %}
-    [x] Link to Steam profile
-    [ ] Show all replays they have been involved in.
-    [x] Allow profiles to work off Steam IDs?
-    [x] "Appeared as" - all steam names used
-    Overall stats based on replays?
-        - [x] Winning goals scored.
-        - [ ] Bring in the usual player stats from the unofficial API?
-        - [ ] Time played, based on replays?
-        - [ ] % of games which have replays uploaded
-        - [x] Times carried / dominated - score far greater than team-mates / other team / score greater than everyone else
-        - [x] Team saver goals - scored in the last ~minute to go to overtime
-        - [x] Preferred match type.
-    [ ] Allow users to rate each other (if they appeared in the same replay, thumbs up only).
-{% endcomment %}
-
 <div class="row">
     <div class="small-12 columns">
         <h3>
@@ -93,8 +77,6 @@
 {% cache 1800 player_stats player_id %}
 <div class="row">
     <div class="medium-5 columns">
-        <h4>Player stats</h4>
-
         <table width="100%">
             <tbody>
                 <tr>
