@@ -9,10 +9,22 @@ register = template.Library()
 
 @register.assignment_tag(takes_context=True)
 def latest_ratings(context):
-    return LeagueRating.objects.filter_or_request(
+    ratings = LeagueRating.objects.filter_or_request(
         platform=context['platform'],
         online_id=context['player_id'],
     )
+
+    if ratings:
+        return ratings
+
+    # Add some default values.
+    return [
+        {
+            'playlist': playlist,
+            'tier': 0,
+        }
+        for playlist in settings.RANKED_PLAYLISTS
+    ]
 
 
 @register.simple_tag
