@@ -10,7 +10,7 @@ from rlapi import RocketLeagueAPI
 
 from ....replays.models import (PLATFORM_PSN, PLATFORM_STEAM, PLATFORM_UNKNOWN,
                                 PLATFORM_XBOX, PLATFORMS_MAPPINGS, Player)
-from ....users.models import LeagueRating
+from ....users.models import LeagueRating, PlayerStats
 
 rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
 
@@ -174,6 +174,9 @@ class Command(BaseCommand):
 
                     players = rl.get_player_skills(PLATFORMS_MAPPINGS[platform], online_ids)
 
+                    # While we're here, get their stats as well.
+                    stats = rl.get_stats_values_for_user(PLATFORMS_MAPPINGS[platform], online_ids)
+
                     for player in players:
                         if platform == PLATFORM_STEAM:
                             online_id = player['user_id']
@@ -194,3 +197,9 @@ class Command(BaseCommand):
                                     'timestamp': timestamp,
                                 }
                             )
+
+                        PlayerStats.objects.update_or_create(
+                            platform=platform,
+                            online_id=online_id,
+                            defaults=stats[online_id]
+                        )

@@ -287,6 +287,47 @@ class LeagueRating(models.Model):
         unique_together = [['platform', 'online_id', 'playlist']]
 
 
+class PlayerStats(models.Model):
+
+    platform = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+
+    online_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+
+    wins = models.PositiveIntegerField(
+        default=0,
+    )
+
+    assists = models.PositiveIntegerField(
+        default=0,
+    )
+
+    goals = models.PositiveIntegerField(
+        default=0,
+    )
+
+    shots = models.PositiveIntegerField(
+        default=0,
+    )
+
+    mvps = models.PositiveIntegerField(
+        default=0,
+    )
+
+    saves = models.PositiveIntegerField(
+        default=0,
+    )
+
+
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
 User.profile = property(lambda u: Profile.objects.get_or_create(user=u)[0])
 
