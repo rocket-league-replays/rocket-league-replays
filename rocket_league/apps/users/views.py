@@ -207,6 +207,10 @@ class SteamView(TemplateView):
         return context
 
 
+class PS4View(TemplateView):
+    template_name = 'users/steam_profile.html'
+
+
 class StreamDataView(View):
 
     def get(self, request, *args, **kwargs):

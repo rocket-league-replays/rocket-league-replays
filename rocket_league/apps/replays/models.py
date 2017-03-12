@@ -810,9 +810,7 @@ class Player(models.Model):
         return components
 
     def get_absolute_url(self):
-        if PLATFORMS_MAPPINGS[self.platform] == 'steam':
-            return reverse('users:steam', args=[self.online_id])
-        return self.platform
+        return reverse('users:' + PLATFORMS_MAPPINGS[self.platform], args=[self.online_id])
 
     def __str__(self):
         return '{} on Team {}'.format(
