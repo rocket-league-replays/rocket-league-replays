@@ -11,6 +11,7 @@ for the site, database, media and email sections below.
 import os
 import platform
 import sys
+from collections import OrderedDict
 
 if platform.python_implementation() == "PyPy":
     from psycopg2cffi import compat
@@ -135,13 +136,13 @@ INSTALLED_APPS = [
 
     "sorl.thumbnail",
     "compressor",
+    'corsheaders',
 
     "cms",
 
     "reversion",
     # "usertools",
     "historylinks",
-    "watson",
 
     "cms.apps.pages",
     "cms.apps.links",
@@ -153,6 +154,7 @@ INSTALLED_APPS = [
     "rocket_league.apps.site",
     "rocket_league.apps.users",
 
+    "djcelery",
     'server_management',
     'django_extensions',
     'cachalot',
@@ -184,13 +186,13 @@ COMPRESS_CSS_FILTERS = [
 
 MIDDLEWARE_CLASSES = (
     # "cms.middleware.LocalisationMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "watson.middleware.SearchContextMiddleware",
     "historylinks.middleware.HistoryLinkFallbackMiddleware",
     "cms.middleware.PublicationMiddleware",
     "cms.apps.pages.middleware.PageMiddleware",
@@ -328,8 +330,11 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 30
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_URLS_REGEX = r'^/api/.*$'
 
 SWAGGER_SETTINGS = {
     'info': {
@@ -367,6 +372,7 @@ PLAYLISTS = {
     'UnrankedDoubles': 2,
     'UnrankedStandard': 3,
     'UnrankedChaos': 4,
+    'Hoops': 6,
     'RankedDuels': 10,
     'RankedDoubles': 11,
     'RankedSoloStandard': 12,
@@ -374,6 +380,24 @@ PLAYLISTS = {
     'SnowDay': 15,
     'RocketLabs': 16,  # TODO: Check this is correct.
 }
+
+PLAYLISTS = OrderedDict(sorted(PLAYLISTS.items(), key=lambda t: t[0]))
+
+HUMAN_PLAYLISTS = {
+    1: 'Unranked Duels',
+    2: 'Unranked Doubles',
+    3: 'Unranked Standard',
+    4: 'Unranked Chaos',
+    6: 'Hoops',
+    10: 'Ranked Duels',
+    11: 'Ranked Doubles',
+    12: 'Ranked Solo Standard',
+    13: 'Ranked Standard',
+    15: 'Snow Day',
+    16: 'Rocket Labs',
+}
+
+RANKED_PLAYLISTS = [10, 11, 12, 13]
 
 TIERS = {
     0: 'Unranked',
@@ -401,6 +425,26 @@ DIVISIONS = {
     3: 'Division IV',
     4: 'Division V',  # Highest
 }
+
+SLACK_URL = os.getenv('SLACK_URL', '')
+
+# CELERY
+BROKER_URL = 'redis://:{}@{}'.format(
+    os.getenv('REDIS_MASTER_PASSWORD'),
+    os.getenv('REDIS_HOST'),
+)
+
+CELERY_DISABLE_RATE_LIMITS = True
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERY_IGNORE_RESULT = False
+
+# Prices are in cents (USD)
+PATREON_CROWN_PRICE = 100  # This must be above 0, otherwise everyone gets a crown -- and this isn't Oprah!
+PATREON_SOCIAL_MEDIA_PRICE = 100
+PATREON_PLAYBACK_PRICE = 300
+PATREON_BOOST_PRICE = 300
+PATREON_STREAM_LISTING_PRICE = 300
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load

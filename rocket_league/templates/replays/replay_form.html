@@ -63,9 +63,11 @@ $(function() {
         'uploadScript': '{% url 'replay:upload' %}',
         'onError': function(errorType, file) {
             data = JSON.parse(file.xhr.responseText)
-            file.queueItem.addClass('error').find('.fileinfo').html(' - ' + data.errorText);
-            replay_ids.push(data.replayID);
-            $('.replay-pack-cta.hide').removeClass('hide');
+            if (typeof data === 'string') {
+                file.queueItem.addClass('error').find('.fileinfo').html(' - ' + data);
+            } else {
+                file.queueItem.addClass('error').find('.fileinfo').html(' - ' + data.errorText);
+            }
         },
         'onUploadComplete': function(file, data) {
             data = JSON.parse(data)

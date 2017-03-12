@@ -1,20 +1,29 @@
 import re
 
 from braces.views import LoginRequiredMixin
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.db.models import Q
-from django.views.generic import CreateView, DeleteView, DetailView, UpdateView
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+from django.views.generic import (CreateView, DeleteView, DetailView,
+                                  RedirectView, UpdateView)
 from django_filters.views import FilterView
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, views, viewsets
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 
+from . import serializers
 from ...utils.forms import AjaxableResponseMixin
+from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import Goal, Map, Player, Replay, ReplayPack, get_default_season
-from .serializers import (GoalSerializer, MapSerializer, PlayerSerializer,
-                          ReplayCreateSerializer, ReplayListSerializer,
-                          ReplaySerializer)
+from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Component,
+                     Goal, Map, Player, Replay, ReplayPack, Season,
+                     get_default_season)
+from .tasks import process_netstream
+from .templatetags.replays import process_boost_data
 
 
 class ReplayListView(FilterView):
@@ -28,7 +37,8 @@ class ReplayListView(FilterView):
 
         qs = qs.exclude(
             Q(processed=False) |
-            Q(replay_id='')
+            Q(replay_id='') |
+            Q(team_sizes=None)
         )
 
         if 'season' not in self.request.GET:
@@ -50,6 +60,15 @@ class ReplayListView(FilterView):
             })
             qs = qs.order_by('-timestamp__date', '-average_rating')
 
+        # Limit to public games, or unlisted / private games uploaded by the user.
+        if self.request.user.is_authenticated():
+            qs = qs.filter(
+                Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+            )
+        else:
+            qs = qs.filter(
+                privacy=PRIVACY_PUBLIC,
+            )
         return qs
 
     def get_context_data(self, **kwargs):
@@ -67,13 +86,125 @@ class ReplayListView(FilterView):
         return context
 
 
-class ReplayDetailView(DetailView):
+class ReplayUUIDMixin(DetailView):
+
+    def dispatch(self, request, *args, **kwargs):
+        from django.shortcuts import redirect
+        from django.core.urlresolvers import resolve
+
+        resolved_url = resolve(request.path)
+
+        if 'pk' in kwargs:
+            obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
+
+            if obj.replay_id:
+                return redirect(
+                    'replay:{}'.format(
+                        resolved_url.url_name
+                    ),
+                    permanent=True,
+                    replay_id=re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', obj.replay_id).lower()
+                )
+
+        if 'replay_id' in kwargs and '-' not in kwargs['replay_id']:
+            return redirect(
+                'replay:{}'.format(
+                    resolved_url.url_name
+                ),
+                permanent=True,
+                replay_id=re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', kwargs['replay_id'].upper()).lower()
+            )
+
+        return super(ReplayUUIDMixin, self).dispatch(request, *args, **kwargs)
+
+    def get_object(self):
+        replay_id = ''
+
+        if 'replay_id' in self.kwargs:
+            replay_id = self.kwargs['replay_id'].replace('-', '').upper()
+
+        try:
+            if 'replay_id' in self.kwargs:
+                obj = get_object_or_404(Replay, replay_id=replay_id)
+            elif 'pk' in self.kwargs:
+                obj = get_object_or_404(Replay, pk=self.kwargs['pk'])
+        except Replay.MultipleObjectsReturned:
+            replays = Replay.objects.filter(
+                replay_id=replay_id,
+            )[1:]
+
+            for replay in replays:
+                replay.delete()
+
+            obj = get_object_or_404(Replay, replay_id=replay_id)
+
+        # Ensure the current user is allowed to view this replay.
+        if obj.privacy in [PRIVACY_PUBLIC, PRIVACY_UNLISTED]:
+            return obj
+
+        if obj.privacy == PRIVACY_PRIVATE:
+            if not self.request.user.is_authenticated():
+                raise Http404
+
+            if self.request.user != obj.user:
+                raise Http404
+
+        return obj
+
+
+class ReplayDetailView(ReplayUUIDMixin):
     model = Replay
 
 
-class ReplayAnalysisView(DetailView):
+class ReplayAnalysisView(RedirectView):
+    permanent = True
+
+    def get_redirect_url(self, *args, **kwargs):
+        return reverse('replay:playback', kwargs=kwargs)
+
+
+class ReplayBoostAnalysisView(ReplayUUIDMixin):
     model = Replay
-    template_name_suffix = '_analysis'
+    template_name_suffix = '_boost_analysis'
+
+    def get_context_data(self, **kwargs):
+        context = super(ReplayBoostAnalysisView, self).get_context_data(**kwargs)
+
+        CACHE_KEY_0 = 'replay_boost_context_{}_team_0'.format(self.object.pk)
+        CACHE_KEY_1 = 'replay_boost_context_{}_team_1'.format(self.object.pk)
+
+        cached_data_0 = cache.get(CACHE_KEY_0)
+        cached_data_1 = cache.get(CACHE_KEY_1)
+
+        context['team_0_boost_consumed'] = 0
+        context['team_1_boost_consumed'] = 0
+
+        if cached_data_0 and cached_data_1:
+            context['team_0_boost_consumed'] = cached_data_0
+            context['team_1_boost_consumed'] = cached_data_1
+            return context
+
+        # Get the tabular data.
+        for player in self.object.player_set.all():
+            if not player.boost_data:
+                player.boost_data = process_boost_data({}, obj=player)
+                player.save()
+
+            # Get the team boost data.
+            if player.team == 0:
+                context['team_0_boost_consumed'] += player.boost_data['boost_consumption']
+            elif player.team == 1:
+                context['team_1_boost_consumed'] += player.boost_data['boost_consumption']
+
+        cache.set(CACHE_KEY_0, context['team_0_boost_consumed'], 3600)
+        cache.set(CACHE_KEY_1, context['team_1_boost_consumed'], 3600)
+
+        return context
+
+
+class ReplayPlaybackView(ReplayUUIDMixin):
+    model = Replay
+    template_name_suffix = '_playback'
 
 
 class ReplayCreateView(AjaxableResponseMixin, CreateView):
@@ -82,12 +213,14 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
 
     def form_invalid(self, form):
         import re
-        results = re.search(r'\/replays\/(\d+)\/', form.errors['__all__'][0])
 
-        if results:
-            form.errors['errorText'] = form.errors['__all__'][0]
-            form.errors['replayID'] = results.group(1)
-            del form.errors['__all__']
+        if '__all__' in form.errors:
+            results = re.search(r'\/replays\/(\d+)\/', form.errors['__all__'][0])
+
+            if results:
+                form.errors['errorText'] = form.errors['__all__'][0]
+                form.errors['replayID'] = results.group(1)
+                del form.errors['__all__']
 
         return super(ReplayCreateView, self).form_invalid(form)
 
@@ -95,7 +228,15 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         if self.request.user.is_authenticated():
             form.instance.user = self.request.user
 
-        return super(ReplayCreateView, self).form_valid(form)
+            # Set the privacy level according to this user's settings.
+            form.instance.privacy = self.request.user.profile.privacy
+
+        response = super(ReplayCreateView, self).form_valid(form)
+
+        # Add the replay to the netstream processing queue.
+        process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
+
+        return response
 
 
 class ReplayUpdateView(LoginRequiredMixin, UpdateView):
@@ -156,6 +297,10 @@ class ReplayPackCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.user = self.request.user
+
+        # Set the privacy level according to this user's settings.
+        form.instance.privacy = self.request.user.profile.privacy
+
         return super(ReplayPackCreateView, self).form_valid(form)
 
     def get_form_kwargs(self):
@@ -229,11 +374,11 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
     queryset = Replay.objects.filter(
         processed=True,
     )
-    serializer_class = ReplaySerializer
+    serializer_class = serializers.ReplaySerializer
 
     serializer_action_classes = {
-        'list': ReplayListSerializer,
-        'create': ReplayCreateSerializer,
+        'list': serializers.ReplaySerializer,
+        'create': serializers.ReplayCreateSerializer,
     }
 
     def get_serializer_class(self):
@@ -243,7 +388,7 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
         i.e.:
 
         class MyViewSet(MultiSerializerViewSetMixin, ViewSet):
-            serializer_class = MyDefaultSerializer
+            serializer_class = serializers.MyDefaultSerializer
             serializer_action_classes = {
                'list': MyListSerializer,
                'my_action': MyActionSerializer,
@@ -277,8 +422,23 @@ class ReplayViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.Retri
             )
         return queryset
 
+    def get_object(self):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        filters = {}
+
+        if 'replay_id' in self.kwargs:
+            filters['replay_id'] = self.kwargs['replay_id']
+        elif 'pk' in self.kwargs:
+            filters['pk'] = self.kwargs['pk']
+
+        return get_object_or_404(queryset, **filters)
+
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        instance = serializer.save(user=self.request.user)
+
+        # Add the replay to the netstream processing queue.
+        process_netstream.apply_async([instance.pk], queue=instance.queue_priority)
 
 
 class MapViewSet(viewsets.ReadOnlyModelViewSet):
@@ -288,7 +448,17 @@ class MapViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Map.objects.all()
-    serializer_class = MapSerializer
+    serializer_class = serializers.MapSerializer
+
+
+class SeasonViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all seasons in the system.
+    """
+
+    queryset = Season.objects.all()
+    serializer_class = serializers.SeasonSerializer
 
 
 class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -298,7 +468,7 @@ class PlayerViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Player.objects.all()
-    serializer_class = PlayerSerializer
+    serializer_class = serializers.PlayerSerializer
 
 
 class GoalViewSet(viewsets.ReadOnlyModelViewSet):
@@ -308,4 +478,49 @@ class GoalViewSet(viewsets.ReadOnlyModelViewSet):
     """
 
     queryset = Goal.objects.all()
-    serializer_class = GoalSerializer
+    serializer_class = serializers.GoalSerializer
+
+
+class ComponentViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all of the car bodies available in-game.
+    """
+
+    queryset = Component.objects.all()
+    serializer_class = serializers.ComponentSerializer
+
+
+class LimitedPageNumberPagination(PageNumberPagination):
+    page_size = 10
+
+
+class ReplayPackViewSet(viewsets.ReadOnlyModelViewSet):
+
+    """
+    Returns a list of all of the car bodies available in-game.
+    """
+
+    queryset = ReplayPack.objects.all()
+    serializer_class = serializers.ReplayPackSerializer
+    pagination_class = LimitedPageNumberPagination
+
+
+class LatestUserReplay(views.APIView):
+    serializer_class = serializers.ReplaySerializer
+
+    def get_serializer_context(self):
+        user = get_object_or_404(User, pk=self.kwargs['user_id'])
+
+        try:
+            return Replay.objects.filter(
+                user=user,
+            ).order_by('-pk')[0]
+        except IndexError:
+            pass
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class(self.get_serializer_context(), context={
+            'request': request,
+        })
+        return Response(serializer.data)

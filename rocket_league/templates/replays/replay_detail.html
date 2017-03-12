@@ -14,7 +14,7 @@
     {% endif %}
 
     <div class="row">
-        <div class="large-6 columns">
+        <div class="large-6 columns mb-30">
         {% if replay.show_leaderboard %}
             {% scoreboard 0 %}
             {% scoreboard 1 %}
@@ -53,6 +53,19 @@
             </p>
             {% endif %}
         {% endif %}
+
+        {% if patreon == 0 %}
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <!-- Under scoreboard -->
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="ca-pub-1408820986188374"
+             data-ad-slot="4628590486"
+             data-ad-format="auto"></ins>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+        {% endif %}
         </div>
         <div class="large-6 columns">
             <table width="100%">
@@ -66,7 +79,7 @@
                 <tbody>
                     {% for goal in object.goal_set.all %}
                     <tr>
-                        <td>{{ goal.number }}</td>
+                        <td>{{ forloop.counter }}</td>
                         <td>{{ goal.goal_time }}</td>
                         <td>
                             {% if goal.player.team == 0 %}
@@ -138,6 +151,48 @@
 
     {# JSON powered heatmaps #}
     {% if replay.heatmap_json_file %}
+    <div class="flex-row" style="justify-content: space-around;">
+      <div class="medium-4 columns">
+          <h5>Ball</h5>
+          <div class="heatmap" data-actor-id="ball">
+              <p>Loading heatmap..</p>
+
+              <div class="thirds" data-actor-id="ball">
+                <div class="third-value left"></div>
+                <div class="third-value middle"></div>
+                <div class="third-value right"></div>
+            </div>
+
+            <div class="quadrants" data-actor-id="ball">
+                <div class="quadrant-value top-left"></div>
+                <div class="quadrant-value top-right"></div>
+                <div class="quadrant-value bottom-left"></div>
+                <div class="quadrant-value bottom-right"></div>
+            </div>
+        </div>
+      </div>
+
+      {% if replay.shot_data %}
+      <div class="medium-4 columns end">
+        <h5>Goal scoring positions</h5>
+        <div style="position: relative">
+            <img src="{% static 'img/arena_outline.png' %}" alt="">
+            <div id="hmp-Outer-xy"></div>
+        </div>
+
+        <style>
+        #hmp-Outer-xy {
+          position: absolute;
+          top: 8px;
+          left: 11px;
+          right: 13px;
+          bottom: 8px;
+        }
+        </style>
+      </div>
+      {% endif %}
+    </div>
+
     <div class="flex-row">
         {% team_players 0 as players %}
         <div class="flex-6">
@@ -207,11 +262,7 @@
                     <tr>
                         <td class="text-center">
                             <a href="{% url 'replay:update' pk=replay.pk %}">
-                                {% if replay.title %}
-                                    Rename this replay
-                                {% else %}
-                                    Give this replay a name
-                                {% endif %}
+                                Manage replay
                             </a>
                         </td>
                         <td class="text-center">
@@ -248,7 +299,16 @@
                             Replay ID:
                         </td>
                         <td>
-                            {{ replay.replay_id }}
+                            {{ replay.replay_id }} {% if user.is_superuser %}({{ replay.pk }}){% endif %}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            Replay privacy:
+                        </td>
+                        <td>
+                            {{ replay.get_privacy_display }}
                         </td>
                     </tr>
 
@@ -301,6 +361,13 @@
                         <td>{{ replay.match_type }}</td>
                     </tr>
 
+                    {% if replay.playlist %}
+                    <tr>
+                        <td>Playlist:</td>
+                        <td>{{ replay.get_human_playlist }}</td>
+                    </tr>
+                    {% endif %}
+
                     <tr>
                         <td>Match length:</td>
                         <td>{{ replay.match_length }}</td>
@@ -343,5 +410,98 @@
 {% block additional_js %}
     {% if replay.heatmap_json_file %}
     <script src="{% static 'js/vendor/heatmap.js' %}"></script>
+    {% endif %}
+
+    {% if replay.shot_data %}
+    <script type="text/javascript">
+    var data = [
+      {% for goal in replay.shot_data %}
+      {
+        x: [{{ goal.player.0 }}, {{ goal.ball.0 }}],
+        y: [{{ goal.player.1 }}, {{ goal.ball.1 }}],
+        z: [{{ goal.player.2 }}, {{ goal.ball.2 }}],
+        label: "Goal {% get_goal_number goal.frame %}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+    </script>
+
+    <script>
+    function getBaseSettings() {
+        return {
+            zoomEnabled: true,
+            title:{
+                fontSize: 14,
+            },
+            axisX: {
+                labelFontSize: 14,
+                titleFontSize: 14,
+            },
+            axisY: {
+                labelFontSize: 14,
+                titleFontSize: 14,
+            },
+            legend: {
+                cursor: "pointer",
+                itemclick: function (e) {
+                    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                        e.dataSeries.visible = false;
+                    } else {
+                        e.dataSeries.visible = true;
+                    }
+
+                    e.chart.render();
+                },
+                itemTextFormatter: function(e) {
+                    return parseHtmlEntities(e.dataSeries.name)
+                }
+            },
+            toolTip: {
+                shared: true,
+            }
+        }
+    }
+
+    const xy = new CanvasJS.Chart("hmp-Outer-xy", getBaseSettings())
+    xy.options.data = []
+
+    xy.options.backgroundColor = ''
+    // xy.options.width = '100%'
+    xy.options.height = 280
+    xy.options.toolTip = {
+      content: '{name}'
+    }
+
+    xy.options.axisX.title = null
+    xy.options.axisX.minimum = -5220
+    xy.options.axisX.maximum = 5220
+    xy.options.axisX.margin = 0
+    xy.options.axisX.lineThickness = 0
+    xy.options.axisX.tickThickness = 0
+    xy.options.axisX.gridThickness = 0
+    xy.options.axisX.labelFormatter = function (e) { return '' }
+
+    xy.options.axisY.title = null
+    xy.options.axisY.minimum = -4120
+    xy.options.axisY.maximum = 4120
+    xy.options.axisY.margin = 0
+    xy.options.axisY.lineThickness = 0
+    xy.options.axisY.tickThickness = 0
+    xy.options.axisY.gridThickness = 0
+    xy.options.axisY.labelFormatter = function (e) { return '' }
+
+
+    data.forEach(function (item, index) {
+      xy.options.data.push({
+        type: 'line',
+        name: item.label,
+        dataPoints: [
+          { y: item.x[0], x: item.y[0] },
+          { y: item.x[1], x: item.y[1] },
+        ]
+      })
+    });
+    xy.render();
+    </script>
     {% endif %}
 {% endblock %}

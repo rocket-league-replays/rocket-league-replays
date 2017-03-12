@@ -6,7 +6,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta name="description" content="{% block meta_description %}{% meta_description %}{% endblock %}">
+        <meta name="description" content="Rocket League Replays is a fansite focused on providing post-match analysis of games played in Rocket League.">
         <meta name="robots" content="{% block meta_robots %}{% meta_robots %}{% endblock %}">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <link rel="canonical" href="{% canonical_url %}"/>
@@ -18,7 +18,7 @@
         <meta property="og:description" content="{% block og_description %}{% og_description %}{% endblock %}">
         <meta property="og:image" content="{% block og_image %}{% og_image %}{% endblock %}">
 
-        <title>{% block title %}{% title %}{% endblock %}</title>
+        <title>{% block title %}{% block object_title_outer %}{% if object %}{% block object_title %}{{ object }}{% endblock %} - {% endif %}{% endblock %}{% title %}{% endblock %}</title>
 
         {% block feeds %}{% endblock %}
 
@@ -55,6 +55,16 @@
         <meta name="msapplication-square150x150logo" content="{% static 'build/img/icons/mediumtile.png' %}" />
         <meta name="msapplication-wide310x150logo" content="{% static 'build/img/icons/widetile.png' %}" />
         <meta name="msapplication-square310x310logo" content="{% static 'build/img/icons/largetile.png' %}" />
+
+        {% if patreon == 0 %}
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <script>
+          (adsbygoogle = window.adsbygoogle || []).push({
+            google_ad_client: "ca-pub-1408820986188374",
+            enable_page_level_ads: true
+          });
+        </script>
+        {% endif %}
     </head>
 
     <body class="{% block body_class %}{% endblock %}">
@@ -77,14 +87,14 @@
         <div class="row page-wrapper">
             <header>
                 <div class="row">
-                    <div class="small-6 medium-3 columns logo-container left">
+                    <div class="medium-3 columns logo-container left">
                         <a href="/" class="secondary">
                             <img src="{% static 'build/img/social_logo.png' %}">
                             <span class="logo-text">Rocket League<br>Replays</span>
                         </a>
                     </div>
 
-                    <ul class="small-6 medium-9 columns text-right primary-navigation">
+                    <ul class="medium-9 columns text-right primary-navigation">
                         {% get_navigation pages.homepage.navigation as nav %}
 
                         {% for item in nav %}
@@ -104,156 +114,25 @@
                 </div>
 
                 <div class="row secondary-navigation">
-                    <div class="medium-3 columns ">
-                        {% if 'steam' not in backends.not_associated %}
-                            {% league_data as data %}
-
-                            {% if data %}
-                                {% if data.10 %}
-                                <span title="This is your rating for ranked duels.">
-                                    Duels:
-
-                                    {% if data.10|league_image %}
-                                        {% with data.10|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.10 %}" title="{% league_name data.10 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.10 %}
-
-                                    {% if data.10_division != -1 %} ({% division_name data.10_division %}){% endif %}
-
-                                    {% if 10 in user.profile.rating_diff and user.profile.rating_diff.10 != 0 %}
-                                        {% if user.profile.rating_diff.10 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.10|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.10 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
-                                </span>
-                                {% if data.11 or data.12 or data.13 %}<br>{% endif %}
-                                {% endif %}
-
-                                {% if data.11 %}
-                                <span title="This is your rating for ranked doubles.">
-                                    Doubles:
-
-                                    {% if data.11|league_image %}
-                                        {% with data.11|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.11 %}" title="{% league_name data.11 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.11 %}
-
-                                    {% if data.11_division != -1 %} ({% division_name data.11_division %}){% endif %}
-
-                                    {% if 11 in user.profile.rating_diff and user.profile.rating_diff.11 != 0 %}
-                                        {% if user.profile.rating_diff.11 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.11|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.11 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
-                                </span>
-                                {% if data.12 or data.13 %}<br>{% endif %}
-                                {% endif %}
-
-                                {% if data.12 %}
-                                <span title="This is your rating for ranked solo standard.">
-                                    Solo Standard:
-
-                                    {% if data.12|league_image %}
-                                        {% with data.12|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.12 %}" title="{% league_name data.12 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.12 %}
-
-                                    {% if data.12_division != -1 %} ({% division_name data.12_division %}){% endif %}
-
-                                    {% if 12 in user.profile.rating_diff and user.profile.rating_diff.12 != 0 %}
-                                        {% if user.profile.rating_diff.12 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.12|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.12 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
-                                </span>
-                                {% if data.13 %}<br>{% endif %}
-                                {% endif %}
-
-                                {% if data.13 %}
-                                <span title="This is your rating for ranked standard.">
-                                    Standard:
-
-                                    {% if data.13|league_image %}
-                                        {% with data.13|string as rating_string %}
-                                            {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                <img src="{% static url %}" alt="{% league_name data.13 %}" title="{% league_name data.13 %}">
-                                            {% endwith %}
-                                        {% endwith %}
-                                    {% endif %}
-
-                                    {% league_name data.13 %}
-
-                                    {% if data.13_division != -1 %} ({% division_name data.13_division %}){% endif %}
-
-                                    {% if 13 in user.profile.rating_diff and user.profile.rating_diff.13 != 0 %}
-                                        {% if user.profile.rating_diff.13 < 0 %}
-                                            <span class="rating-down">
-                                                <em class="icon-down-dir"></em>
-                                                {{ user.profile.rating_diff.13|wrap:"abs" }}
-                                        {% else %}
-                                            <span class="rating-up">
-                                                <em class="icon-up-dir"></em>
-                                                {{ user.profile.rating_diff.13 }}
-                                        {% endif %}
-                                        </span>
-                                    {% endif %}
-                                </span>
-                                {% endif %}
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                    <div class="medium-9 columns right text-right ">
+                    <div class="medium-12 columns text-right pl-0 pr-0">
                         {% if user.is_authenticated %}
                             <a href="{% url 'users:profile' username=user.username %}">Your Profile</a>
                             <a href="{% url 'replay:list' %}?user={{ user.pk }}">Your Replays</a>
                             <a href="{% url 'replaypack:list' %}?user={{ user.pk }}">Your Replay Packs</a>
-                            <a href="{% url 'users:patreon' %}">Patreon Settings</a>
+                            <a href="{% url 'users:settings' %}">Settings</a>
+                            <a href="{% url 'users:stream_settings' %}">Stream Data</a>
 
                             {% if 'steam' in backends.not_associated %}
                                 <a href="{% url 'social:begin' backend='steam' %}">
                                   <img src="https://steamcommunity-a.akamaihd.net/public/images/signinthroughsteam/sits_small.png" style="width: auto; height: auto;">
                                 </a>
                             {% else %}
+                                {% comment %}
                                 <form method="post" action="{% url 'social:disconnect_individual' backend='steam' association_id=user.social_auth.all.0.id %}" style="display: inline;">
                                   {% csrf_token %}
                                   <a href="#" onclick="$(this).parents('form').submit(); return false;">Disconnect Steam account</a>
                                 </form>
+                                {% endcomment %}
 
                                 <a href="{% url 'auth_logout' %}">Logout</a>
                             {% endif %}
@@ -264,6 +143,32 @@
                         {% endif %}
                     </div>
                 </div>
+
+                {% if 'steam' not in backends.not_associated %}
+                    {% for platform, ratings in user.profile.latest_ratings.items %}
+                        {% if ratings %}
+                            <div class="flex-row secondary-navigation" style="justify-content: space-between;">
+                            {% for rating in ratings %}
+                                <div>
+                                {% playlist_name rating.playlist remove_prefix=True %}
+
+                                {% if rating.tier|league_image %}
+                                    {% with rating.tier|string as rating_string %}
+                                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
+                                            <img src="{% static url %}" alt="{% tier_name rating.tier %}" title="{% tier_name rating.tier %}">
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endif %}
+
+                                {% tier_name rating.tier %}
+
+                                {% if rating.division != -1 %} ({% division_name rating.division %}){% endif %}
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
             </header>
 
             <main>
@@ -275,11 +180,12 @@
                 {% if patreon == 0 %}
                 <div class="medium-12 columns text-center hide-below-banner-width">
                     <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-                    <!-- Detail page -->
+                    <!-- Footer responsive -->
                     <ins class="adsbygoogle"
-                         style="display:inline-block;width:728px;height:90px"
+                         style="display:block"
                          data-ad-client="ca-pub-1408820986188374"
-                         data-ad-slot="3142548889"></ins>
+                         data-ad-slot="3012256483"
+                         data-ad-format="auto"></ins>
                     <script>
                     (adsbygoogle = window.adsbygoogle || []).push({});
                     </script>
@@ -295,14 +201,12 @@
         </div>
 
         {% compress js %}
-        <script src="{% static 'js/vendor/jquery.cookie.js' %}"></script>
-
-        <script src="{% static 'js/vendor/fastclick.js' %}"></script>
+        <script src="{% static 'js/vendor/modernizr.js' %}"></script>
 
         <script src="{% static 'js/vendor/foundation/foundation.js' %}"></script>
-        <script src="{% static 'js/vendor/foundation/foundation.tab.js' %}"></script>
+        <script src="{% static 'js/vendor/foundation/foundation.tooltip.js' %}"></script>
 
-        <script src="{% static 'js/vendor/jquery.canvasjs.min.js' %}"></script>
+        <script src="{% static 'js/vendor/canvasjs.js' %}"></script>
         <script src="{% static 'build/js/shared.js' %}"></script>
         <script src="{% static 'build/js/app.js' %}"></script>
 

@@ -22,16 +22,17 @@ class Command(BaseCommand):
             patron_id = pledge['relationships']['patron']['data']['id']
             patron = patrons[patron_id]
 
-            Patron.objects.get_or_create(
-                pledge_id=pledge['id'],
-                defaults={
-                    'pledge_amount': pledge['attributes']['amount_cents'],
-                    'pledge_created': pledge['attributes']['created_at'],
-                    'pledge_declined_since': pledge['attributes']['declined_since'],
-                    'patron_id': patron_id,
-                    'patron_email': patron['email']
-                }
-            )
+            if 'email' in patron:
+                Patron.objects.update_or_create(
+                    patron_email=patron['email'],
+                    defaults={
+                        'pledge_amount': pledge['attributes']['amount_cents'],
+                        'pledge_created': pledge['attributes']['created_at'],
+                        'pledge_declined_since': pledge['attributes']['declined_since'],
+                        'patron_id': patron_id,
+                        'pledge_id': pledge['id'],
+                    }
+                )
 
             processed += 1
 

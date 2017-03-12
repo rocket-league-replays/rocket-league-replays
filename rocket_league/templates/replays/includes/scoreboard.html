@@ -17,43 +17,19 @@
         <th>Assists</th>
         <th>Saves</th>
         <th>Shots</th>
+        <th colspan="2"></th>
     </tr>
     {% for player in players %}
     {% if player.player_name != 'Unknown player (own goal?)' %}
     <tr>
         {% if players.0.player_name %}
         <td>
-            {% if player.platform == 'OnlinePlatform_Steam' or player.platform == '1' %}
-            <a href="{% url 'users:steam' player.online_id %}">
-
-            {# Try to get the latest rating for this player in this size. #}
-            {% with steam_id=player.online_id %}
-                {% latest_ratings as ratings %}
-
-                {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
-                    {% with ratings.10|string as rating_string %}
-                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
-                    {% with ratings.11|string as rating_string %}
-                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
-                    {% with ratings.12|string as rating_string %}
-                        {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                            <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
-                        {% endwith %}
-                    {% endwith %}
-                {% else %}
-                    <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+            <a href="{{ player.get_absolute_url }}">
+            {% with player.get_rating_data as rating_data %}
+                {% if rating_data %}
+                    <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
                 {% endif %}
             {% endwith %}
-
-            {% endif %}
 
             {# Is this player a patron of the site? #}
             {% include 'site/patreon_crown.html' %}
@@ -69,6 +45,56 @@
         <td>{{ player.assists|intcomma }}</td>
         <td>{{ player.saves|intcomma }}</td>
         <td>{{ player.shots|intcomma }}</td>
+        <td>
+            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
+                {% if player.camera_settings %}
+                {% if player.camera_settings.fov %}Field of View: {{ player.camera_settings.fov|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.height %}Height: {{ player.camera_settings.height|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.pitch %}Angle: {{ player.camera_settings.pitch|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.dist %}Distance: {{ player.camera_settings.dist|floatformat:0 }}<br>{% endif %}
+                {% if player.camera_settings.stiff %}Stiffness: {{ player.camera_settings.stiff|floatformat:2 }}<br>{% endif %}
+                {% if player.camera_settings.swiv %}Swivel Speed: {{ player.camera_settings.swiv|floatformat:2 }}<br>{% endif %}
+
+                {% for k, v in player.camera_settings.items %}
+                    {% if k == 'FOV' %}
+                        Field of View: {{ v|floatformat:0 }}<br>
+                    {% elif k == 'SwivelSpeed' %}
+                        Swivel Speed: {{ v|floatformat:0 }}<br>
+                    {% elif k != 'fov' and k != 'height' and k != 'pitch' and k != 'dist' and k != 'stiff' and k != 'swiv' %}
+                        {{ k }}: {{ v }}<br>
+                    {% endif %}
+                {% endfor %}
+                {% else %}
+                Field of View: 90<br>
+                Height: 100<br>
+                Angle: -5<br>
+                Distance: 240<br>
+                Stiffness: 0<br>
+                Swivel Speed: 2.50<br>
+                {% endif %}">
+                <em class="icon-videocam"></em>
+            </span>
+        </td>
+        <td>
+            {% if player.vehicle_loadout %}
+            {% with data=player.vehicle_data %}
+            <span data-tooltip aria-haspopup="true" class="has-tip tip-right" title="
+                {% if 'body' in data %}
+                    Body: {{ data.body.name }}<br>
+                    {% if data.wheels and data.wheels.name != 'Unknown' %}Wheels: {{ data.wheels.name }}<br>{% endif %}
+                    {% if data.trail and data.trail.name != 'Unknown' %}Trail: {{ data.trail.name }}<br>{% endif %}
+                    {% if data.antenna and data.antenna.name != 'Unknown' %}Antenna: {{ data.antenna.name }}<br>{% endif %}
+                    {% if data.decal and data.decal.name != 'Unknown' %}Decal: {{ data.decal.name }}<br>{% endif %}
+                    {% if data.topper and data.topper.name != 'Unknown' %}Topper: {{ data.topper.name }}{% endif %}
+                {% else %}
+                    {{ player.vehicle_data.body.name }}
+                {% endif %}
+            ">
+                <em class="icon-cab"></em>
+            </span>
+            {% endwith %}
+            {% endif %}
+        </td>
     </tr>
     {% endif %}
     {% endfor %}

@@ -1,19 +1,63 @@
+import math
 import re
-import time
-from datetime import datetime
+from itertools import zip_longest
 
+import bitstring
 from django.conf import settings
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from pyrope import Replay as Pyrope
 from social.apps.django_app.default.fields import JSONField
 
-from itertools import zip_longest
-import bitstring
+from .parser import parse_replay_header, parse_replay_netstream
 
-from .parser import Parser
+PRIVACY_PRIVATE = 1
+PRIVACY_UNLISTED = 2
+PRIVACY_PUBLIC = 3
+
+PLATFORM_UNKNOWN = 0
+PLATFORM_STEAM = 1
+PLATFORM_PSN = 2
+PLATFORM_XBOX = 4
+
+PLATFORMS = {
+    'Unknown': PLATFORM_UNKNOWN,
+    'Steam': PLATFORM_STEAM,
+    'PlayStation': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+}
+
+PLATFORMS_MAPPINGS = {
+    'unknown': PLATFORM_UNKNOWN,
+    'steam': PLATFORM_STEAM,
+    'Steam': PLATFORM_STEAM,
+    'PlayStation': PLATFORM_PSN,
+    'playstation': PLATFORM_PSN,
+    'ps4': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+    'xbox': PLATFORM_XBOX,
+    'xboxone': PLATFORM_XBOX,
+    'OnlinePlatform_PS4': PLATFORM_PSN,
+    'OnlinePlatform_Unknown': PLATFORM_UNKNOWN,
+    'OnlinePlatform_Dingo': PLATFORM_XBOX,
+    'OnlinePlatform_Steam': PLATFORM_STEAM,
+
+    # The next values are used for the official API.
+    PLATFORM_UNKNOWN: 'unknown',
+    str(PLATFORM_UNKNOWN): 'unknown',
+    PLATFORM_STEAM: 'steam',
+    str(PLATFORM_STEAM): 'steam',
+    PLATFORM_PSN: 'ps4',
+    str(PLATFORM_PSN): 'ps4',
+    PLATFORM_XBOX: 'xboxone',
+    str(PLATFORM_XBOX): 'xboxone',
+}
 
 
 class Season(models.Model):
@@ -87,7 +131,7 @@ class Replay(models.Model):
 
     title = models.CharField(
         "replay name",
-        max_length=32,
+        max_length=128,
         blank=True,
         null=True,
     )
@@ -120,6 +164,7 @@ class Replay(models.Model):
         max_length=100,
         blank=True,
         null=True,
+        db_index=True,
     )
 
     player_name = models.CharField(
@@ -152,6 +197,10 @@ class Replay(models.Model):
         null=True,
     )
 
+    date_created = models.DateTimeField(
+        default=now,
+    )
+
     team_sizes = models.PositiveIntegerField(
         blank=True,
         null=True,
@@ -176,6 +225,16 @@ class Replay(models.Model):
         max_length=7,
         blank=True,
         null=True,
+    )
+
+    privacy = models.PositiveIntegerField(
+        'replay privacy',
+        choices=[
+            (PRIVACY_PRIVATE, 'Private'),
+            (PRIVACY_UNLISTED, 'Unlisted'),
+            (PRIVACY_PUBLIC, 'Public')
+        ],
+        default=3,
     )
 
     # Parser V2 values.
@@ -209,6 +268,11 @@ class Replay(models.Model):
         null=True,
     )
 
+    shot_data = JSONField(
+        blank=True,
+        null=True,
+    )
+
     excitement_factor = models.FloatField(
         default=0.00,
     )
@@ -230,6 +294,10 @@ class Replay(models.Model):
     processed = models.BooleanField(
         default=False,
     )
+
+    @cached_property
+    def uuid(self):
+        return re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower()
 
     def team_x_player_list(self, team):
         return [
@@ -259,6 +327,7 @@ class Replay(models.Model):
     def player_pairs(self):
         return zip_longest(self.team_0_player_list(), self.team_1_player_list())
 
+    @cached_property
     def region(self):
         if not self.server_name:
             return 'N/A'
@@ -279,6 +348,7 @@ class Replay(models.Model):
             *match
         )
 
+    @cached_property
     def match_length(self):
         if not self.num_frames or not self.record_fps:
             return 'N/A'
@@ -335,109 +405,52 @@ class Replay(models.Model):
 
         # Now we have the swing rating, adjust it by the total number of goals.
         # This gives us a "base value" for each replay and allows replays with
-        # lots of goals but not much swing to get reasonable rating.
-        swing_rating += (self.team_0_score + self.team_1_score) * goal_count_multiplier
+        # lots of goals but not much swing to get reasonable rating. Cap the goal
+        # multiplier at 5.
+        total_goals = self.team_0_score + self.team_1_score
+        if total_goals > 5:
+            total_goals = 5
 
-        # Decay the score based on the number of days since the game was played.
-        # This should keep the replay list fresh. Cap at a set number of days.
-        days_ago = (now().date() - self.timestamp.date()).days
-
-        day_cap = 75
-
-        if days_ago > day_cap:
-            days_ago = day_cap
-
-        # Make sure we're not dividing by zero.
-        if days_ago > 0:
-            days_ago = float(days_ago)
-            swing_rating -= swing_rating * days_ago / 100
+        swing_rating += total_goals * goal_count_multiplier
 
         return swing_rating
 
     def calculate_average_rating(self):
         from ..users.models import LeagueRating
 
-        players = self.player_set.filter(
-            platform__in=['OnlinePlatform_Steam', '1'],
-        ).exclude(
+        players = self.player_set.exclude(
             online_id__isnull=True,
         )
-
-        team_sizes = self.player_set.count() / 2
 
         num_player_ratings = 0
         total_player_ratings = 0
 
-        get_season = Season.objects.filter(
-            start_date__lte=self.timestamp,
-        )
-
         for player in players:
-            # Get the latest rating for this player.
-            ratings = LeagueRating.objects.filter(
-                steamid=player.online_id,
-                season_id=get_season[0].pk if get_season else get_default_season()
-            )
+            try:
+                # Get the latest rating for this player.
+                rating = LeagueRating.objects.get(
+                    platform=player.platform,
+                    online_id=player.online_id,
+                    playlist=self.playlist,
+                )
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels']:
-                    ratings = ratings.exclude(duels=0)
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles']:
-                    ratings = ratings.exclude(doubles=0)
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard']:
-                    ratings = ratings.exclude(solo_standard=0)
-                elif self.playlist == settings.PLAYLISTS['RankedStandard']:
-                    ratings = ratings.exclude(standard=0)
-            else:
-                if team_sizes == 1:
-                    ratings = ratings.exclude(duels=0)
-                elif team_sizes == 2:
-                    ratings = ratings.exclude(doubles=0)
-                elif team_sizes == 3:
-                    ratings = ratings.exclude(solo_standard=0, standard=0)
-
-                ratings = ratings[:1]
-
-            if len(ratings) > 0:
-                rating = ratings[0]
-            else:
+                total_player_ratings += rating.tier
+                num_player_ratings += 1
+            except LeagueRating.DoesNotExist:
+                # Should we get the ratings?
                 continue
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels'] and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles'] and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard'] and rating.solo_standard > 0:
-                    total_player_ratings += rating.solo_standard
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedStandard'] and rating.standard > 0:
-                    total_player_ratings += rating.standard
-                    num_player_ratings += 1
-            else:
-                if team_sizes == 1 and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif team_sizes == 2 and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
-                    if rating.solo_standard > 0 and rating.standard <= 0:
-                        total_player_ratings += rating.solo_standard
-                    elif rating.standard > 0 and rating.solo_standard <= 0:
-                        total_player_ratings += rating.standard
-                    else:
-                        total_player_ratings += (rating.solo_standard + rating.standard) / 2
-                    num_player_ratings += 1
-
         if num_player_ratings > 0:
-            return total_player_ratings / num_player_ratings
+            return math.ceil(total_player_ratings / num_player_ratings)
         return 0
 
-    def eligble_for_analysis(self):
-        patreon_amount = 300
+    def eligible_for_feature(self, feature):
+        features = {
+            'playback': settings.PATREON_PLAYBACK_PRICE,
+            'boost_analysis': settings.PATREON_BOOST_PRICE,
+        }
+
+        patreon_amount = features[feature]
 
         # Import here to avoid circular imports.
         from ..site.templatetags.site import patreon_pledge_amount
@@ -462,14 +475,57 @@ class Replay(models.Model):
 
         return False
 
-    def show_analysis(self):
+    @property
+    def queue_priority(self):
+        # Returns one of 'tournament', 'priority', 'general', where 'tournament'
+        # is the highest priority.
+
+        # TODO: Add tournament logic.
+
+        if self.eligible_for_playback:
+            return 'priority'
+
+        return 'general'
+
+    # Feature eligibility checks.
+    @cached_property
+    def eligible_for_playback(self):
+        return self.eligible_for_feature('playback')
+
+    @cached_property
+    def show_playback(self):
         # First of all, is there even a JSON file?
         if not self.location_json_file:
             return False
 
-        return self.eligble_for_analysis()
+        return self.eligible_for_feature('playback')
+
+    @cached_property
+    def eligible_for_boost_analysis(self):
+        return self.eligible_for_feature('boost_analysis')
+
+    @cached_property
+    def show_boost_analysis(self):
+        # Have we got any boost data yet?
+        if self.boostdata_set.count() == 0:
+            return False
+
+        return self.eligible_for_feature('boost_analysis')
+
+    # Other stuff
+    @cached_property
+    def get_human_playlist(self):
+        if not self.playlist:
+            return None
+
+        return settings.HUMAN_PLAYLISTS.get(self.playlist, self.get_playlist_display())
 
     def get_absolute_url(self):
+        if self.replay_id:
+            return reverse('replay:detail', kwargs={
+                'replay_id': re.sub(r'([A-F0-9]{8})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{4})([A-F0-9]{12})', r'\1-\2-\3-\4-\5', self.replay_id).lower(),
+            })
+
         return reverse('replay:detail', kwargs={
             'pk': self.pk,
         })
@@ -497,21 +553,21 @@ class Replay(models.Model):
             self.file.seek(0)
 
             try:
-                self.parser = Parser(self.file.read(), obj=self)
+                replay = Pyrope(self.file.read())
             except bitstring.ReadError:
                 raise ValidationError("The file you selected does not seem to be a valid replay file.")
 
             # Check if this replay has already been uploaded.
-            replay = Replay.objects.filter(
-                replay_id=self.parser.replay_id,
+            replays = Replay.objects.filter(
+                replay_id=replay.header['Id'],
             )
 
-            if replay.count() > 0:
+            if replays.count() > 0:
                 raise ValidationError(mark_safe("This replay has already been uploaded, <a target='_blank' href='{}'>you can view it here</a>.".format(
-                    replay[0].get_absolute_url()
+                    replays[0].get_absolute_url()
                 )))
 
-            self.replay_id = self.parser.replay_id
+            self.replay_id = replay.header['Id']
 
     def save(self, *args, **kwargs):
         parse_netstream = False
@@ -522,308 +578,11 @@ class Replay(models.Model):
         super(Replay, self).save(*args, **kwargs)
 
         if self.file and not self.processed:
-            self.file.seek(0)
-
-            parser = Parser(self.file.read(), parse_netstream=parse_netstream, obj=self)
-
-            Goal.objects.filter(replay=self).delete()
-            Player.objects.filter(replay=self).delete()
-
             if parse_netstream:
-                self.heatmap_json_file = parser.heatmap_json_filename
-
-                if hasattr(parser, 'location_json_filename'):
-                    self.location_json_file = parser.location_json_filename
-
-            if 'playlist' in parser.match_metadata:
-                self.playlist = parser.match_metadata['playlist']
-
-            if 'server_name' in parser.match_metadata:
-                self.server_name = parser.match_metadata['server_name']
-
-            if len(parser.actor_metadata) == 0:
-                # Parse the players the 'old' way.
-                if 'PlayerStats' in parser.replay.header:
-                    for player in parser.replay.header['PlayerStats']:
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=player['Name'],
-                            platform=player['Platform'].get('OnlinePlatform', ''),
-                            saves=player['Saves'],
-                            score=player['Score'],
-                            goals=player['Goals'],
-                            shots=player['Shots'],
-                            team=player['Team'],
-                            assists=player['Assists'],
-                            bot=player['bBot'],
-                            online_id=player['OnlineID'],
-                        )
-                else:
-                    # The best we can do is to get the goal scorers and the player.
-                    for goal in parser.replay.header.get('Goals', []):
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=goal['PlayerName'],
-                            team=goal['PlayerTeam'],
-                        )
-
-                    if 'PlayerName' in parser.replay.header and 'PrimaryPlayerTeam' in parser.replay.header:
-                        Player.objects.get_or_create(
-                            replay=self,
-                            player_name=parser.replay.header['PlayerName'],
-                            team=parser.replay.header['PrimaryPlayerTeam'],
-                        )
-
-            # Create the player objects.
-            for actor_id, data in parser.actor_metadata.items():
-                """
-                 6: {'Engine.PlayerReplicationInfo:Ping': 5,
-                 'Engine.PlayerReplicationInfo:PlayerID': 481,
-                 'Engine.PlayerReplicationInfo:PlayerName': 'Fishcake',
-                 'Engine.PlayerReplicationInfo:Team': (True, 1),
-                 'Engine.PlayerReplicationInfo:UniqueId': (1, 76561197981862109, 0),
-                 'Engine.PlayerReplicationInfo:bReadyToPlay': True,
-                 'TAGame.PRI_TA:CameraSettings': {'dist': 400.0,
-                                                  'fov': 99.0,
-                                                  'height': 70.0,
-                                                  'pitch': -7.0,
-                                                  'stiff': 0.5,
-                                                  'swiv': 10.0},
-                 'TAGame.PRI_TA:CameraYaw': 181,
-                 'TAGame.PRI_TA:ClientLoadout': (11, [597, 0, 609, 626, 0, 0, 0]),
-                 'TAGame.PRI_TA:PartyLeader': (1, 76561198008869772, 0),
-                 'TAGame.PRI_TA:ReplicatedGameEvent': (True, 2),
-                 'TAGame.PRI_TA:TotalXP': 1174620,
-                 'TAGame.PRI_TA:bUsingSecondaryCamera': True},
-                """
-
-                # Sometimes actor objects can come across with just a player
-                # name. We can't really do much with those, so ignore them.
-                if len(data) == 1:
-                    continue
-
-                # Geneate the unique ID string/
-                if 'Engine.PlayerReplicationInfo:UniqueId' in data:
-                    unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
-
-                    # If a console player is playing split-screen, there can
-                    # sometimes be two actors with the same 'unique id', so this
-                    # handles that situation.
-
-                    while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                        data['Engine.PlayerReplicationInfo:UniqueId'] = (
-                            data['Engine.PlayerReplicationInfo:UniqueId'][0],
-                            data['Engine.PlayerReplicationInfo:UniqueId'][1],
-                            data['Engine.PlayerReplicationInfo:UniqueId'][2] + 1,
-                        )
-
-                        unique_id = '-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId'])
-                else:
-                    if 'Engine.PlayerReplicationInfo:Team' in data:
-                        id_parts = [
-                            str(data['Engine.PlayerReplicationInfo:Team'][1]),
-                            data['Engine.PlayerReplicationInfo:PlayerName'],
-                            '0',
-                        ]
-
-                        unique_id = '-'.join(id_parts)
-
-                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                            id_parts[2] = str(int(id_parts[2]) + 1)
-                            unique_id = '-'.join(id_parts)
-
-                    else:
-                        id_parts = [
-                            '-1',
-                            data['Engine.PlayerReplicationInfo:PlayerName'],
-                            '0'
-                        ]
-
-                        unique_id = '-'.join(id_parts)
-
-                        while Player.objects.filter(replay=self, unique_id=unique_id).count() > 0:
-                            id_parts[2] = str(int(id_parts[2]) + 1)
-                            unique_id = '-'.join(id_parts)
-
-                if 'TAGame.PRI_TA:TotalXP' in data:
-                    if data['TAGame.PRI_TA:TotalXP'] >= 0:
-                        total_xp = data['TAGame.PRI_TA:TotalXP']
-                    else:
-                        total_xp = 0
-                else:
-                    total_xp = 0
-
-                # Try to work out the player's team.
-                if 'Engine.PlayerReplicationInfo:Team' in data:
-                    team_id = data['Engine.PlayerReplicationInfo:Team'][1]
-                    if team_id in parser.team_metadata:
-                        team = parser.team_metadata[team_id]
-                    else:
-                        team = -1
-                else:
-                    team = -1
-
-                Player.objects.create(
-                    replay=self,
-                    unique_id=unique_id,
-                    player_name=data['Engine.PlayerReplicationInfo:PlayerName'],
-                    team=team,
-                    actor_id=actor_id,
-                    bot='Engine.PlayerReplicationInfo:bBot' in data,
-                    camera_settings=data.get('TAGame.PRI_TA:CameraSettings', {}),
-                    total_xp=total_xp,
-                    platform=data['Engine.PlayerReplicationInfo:UniqueId'][0] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                    online_id=data['Engine.PlayerReplicationInfo:UniqueId'][1] if 'Engine.PlayerReplicationInfo:UniqueId' in data else '',
-                    spectator='Engine.PlayerReplicationInfo:bIsSpectator' in data
-                )
-
-            # If any players had a party leader, try to link them up.
-            for player in parser.actor_metadata:
-                data = parser.actor_metadata[player]
-
-                if 'TAGame.PRI_TA:PartyLeader' in data:
-                    # Get this player object, then get the party leader object.
-                    player_obj = Player.objects.get(
-                        replay=self,
-                        unique_id='-'.join(str(x) for x in data['Engine.PlayerReplicationInfo:UniqueId']),
-                    )
-
-                    try:
-                        leader_obj = Player.objects.get(
-                            replay=self,
-                            unique_id='-'.join(str(x) for x in data['TAGame.PRI_TA:PartyLeader']),
-                        )
-                    except Player.DoesNotExist:
-                        leader_obj = None
-
-                    if player_obj != leader_obj:
-                        player_obj.party_leader = leader_obj
-                        player_obj.save()
-
-            if len(parser.actor_metadata) > 0:
-                assert len([
-                    1
-                    for _, data in parser.actor_metadata.items()
-                    if len(data) > 1
-                ]) == Player.objects.filter(replay=self).count()
-
-            if 'PlayerStats' in parser.replay.header:
-                # We can show a leaderboard!
-                self.show_leaderboard = True
-
-                for player in parser.replay.header['PlayerStats']:
-                    # Attempt to match up this player with a Player object.
-                    obj = Player.objects.filter(
-                        replay=self,
-                        player_name=player['Name'],
-                        team=player['Team'],
-                        bot=player['bBot'],
-                    )
-
-                    if not obj:
-                        # Try with just the player name.
-                        obj = Player.objects.filter(
-                            replay=self,
-                            player_name=player['Name'],
-                        )
-
-                    if obj and obj.count() == 1:
-                        obj.update(
-                            saves=player['Saves'],
-                            score=player['Score'],
-                            goals=player['Goals'],
-                            shots=player['Shots'],
-                            assists=player['Assists'],
-                        )
-                    else:
-                        # Unless this player actually did something, we don't
-                        # really care if we can't assign their stats.
-
-                        keys = ['Goals', 'Saves', 'Shots', 'Score']
-
-                        if sum(player.get(key, 0) for key in keys) > 0:
-                            print('Unable to find an object for', player)
-
-            # Create the Goal objects.
-            if 'Goals' in parser.replay.header:
-                for index, goal in enumerate(parser.replay.header['Goals']):
-                    player = None
-
-                    if goal['frame'] in parser.goal_metadata:
-                        player = Player.objects.get(
-                            replay=self,
-                            actor_id=parser.goal_metadata[goal['frame']],
-                        )
-                    else:
-                        players = Player.objects.filter(
-                            replay=self,
-                            player_name=goal['PlayerName'],
-                            team=goal['PlayerTeam']
-                        )
-
-                        if players.count() > 0:
-                            player = players[0]
-                        else:
-                            player = Player.objects.create(
-                                replay=self,
-                                player_name=goal['PlayerName'],
-                                team=goal['PlayerTeam']
-                            )
-
-                    Goal.objects.create(
-                        replay=self,
-                        frame=goal['frame'],
-                        number=index + 1,
-                        player=player,
-                    )
-
-            data = parser.replay.header
-
-            self.replay_id = data['Id']
-            self.player_name = data['PlayerName']
-            self.player_team = data.get('PrimaryPlayerTeam', 0)
-
-            if data.get('MapName'):
-                map_obj, created = Map.objects.get_or_create(
-                    slug=data['MapName'].lower(),
-                )
+                # Header parse?
+                parse_replay_netstream(self.pk)
             else:
-                map_obj = None
-
-            self.map = map_obj
-            self.timestamp = datetime.fromtimestamp(
-                time.mktime(
-                    time.strptime(
-                        data['Date'],
-                        '%Y-%m-%d:%H-%M'
-                    )
-                )
-            )
-
-            get_season = Season.objects.filter(
-                start_date__lte=self.timestamp,
-            )
-
-            if get_season:
-                self.season = get_season[0]
-
-            self.team_sizes = data['TeamSize']
-            self.team_0_score = data.get('Team0Score', 0)
-            self.team_1_score = data.get('Team1Score', 0)
-            self.match_type = data['MatchType']
-            self.server_name = data.get('ServerName', '')
-
-            # Parser V2 values
-            self.keyframe_delay = data['KeyframeDelay']
-            self.max_channels = data['MaxChannels']
-            self.max_replay_size_mb = data['MaxReplaySizeMB']
-            self.num_frames = data.get('NumFrames', 0)
-            self.record_fps = data['RecordFPS']
-
-            self.excitement_factor = self.calculate_excitement_factor()
-            self.average_rating = self.calculate_average_rating()
-            self.processed = True
-            self.save()
+                parse_replay_header(self.pk)
 
 
 class Player(models.Model):
@@ -921,11 +680,142 @@ class Player(models.Model):
         null=True,
     )
 
-    total_xp = models.PositiveIntegerField(
+    vehicle_loadout = JSONField(
+        blank=True,
+        null=True,
+    )
+
+    total_xp = models.IntegerField(
         default=0,
         blank=True,
         null=True,
     )
+
+    # Other stuff.
+    boost_data = JSONField(
+        blank=True,
+        null=True,
+    )
+
+    @cached_property
+    def get_rating_data(self):
+        from ..users.models import LeagueRating
+        from ..users.templatetags.ratings import tier_name
+
+        if self.replay.playlist not in settings.RANKED_PLAYLISTS:
+            return
+
+        try:
+            rating = LeagueRating.objects.get_or_request(
+                platform=self.platform,
+                online_id=self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+                playlist=self.replay.playlist,
+            )
+
+            return {
+                'image': static('img/tiers/icons/{}.png'.format(rating.tier)),
+                'tier_name': tier_name(rating.tier)
+            }
+        except LeagueRating.DoesNotExist:
+            pass
+
+        return {
+            'image': static('img/tiers/icons/0.png'),
+            'tier_name': 'Unranked'
+        }
+
+    @cached_property
+    def vehicle_data(self):
+        """
+        {
+            "RocketTrail": {"Name": "Boost_HolyLight", "Id": 44},
+            "Topper": {"Name": "Hat_Tiara", "Id": 495},
+            "Version": 12,
+            "Wheels": {"Name": "WHEEL_Atlantis", "Id": 359},
+            "Body": {"Name": "Body_Force", "Id": 22},
+            "Antenna": {"Name": null, "Id": 0},
+            "Decal": {"Name": "Skin_Force_Junk", "Id": 1178},
+            "Unknown2": 0,
+            "Unknown1": 0
+        }
+        """
+
+        components = {}
+
+        if not self.vehicle_loadout:
+            return components
+
+        if type(self.vehicle_loadout) == list:
+            """
+            [
+              403,  # Body
+              0,    # Decal. 330 = Flames
+              376,  # Wheels. 386 = Christiano, 376 = OEM
+              63,   # Rocket Trail. 578 = Candy Corn
+              0,    # Antenna. 1 = 8-Ball
+              0,    # Topper. 796 = Deadmau5
+              0     #
+            ],
+            """
+
+            if len(self.vehicle_loadout) == 9:
+                self.vehicle_loadout = self.vehicle_loadout[1:-1]
+
+            assert len(self.vehicle_loadout) == 7
+
+            component_maps = [
+                'body',
+                'decal',
+                'wheels',
+                'trail',
+                'antenna',
+                'topper',
+            ]
+
+            for index, component in enumerate(self.vehicle_loadout):
+                if component > 0:
+                    try:
+                        components[component_maps[index]] = Component.objects.get_or_create(
+                            type=component_maps[index],
+                            internal_id=component,
+                            defaults={
+                                'name': 'Unknown'
+                            }
+                        )[0]
+                    except Component.DoesNotExist:
+                        pass
+
+        elif type(self.vehicle_loadout) == dict:
+            component_maps = {
+                'Body': {'type': 'body', 'replace': 'Body_'},
+                'Decal': {'type': 'decal', 'replace': 'Skin_'},
+                'Wheels': {'type': 'wheels', 'replace': 'WHEEL_'},
+                'RocketTrail': {'type': 'trail', 'replace': 'Boost_'},
+                'Antenna': {'type': 'antenna', 'replace': 'Antenna '},
+                'Topper': {'type': 'topper', 'replace': 'Hat_'},
+            }
+
+            for component_type, mappings in component_maps.items():
+                if component_type in self.vehicle_loadout and self.vehicle_loadout[component_type]['Name']:
+                    components[mappings['type']] = Component.objects.get_or_create(
+                        type=mappings['type'],
+                        internal_id=self.vehicle_loadout[component_type]['Id'],
+                        defaults={
+                            'name': self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                        }
+                    )[0]
+
+                    if components[mappings['type']].name == 'Unknown':
+                        components[mappings['type']].name = self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                        components[mappings['type']].save()
+
+        return components
+
+    def get_absolute_url(self):
+        return reverse('users:player', kwargs={
+            'platform': PLATFORMS_MAPPINGS[self.platform],
+            'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+        })
 
     def __str__(self):
         return '{} on Team {}'.format(
@@ -935,7 +825,6 @@ class Player(models.Model):
 
     class Meta:
         ordering = ('team', '-score', 'player_name')
-        unique_together = [('unique_id', 'replay')]
 
 
 class Goal(models.Model):
@@ -958,6 +847,7 @@ class Goal(models.Model):
         null=True,
     )
 
+    @cached_property
     def goal_time(self):
         if not self.frame or not self.replay.record_fps:
             return 'N/A'
@@ -976,7 +866,7 @@ class Goal(models.Model):
         )
 
     class Meta:
-        ordering = ['number']
+        ordering = ['frame']
 
 
 class ReplayPack(models.Model):
@@ -1009,6 +899,7 @@ class ReplayPack(models.Model):
         auto_now=True,
     )
 
+    @cached_property
     def maps(self):
         maps = Map.objects.filter(
             id__in=set(self.replays.values_list('map_id', flat=True))
@@ -1016,6 +907,7 @@ class ReplayPack(models.Model):
 
         return ', '.join(maps)
 
+    @cached_property
     def goals(self):
         if not self.replays.count():
             return 0
@@ -1023,11 +915,13 @@ class ReplayPack(models.Model):
             num_goals=models.Sum(models.F('team_0_score') + models.F('team_1_score'))
         )['num_goals']
 
+    @cached_property
     def players(self):
         return set(Player.objects.filter(
             replay_id__in=self.replays.values_list('id', flat=True),
         ).values_list('player_name', flat=True))
 
+    @cached_property
     def total_duration(self):
         calculation = 0
 
@@ -1038,7 +932,7 @@ class ReplayPack(models.Model):
         hours, minutes = divmod(minutes, 60)
 
         return '{} {}m {}s'.format(
-            '{}h'.format(hours) if hours > 0 else '',
+            '{}h'.format(int(hours)) if hours > 0 else '',
             int(minutes),
             int(seconds),
         )
@@ -1053,3 +947,48 @@ class ReplayPack(models.Model):
 
     class Meta:
         ordering = ['-last_updated', '-date_created']
+
+
+class BoostData(models.Model):
+
+    replay = models.ForeignKey(
+        Replay,
+        db_index=True,
+    )
+
+    player = models.ForeignKey(
+        Player,
+    )
+
+    frame = models.PositiveIntegerField()
+
+    value = models.PositiveIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(255)]
+    )
+
+    class Meta:
+        ordering = ['player', 'frame']
+        # unique_together = [('player', 'frame', 'value')]
+
+
+class Component(models.Model):
+
+    type = models.CharField(
+        max_length=8,
+        choices=[
+            ('trail', 'Trail'),
+            ('antenna', 'Antenna'),
+            ('wheels', 'Wheels'),
+            ('decal', 'Decal'),
+            ('body', 'Body'),
+            ('topper', 'Topper')
+        ],
+        default='body',
+    )
+
+    internal_id = models.PositiveIntegerField()
+
+    name = models.CharField(
+        max_length=100,
+        default='Unknown',
+    )

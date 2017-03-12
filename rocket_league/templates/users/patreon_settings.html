@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
+{% block object_title %}Settings{% endblock %}
+
 {% block content_primary %}
 <div class="row">
     <div class="small-12 columns">
-        <h3>Patreon settings</h3>
+        <h3>Settings</h3>
         <p><strong>Patreon status:</strong> {% if patreon == 0 %}Inactive{% else %}Active (${{ patreon_dollars }}) - thank you!{% endif %}</p>
     </div>
 </div>
@@ -15,7 +17,16 @@
         <div class="alert-box success">{{ message }}</div>
     {% endfor %}
 
-    <div class="row {% if form.patreon_email_address.errors %}errored{% endif %}">
+    <div class="row {% if form.errors %}errored{% endif %}">
+        <div class="medium-4 columns">
+            {{ form.username.label_tag }}
+            {{ form.username }}
+
+            {% for error in form.username.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
+
         <div class="medium-4 columns">
             {{ form.patreon_email_address.label_tag }}
             {{ form.patreon_email_address }}
@@ -24,9 +35,18 @@
                 <span class="field-error">{{ error }}</span>
             {% endfor %}
         </div>
+
+        <div class="medium-4 columns end">
+            {{ form.privacy.label_tag }}
+            {{ form.privacy }}
+
+            {% for error in form.privacy.errors %}
+                <span class="field-error">{{ error }}</span>
+            {% endfor %}
+        </div>
     </div>
 
-    {% if patreon >= 300 %}
+    {% if patreon >= settings.PATREON_SOCIAL_MEDIA_PRICE %}
     <div class="row">
         <div class="small-12 columns">
             <h4>Social media profiles</h4>

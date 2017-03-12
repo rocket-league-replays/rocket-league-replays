@@ -1,5 +1,4 @@
 /*global h337 replay_file_url*/
-
 'use strict'
 
 if ($('#chartContainer').length === 1 && (
@@ -70,13 +69,8 @@ function render_heatmap (data) {
 
     const el = elements[index]
 
-    let radius = 20
-    let blur
-
-    if (el.offsetWidth > 300) {
-      radius = 30
-      blur = 0.45
-    }
+    const radius = 40
+    const blur = 0.9
 
     const heatmap = h337.create({
       container: el,
@@ -99,6 +93,11 @@ function render_heatmap (data) {
     let max_y = null
     let min_x = null
     let min_y = null
+
+    if (!data.hasOwnProperty(selected_actor)) {
+      el.parentNode.style.display = 'none'
+      continue
+    }
 
     Object.keys(data[selected_actor]).forEach(function (item) {
       const value = data[selected_actor][item]
@@ -221,7 +220,7 @@ function render_heatmap (data) {
       reformatted_data.push({
         x: offsetX,
         y: offsetY,
-        value: item.value
+        value: 1 / (1 + Math.exp(Math.log(item.value)))
       })
     })
 

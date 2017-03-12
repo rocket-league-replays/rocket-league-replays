@@ -91,11 +91,168 @@ class UserSettingsForm(forms.ModelForm):
 
 class PatreonSettingsForm(forms.ModelForm):
 
+    username = User._meta.get_field('username').formfield()
+
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+
         super(PatreonSettingsForm, self).__init__(*args, **kwargs)
 
         self.fields['patreon_email_address'].required = True
 
+        if 'id' in self.initial:
+            self.fields['username'].initial = self.user.username
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+
+        users = User.objects.filter(
+            username=username,
+        ).exclude(
+            pk=self.user.pk,
+        ).count()
+
+        if users > 0:
+            raise forms.ValidationError('This username is already in use.')
+
+        return username
+
     class Meta:
         model = Profile
         exclude = ['user', 'patreon_level']
+
+
+class StreamSettingsForm(forms.Form):
+
+    limit_to = forms.ChoiceField(
+        choices=[
+            ('3', 'Last 3 games'),
+            ('5', 'Last 5 games'),
+            ('10', 'Last 10 games'),
+            ('20', 'Last 20 games'),
+            ('hour', 'Last hour'),
+            ('today', 'Today'),
+            ('week', 'Last week'),
+            ('all', 'All time'),
+            # ('session', 'This session'),  # Have a button which allows you to start / stop a session.
+        ],
+        initial='today',
+    )
+
+    show_games_played = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_wins = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_losses = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_win_percentage = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_average_goals = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_average_assists = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_average_saves = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_average_shots = forms.BooleanField(
+        initial=False,
+        required=False,
+    )
+
+    show_goal_assist_ratio = forms.BooleanField(
+        label="Show goal / assist ratio",
+        initial=False,
+        required=False,
+    )
+
+    # Display config
+    font = forms.ChoiceField(
+        initial='Helvetica Neue',
+        choices=[
+            ("Arial", "Arial"),
+            ("Arial Black", "Arial Black"),
+            ("Calibri", "Calibri"),
+            ("Cambria", "Cambria"),
+            ("Comic Sans MS", "Comic Sans MS"),
+            ("Consolas", "Consolas"),
+            ("Courier New", "Courier New"),
+            ("Ebrima", "Ebrima"),
+            ("Furore", "Furore"),
+            ("Gabriola", "Gabriola"),
+            ("Gadugi", "Gadugi"),
+            ("Georgia", "Georgia"),
+            ("Georgia Pro", "Georgia Pro"),
+            ("Gill Sans Nova", "Gill Sans Nova"),
+            ("Impact", "Impact"),
+            ("Leelawadee UI", "Leelawadee UI"),
+            ("Lucida Console", "Lucida Console"),
+            ("Malgun Gothic", "Malgun Gothic"),
+            ("MV Boli", "MV Boli"),
+            ("Myanmar Text", "Myanmar Text"),
+            ("Nirmala UI", "Nirmala UI"),
+            ("Rockwell Nova", "Rockwell Nova"),
+            ("Segoe UI", "Segoe UI"),
+            ("Tahoma", "Tahoma"),
+            ("Times New Roman", "Times New Roman"),
+            ("Trebuchet MS", "Trebuchet MS"),
+            ("Verdana", "Verdana"),
+        ]
+    )
+
+    custom_font = forms.CharField(
+        required=False,
+        help_text="If the font you wish to use isn't listed, simply enter the name of it here.",
+    )
+
+    font_size = forms.CharField(
+        initial='16',
+        widget=forms.TextInput(attrs={
+            'type': 'range',
+            'min': '10',
+            'max': '72'
+        }),
+    )
+
+    text_color = forms.CharField(
+        initial='#ffffff',
+        widget=forms.TextInput(attrs={
+            'type': 'color',
+        }),
+    )
+
+    transparent_background = forms.BooleanField(
+        initial=True,
+        required=False,
+    )
+
+    background_color = forms.CharField(
+        initial='#00ff00',
+        widget=forms.TextInput(attrs={
+            'type': 'color',
+        })
+    )
+
+    text_shadow = forms.BooleanField(
+        initial=True,
+        required=False,
+    )

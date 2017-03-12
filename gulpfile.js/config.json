@@ -18,7 +18,8 @@
       "dest": "js",
       "extractSharedJs": true,
       "entries": {
-        "app": ["./app.js"]
+        "app": ["./app.js"],
+        "2d-rendering": ["./2d-rendering/main.js"]
       },
       "extensions": ["js"]
     },

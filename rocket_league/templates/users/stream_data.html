@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream data</title>
+  <style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+  </style>
+  <script src="//cdn.jsdelivr.net/vue/1.0.21/vue.min.js"></script>
+</head>
+<body :style="style" v-if="data">
+{% if template %}
+  {{ template }}
+{% else %}
+  {% verbatim %}
+    <div class="str-Text str-Text-games_played" v-if="data.show_games_played">
+      Games played: {{ data.games_played }}
+    </div>
+
+    <div class="str-Text str-Text-wins" v-if="data.show_wins">
+      Wins: {{ data.wins }}
+    </div>
+
+    <div class="str-Text str-Text-losses" v-if="data.show_losses">
+      Losses: {{ data.losses }}
+    </div>
+
+    <div class="str-Text str-Text-win_percentage" v-if="data.show_win_percentage">
+      Win percentage: {{ data.win_percentage }}%
+    </div>
+
+    <div class="str-Text str-Text-average_goals" v-if="data.show_average_goals">
+      Average goals: {{ data.average_goals }}
+    </div>
+
+    <div class="str-Text str-Text-average_assists" v-if="data.show_average_assists">
+      Average assists: {{ data.average_assists }}
+    </div>
+
+    <div class="str-Text str-Text-average_saves" v-if="data.show_average_saves">
+      Average saves: {{ data.average_saves }}
+    </div>
+
+    <div class="str-Text str-Text-average_shots" v-if="data.show_average_shots">
+      Average shots: {{ data.average_shots }}
+    </div>
+
+    <div class="str-Text str-Text-goal_assist_ratio" v-if="data.show_goal_assist_ratio">
+      Goal / assist ratio: {{ data.goal_assist_ratio }}
+    </div>
+  {% endverbatim %}
+{% endif %}
+
+  <script>
+  var method = "{{ method }}"
+  var field = "{{ field }}"
+  var fields = ['wins', 'losses', 'average_goals', 'average_assists', 'average_saves', 'average_shots', 'games_played', 'win_percentage', 'goal_assist_ratio']
+
+  new Vue({
+    el: 'body',
+    data: {
+      api_url: '{% url "stream-data" user_id=user.id %}',
+      data: false,
+      interval: 10000,  // 10 seconds.
+    },
+    ready: function () {
+      this.getData()
+    },
+    computed: {
+      style: function() {
+        if (Object.keys(this.data).length === 0) {
+          return {}
+        }
+
+        var fontFamily = this.data.font + ', sans-serif'
+
+        if (this.data.custom_font) {
+          fontFamily = this.data.custom_font + ', ' + fontFamily
+        }
+
+        var backgroundColor = 'transparent'
+
+        if (!this.data.transparent_background) {
+          backgroundColor = this.data.background_color
+        }
+
+        return {
+          fontFamily: fontFamily,
+          fontSize: this.data.font_size + 'px',
+          color: this.data.text_color,
+          backgroundColor: backgroundColor,
+          lineHeight: 1.4,
+          'textShadow': this.data.text_shadow ? '#000 0px 0px 3px' : 'none'
+        }
+      }
+    },
+    methods: {
+      getData: function () {
+        var request = new XMLHttpRequest();
+        var v = this
+        request.open('GET', this.api_url, true);
+
+        request.onload = function() {
+          if (this.status >= 200 && this.status < 400) {
+            // Success!
+            try {
+              v.data = JSON.parse(this.response);
+
+              if (method == "single") {
+                fields.forEach(function (item) {
+                  if (item !== field) {
+                    v.data['show_' + item] = false
+                  }
+                })
+
+                v.data['show_' + field] = true
+              }
+
+            } catch (e) {
+              console.log(e)
+            }
+          }
+
+          setTimeout(v.getData, v.interval)
+        };
+
+        request.onerror = function() {
+          setTimeout(v.getData, v.interval)
+        }
+        request.send();
+      }
+    }
+  })
+  </script>
+</body>
+</html>

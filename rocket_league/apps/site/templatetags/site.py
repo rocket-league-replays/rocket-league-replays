@@ -14,6 +14,26 @@ def wrap(val, func):
 
 
 @register.filter
+def cls(obj):
+    return obj.__class__.__name__
+
+
+@register.filter
+def startswith(string, val):
+    return string.startswith(val)
+
+
+@register.filter
+def remove(string, val):
+    return string.replace(val, '')
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+
+@register.filter
 def order_by(qs, ordering):
     return qs.order_by(ordering)
 
@@ -69,34 +89,33 @@ def patreon_pledge_amount(context, user=None, steam_id=None):
             return 0
 
     # Does this user have a Patreon email address?
-    if not user.profile.patreon_email_address:
-        return 0
-
-    # Does a patreon object for this email address exist?
-    try:
-        obj = Patron.objects.get(
-            patron_email=user.profile.patreon_email_address,
-        )
-
-        if obj.pledge_declined_since:
-            # TODO: Double check this is correct.
-            return 0
-
-        return obj.pledge_amount
-
-    except Patron.DoesNotExist:
-        # Does an active trial for this user exist?
+    if user.profile.patreon_email_address:
         try:
-            PatronTrial.objects.get(
-                user=user,
-                expiry_date__gte=now().date,
+            # Does a patreon object for this email address exist?
+            obj = Patron.objects.get(
+                patron_email=user.profile.patreon_email_address,
             )
 
-            return 99999
-        except PatronTrial.DoesNotExist:
-            return 0
+            if obj.pledge_declined_since:
+                # TODO: Double check this is correct.
+                return 0
 
-        return 0
+            return obj.pledge_amount
+        except Patron.DoesNotExist:
+            pass
+
+    # Does an active trial for this user exist?
+    try:
+        PatronTrial.objects.get(
+            user=user,
+            expiry_date__gte=now().date,
+        )
+
+        return 99999
+    except PatronTrial.DoesNotExist:
+        pass
+
+    return 0
 
 
 @register.assignment_tag(takes_context=True)

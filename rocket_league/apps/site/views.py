@@ -1,6 +1,8 @@
+import json
 from datetime import timedelta
 
 from braces.views import LoginRequiredMixin
+from django.conf import settings
 from django.contrib import messages
 from django.core.urlresolvers import reverse
 from django.db.models import Count
@@ -9,7 +11,8 @@ from django.views.generic import RedirectView, TemplateView
 from social.apps.django_app.default.models import UserSocialAuth
 
 from ..replays.models import Goal, Player, Replay
-from .models import PatronTrial
+from ..users.models import Profile
+from .models import Patron, PatronTrial
 
 
 class StatsView(TemplateView):
@@ -90,8 +93,58 @@ class StartTrialView(LoginRequiredMixin, RedirectView):
         else:
             # Activate a trial for this user.
             PatronTrial.objects.create(
-                user=self.request.user
+                user=self.request.user,
+                expiry_date=now() + timedelta(days=7),
             )
             messages.success(self.request, "Your free trial has been activated. You can make full use of all patron benefits for the next 7 days.")
 
-        return reverse('replay:analysis', kwargs=kwargs)
+        return reverse('replay:playback', kwargs=kwargs)
+
+
+class StreamListView(TemplateView):
+
+    template_name = 'site/stream_list.html'
+
+    def clean_twitch_username(self, username):
+        if 'twitch.tv' in username:
+            return username.split('/')[-1]
+        return username
+
+    def get_queryset(self):
+        # Get all of the active Patreons, then figure out if they have a Twitch
+        # account listed.
+
+        return Profile.objects.filter(
+            patreon_email_address__in=Patron.objects.filter(
+                pledge_declined_since=None,
+                pledge_amount__gte=settings.PATREON_STREAM_LISTING_PRICE,
+            ).values_list('patron_email', flat=True),
+        ).exclude(
+            twitch_username='',
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super(StreamListView, self).get_context_data(**kwargs)
+
+        query = Profile.objects.raw("""SELECT
+  users_profile.id,
+  twitch_username,
+  CASE WHEN site_patron.pledge_amount >= {patreon_price} THEN TRUE ELSE FALSE END featured
+FROM users_profile
+RIGHT JOIN site_patron on users_profile.patreon_email_address = site_patron.patron_email
+WHERE
+  users_profile.twitch_username != '' AND
+  site_patron.pledge_amount >= {patreon_price} AND
+  site_patron.pledge_declined_since IS NULL;""".format(patreon_price=settings.PATREON_STREAM_LISTING_PRICE))
+
+        context['usernames'] = []
+
+        for row in query:
+            context['usernames'].append({
+                'username': self.clean_twitch_username(row.twitch_username).lower(),
+                'featured': row.featured
+            })
+
+        context['usernames'] = json.dumps(context['usernames'])
+
+        return context

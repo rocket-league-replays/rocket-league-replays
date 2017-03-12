@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block uncompressed_js %}
+<script src="//cdn.jsdelivr.net/vue/1.0.21/vue.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/vue-resource/0.7.4/vue-resource.min.js"></script>
+
+<script>
+'use strict';
+
+new Vue({
+    el: 'main',
+    data () {
+        return {
+            'APIURL': 'https://api.twitch.tv/kraken/streams?game=Rocket+League&stream_type=live',
+            'patron_usernames': JSON.parse('{{ usernames|safe }}'),
+            'limit': 100,
+            'patron_streams': 0,
+            'general_streams': 0,
+            'active_tab': 0,
+            'stream_data': {
+                0: [],
+                1: []
+            },
+            'active_channel': window.location.hash.replace(/^#/, ''),
+            'loaded': false
+        }
+    },
+    created () {
+        this.getData(true)
+        this.getData(false)
+    },
+
+    ready () {
+        setInterval(() => {
+            this.getData(true)
+            this.getData(false)
+        }, 60000)
+
+        Vue.http.headers.common['Client-ID'] = 'n5uztyfrm2ldyizmom2b8gzvbau6w57';
+
+    },
+
+    methods: {
+        getData (patrons) {
+            let requestURL = this.APIURL
+
+            if (patrons) {
+                let usernames = []
+                this.patron_usernames.forEach((item) => {
+                    usernames.push(item.username)
+                })
+                requestURL += `&channel=${usernames.join(',')}`
+                // this.limit = 100
+            } else {
+                // this.limit = 12
+            }
+
+            requestURL += `&limit=${this.limit}`
+
+            this.$http.get(requestURL).then((response) => {
+                if (patrons) {
+                    // Get the number of 'all' streams.
+                    this.patron_streams = response.data._total
+                    this.stream_data[0] = response.data.streams
+
+                    if (!this.loaded && this.patron_streams === 0) {
+                        this.active_tab = 1
+                    }
+                } else {
+                    this.general_streams = response.data._total
+                    this.stream_data[1] = response.data.streams
+                }
+            }, (err) => console.error(err))
+        },
+
+        getPatron (username) {
+            let patron = null
+            this.patron_usernames.forEach((item) => {
+                if (item.username.toLowerCase() === username.toLowerCase()) {
+                    console.log('returning', item)
+                    patron = item
+                }
+            })
+
+            return patron
+        }
+    }
+})
+</script>
+{% endblock %}
+
+{% block content_primary %}
+{% verbatim %}
+<div class="lyt-Tabs">
+    <div class="lyt-Tabs_Items">
+        <div class="lyt-Tabs_Item" :class="{'lyt-Tabs_Item-active': active_tab === 0}">
+            <a href="#" class="lyt-Tabs_Action" @click.prevent="active_tab = 0">
+                Patron streams ({{ patron_streams }})
+            </a>
+        </div>
+
+        <div class="lyt-Tabs_Item" :class="{'lyt-Tabs_Item-active': active_tab === 1}">
+            <a href="#" class="lyt-Tabs_Action" @click.prevent="active_tab = 1">
+                All streams ({{ general_streams }})
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row" v-if="active_channel">
+    <div class="small-12 columns" style="display: flex;">
+        <iframe :src="`https://player.twitch.tv/?channel=${active_channel}`" style="width: calc(100% - 350px)" height="506" frameborder="0"  scrolling="no" allowfullscreen="true"></iframe>
+        <iframe frameborder="0" scrolling="no" id="chat_embed" :src="`https://www.twitch.tv/${active_channel}/chat`" height="506" width="350"></iframe>
+    </div>
+
+    <div class="small-12 columns text-center mt-15 mb-30">
+        <a href="#" @click="active_channel = ''">Close stream</a>
+    </div>
+</div>
+
+<div class="flex-row" v-if="active_tab === 0">
+    <div class="flex-6 mb-20" v-for="stream in stream_data[active_tab]" v-if="getPatron(stream.channel.name).featured">
+        <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name'>
+            <img :src="stream.preview.large" alt="">
+        </a>
+        <h6 class="mt-15 mb-5">
+            <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name' style="word-break: break-word;">{{ stream.channel.status }}</a>
+        </h6>
+        <p>{{ stream.viewers }} viewers on <a :href="stream.channel.url" target="_blank">{{ stream.channel.display_name }}</a></p>
+    </div>
+</div>
+
+<div class="flex-row">
+    <div class="flex-3 mb-20" v-for="stream in stream_data[active_tab]" v-if="(active_tab === 0 && !getPatron(stream.channel.name).featured) || active_tab === 1">
+        <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name'>
+            <img :src="stream.preview.medium" alt="">
+        </a>
+        <h6 class="mt-15 mb-5">
+            <a href="#{{ active_channel }}" @click='active_channel = stream.channel.name' style="word-break: break-word;">{{ stream.channel.status }}</a>
+        </h6>
+        <p>{{ stream.viewers }} viewers on <a :href="stream.channel.url" target="_blank">{{ stream.channel.display_name }}</a></p>
+    </div>
+</div>
+
+<div class="row" v-if="stream_data[active_tab].length === 0">
+    <div class="small-12 columns">
+        <p>There are currently no streams to display.</p>
+    </div>
+</div>
+{% endverbatim %}
+{% endblock %}
