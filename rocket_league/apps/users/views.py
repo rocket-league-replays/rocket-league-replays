@@ -14,16 +14,16 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
-from django.views.generic import (DetailView, FormView, TemplateView,
-                                  UpdateView, View)
+from django.views.generic import (DetailView, FormView, ListView, UpdateView,
+                                  View)
 from rest_framework import views
 from rest_framework.response import Response
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends.steam import USER_INFO
 
-from ..replays.models import PRIVACY_PUBLIC, Replay
+from ..replays.models import PLATFORMS_MAPPINGS, PRIVACY_PUBLIC, Replay
 from .forms import PatreonSettingsForm, StreamSettingsForm, UserSettingsForm
-from .models import Profile, SteamCache
+from .models import PlayerStats, Profile, SteamCache
 from .serializers import StreamDataSerializer
 
 
@@ -81,128 +81,164 @@ class PublicProfileView(DetailView):
         response = super(PublicProfileView, self).get(request, *args, **kwargs)
 
         if self.object.profile.has_steam_connected():
-            return redirect('users:steam', steam_id=self.object.profile.steam_info()['steamid'])
+            return redirect('users:player', platform='steam', player_id=self.object.profile.steam_info()['steamid'])
 
         return response
 
 
-class SteamView(TemplateView):
-    template_name = 'users/steam_profile.html'
+class PlayerView(ListView):
+    template_name = 'users/player_profile.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        filters = {
+            'show_leaderboard': True,
+            'player__platform': PLATFORMS_MAPPINGS.get(self.kwargs['platform'], self.kwargs['platform']),
+        }
+
+        if self.kwargs['platform'] == 'steam':
+            filters['player__online_id'] = self.kwargs['player_id']
+        else:
+            filters['player__player_name'] = self.kwargs['player_id']
+
+        objects = Replay.objects.filter(**filters).distinct()
+
+        if self.request.user.is_authenticated():
+            objects = objects.filter(
+                Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+            )
+        else:
+            objects = objects.filter(
+                privacy=PRIVACY_PUBLIC,
+            )
+
+        return objects
 
     def get(self, request, *args, **kwargs):
-        if not kwargs['steam_id'].isnumeric():
+        if kwargs['platform'] == 'steam' and not kwargs['player_id'].isnumeric():
             # Try to get the 64 bit ID for a user.
             try:
                 data = requests.get('http://steamcommunity.com/id/{}/?xml=1'.format(
-                    kwargs['steam_id']
+                    kwargs['player_id']
                 ))
 
                 xml = ET.fromstring(data.text)
 
-                kwargs['steam_id'] = xml.findall('steamID64')[0].text
-                return redirect('users:steam', steam_id=kwargs['steam_id'])
+                kwargs['player_id'] = xml.findall('steamID64')[0].text
+                return redirect('users:player', platform='steam', player_id=kwargs['player_id'])
             except Exception as e:
                 raise Http404(e)
 
-        return super(SteamView, self).get(request, *args, **kwargs)
+        return super(PlayerView, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        context = super(SteamView, self).get_context_data(**kwargs)
+        context = super(PlayerView, self).get_context_data(**kwargs)
+        platform = context['platform'] = self.kwargs['platform']
+        player_id = context['player_id'] = self.kwargs['player_id']
 
         # Is this Steam ID associated with a user?
-        try:
-            social_obj = UserSocialAuth.objects.get(
-                uid=kwargs['steam_id'],
-            )
-            context['steam_info'] = social_obj.extra_data['player']
-
-            context['uploaded'] = social_obj.user.replay_set.all()
-
-            # Limit to public games, or unlisted / private games uploaded by the user.
-            if self.request.user.is_authenticated() and self.request.user == social_obj.user:
-                context['uploaded'] = context['uploaded'].filter(
-                    Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
-                )
-            else:
-                context['uploaded'] = context['uploaded'].filter(
-                    privacy=PRIVACY_PUBLIC,
-                )
-
-            context['has_user'] = True
-            context['social_obj'] = social_obj
-        except UserSocialAuth.DoesNotExist:
-            # Pull the profile data and pass it in.
-            context['has_user'] = False
-            context['steam_info'] = None
-
-            # Do we have a cache object for this already?
+        if platform == 'steam':
             try:
-                cache = SteamCache.objects.filter(
-                    uid=kwargs['steam_id']
+                social_obj = UserSocialAuth.objects.get(
+                    uid=player_id,
+                )
+                context['steam_info'] = social_obj.extra_data['player']
+
+                context['uploaded'] = social_obj.user.replay_set.all()
+
+                # Limit to public games, or unlisted / private games uploaded by the user.
+                if self.request.user.is_authenticated() and self.request.user == social_obj.user:
+                    context['uploaded'] = context['uploaded'].filter(
+                        Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
+                    )
+                else:
+                    context['uploaded'] = context['uploaded'].filter(
+                        privacy=PRIVACY_PUBLIC,
+                    )
+
+                self.page_kwarg = 'up_page'
+                up_paginator, up_page, up_qs, up_is_paginated = self.paginate_queryset(
+                    context['uploaded'],
+                    self.get_paginate_by(context['uploaded'])
                 )
 
-                if cache.count() > 0:
-                    for cache_item in cache[1:]:
-                        cache_item.delete()
+                context['uploaded_page_object'] = up_page
+                context['uploaded'] = up_qs
 
-                    cache = cache[0]
+                self.page_kwarg = 'page'
 
-                    # Have we updated this profile recently?
-                    if 'last_updated' in cache.extra_data:
-                        # Parse the last updated date.
-                        last_date = parse_datetime(cache.extra_data['last_updated'])
+                context['has_user'] = True
+                context['social_obj'] = social_obj
+            except UserSocialAuth.DoesNotExist:
+                # Pull the profile data and pass it in.
+                context['has_user'] = False
+                context['steam_info'] = None
 
-                        seconds_ago = (now() - last_date).seconds
+                # Do we have a cache object for this already?
+                try:
+                    cache = SteamCache.objects.filter(
+                        uid=player_id,
+                    )
 
-                        # 3600  seconds = 1 hour
-                        # 21600 seconds = 6 hours
-                        if seconds_ago < 21600:
-                            context['steam_info'] = cache.extra_data['player']
+                    if cache.count() > 0:
+                        for cache_item in cache[1:]:
+                            cache_item.delete()
 
-            except SteamCache.DoesNotExist:
-                pass
+                        cache = cache[0]
 
-            try:
-                if not context['steam_info']:
-                    player = requests.get(USER_INFO, params={
-                        'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
-                        'steamids': kwargs['steam_id'],
-                    }).json()
+                        # Have we updated this profile recently?
+                        if 'last_updated' in cache.extra_data:
+                            # Parse the last updated date.
+                            last_date = parse_datetime(cache.extra_data['last_updated'])
 
-                    if len(player['response']['players']) > 0:
-                        context['steam_info'] = player['response']['players'][0]
+                            seconds_ago = (now() - last_date).seconds
 
-                        # Store this data in a SteamCache object.
-                        cache_obj, _ = SteamCache.objects.get_or_create(
-                            uid=kwargs['steam_id']
-                        )
-                        cache_obj.extra_data = {
-                            'player': context['steam_info'],
-                            'last_updated': now().isoformat(),
-                        }
-                        cache_obj.save()
-            except:
-                pass
+                            # 3600  seconds = 1 hour
+                            # 21600 seconds = 6 hours
+                            if seconds_ago < 21600:
+                                context['steam_info'] = cache.extra_data['player']
 
-        context['appears_in'] = Replay.objects.filter(
-            show_leaderboard=True,
-            player__platform__in=['OnlinePlatform_Steam', '1'],
-            player__online_id=kwargs['steam_id'],
-        ).distinct()
+                except SteamCache.DoesNotExist:
+                    pass
 
-        if self.request.user.is_authenticated():
-            context['appears_in'] = context['appears_in'].filter(
-                Q(privacy=PRIVACY_PUBLIC) | Q(user=self.request.user)
-            )
+                try:
+                    if not context['steam_info']:
+                        player = requests.get(USER_INFO, params={
+                            'key': settings.SOCIAL_AUTH_STEAM_API_KEY,
+                            'steamids': player_id,
+                        }).json()
+
+                        if len(player['response']['players']) > 0:
+                            context['steam_info'] = player['response']['players'][0]
+
+                            # Store this data in a SteamCache object.
+                            cache_obj, _ = SteamCache.objects.get_or_create(
+                                uid=player_id,
+                            )
+                            cache_obj.extra_data = {
+                                'player': context['steam_info'],
+                                'last_updated': now().isoformat(),
+                            }
+                            cache_obj.save()
+                except:
+                    pass
         else:
-            context['appears_in'] = context['appears_in'].filter(
-                privacy=PRIVACY_PUBLIC,
-            )
-
-        if not context.get('steam_info', None):
             context['steam_info'] = {
-                'steamid': kwargs['steam_id'],
+                'personaname': player_id,
             }
+
+        if platform == 'steam' and not context.get('steam_info', None):
+            context['steam_info'] = {
+                'steamid': player_id,
+            }
+
+        try:
+            context['stats'] = PlayerStats.objects.get_or_request(
+                platform=platform,
+                online_id=player_id,
+            )
+        except PlayerStats.DoesNotExist:
+            context['stats'] = None
 
         return context
 

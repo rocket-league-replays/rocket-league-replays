@@ -1,19 +1,19 @@
-from datetime import timedelta
+import os
 
 import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
-from django.db.models import Max
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
+from rlapi import RocketLeagueAPI
 from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
 from social.backends.steam import USER_INFO
 
-from ..replays.models import Season, get_default_season
+from ..replays.models import PLATFORM_STEAM, PLATFORMS_MAPPINGS
 
 
 class Profile(models.Model):
@@ -66,85 +66,31 @@ class Profile(models.Model):
     privacy = models.PositiveIntegerField(
         'replay privacy',
         choices=[
-            (1, 'Private'),
-            (2, 'Unlisted'),
-            (3, 'Public')
+            (1, b'Private'),
+            (2, b'Unlisted'),
+            (3, b'Public')
         ],
         default=3,
     )
 
     def latest_ratings(self):
-        if not self.has_steam_connected():
-            return {}
+        # This method will return the ratings for each of the platforms that the
+        # user has associated with their account.  For most people this will only
+        # be one, but it's useful to handle all cases regardless.
 
-        steam_id = self.user.social_auth.get(provider='steam').uid
+        accounts = []
 
-        ratings = LeagueRating.objects.filter(
-            steamid=steam_id,
-            season_id=get_default_season(),
-        )
+        if self.has_steam_connected():
+            accounts.append((PLATFORMS_MAPPINGS['steam'], self.user.social_auth.get(provider='steam').uid))
 
-        if ratings.count() > 1:
-            LeagueRating.objects.filter(
-                steamid=steam_id,
-                season_id=get_default_season(),
-            ).exclude(
-                pk=ratings[0].pk
-            ).delete()
+        account_data = {}
+        for platform, online_id in accounts:
+            account_data[platform] = LeagueRating.objects.filter(
+                platform=platform,
+                online_id=online_id,
+            ).order_by('playlist')
 
-        if ratings:
-            return {
-                settings.PLAYLISTS['RankedDuels']: ratings[0].duels,
-                '{}_division'.format(settings.PLAYLISTS['RankedDuels']): ratings[0].duels_division,
-                settings.PLAYLISTS['RankedDoubles']: ratings[0].doubles,
-                '{}_division'.format(settings.PLAYLISTS['RankedDoubles']): ratings[0].doubles_division,
-                settings.PLAYLISTS['RankedSoloStandard']: ratings[0].solo_standard,
-                '{}_division'.format(settings.PLAYLISTS['RankedSoloStandard']): ratings[0].solo_standard_division,
-                settings.PLAYLISTS['RankedStandard']: ratings[0].standard,
-                '{}_division'.format(settings.PLAYLISTS['RankedStandard']): ratings[0].standard_division,
-            }
-
-    def rating_diff(self):
-        steam_id = self.user.social_auth.get(provider='steam').uid
-
-        # Do we have ratings from today as well as yesterday?
-        yesterdays_rating = LeagueRating.objects.filter(
-            steamid=steam_id,
-            timestamp__startswith=now().date() - timedelta(days=1),
-            season_id=get_default_season(),
-        ).aggregate(
-            Max('duels'),
-            Max('doubles'),
-            Max('solo_standard'),
-            Max('standard'),
-        )
-
-        todays_ratings = LeagueRating.objects.filter(
-            steamid=steam_id,
-            timestamp__startswith=now().date(),
-            season_id=get_default_season(),
-        ).aggregate(
-            Max('duels'),
-            Max('doubles'),
-            Max('solo_standard'),
-            Max('standard'),
-        )
-
-        response = {}
-
-        if todays_ratings['duels__max'] and yesterdays_rating['duels__max']:
-            response[settings.PLAYLISTS['RankedDuels']] = todays_ratings['duels__max'] - yesterdays_rating['duels__max']
-
-        if todays_ratings['doubles__max'] and yesterdays_rating['doubles__max']:
-            response[settings.PLAYLISTS['RankedDoubles']] = todays_ratings['doubles__max'] - yesterdays_rating['doubles__max']
-
-        if todays_ratings['solo_standard__max'] and yesterdays_rating['solo_standard__max']:
-            response[settings.PLAYLISTS['RankedSoloStandard']] = todays_ratings['solo_standard__max'] - yesterdays_rating['solo_standard__max']
-
-        if todays_ratings['standard__max'] and yesterdays_rating['standard__max']:
-            response[settings.PLAYLISTS['RankedStandard']] = todays_ratings['standard__max'] - yesterdays_rating['standard__max']
-
-        return response
+        return account_data
 
     def has_steam_connected(self):
         try:
@@ -199,8 +145,9 @@ class Profile(models.Model):
 
     def get_absolute_url(self):
         if self.has_steam_connected():
-            return reverse('users:steam', kwargs={
-                'steam_id': self.user.social_auth.get(provider='steam').uid
+            return reverse('users:player', kwargs={
+                'platform': 'steam',
+                'player_id': self.user.social_auth.get(provider='steam').uid
             })
 
         return reverse('users:profile', kwargs={
@@ -208,61 +155,157 @@ class Profile(models.Model):
         })
 
 
+class LeagueRatingManager(models.Manager):
+
+    def filter_or_request(self, **kwargs):
+        original_platform = kwargs['platform']
+        kwargs['platform'] = PLATFORMS_MAPPINGS[original_platform]
+
+        objects = self.filter(**kwargs)
+
+        if objects:
+            return objects
+
+        kwargs['platform'] = original_platform
+
+        # Get the rating from the API.
+        rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+        player = rl.get_player_skills(kwargs['platform'], kwargs['online_id'])[0]
+
+        if kwargs['platform'] == PLATFORM_STEAM:
+            online_id = player['user_id']
+        else:
+            online_id = player['user_name']
+
+        timestamp = now()
+        objects = []
+
+        for playlist_data in player['player_skills']:
+            obj, _ = LeagueRating.objects.update_or_create(
+                platform=kwargs['platform'],
+                online_id=online_id,
+                playlist=playlist_data['playlist'],
+                defaults={
+                    'skill': playlist_data['skill'],
+                    'matches_played': playlist_data['matches_played'],
+                    'tier': playlist_data['tier'],
+                    'tier_max': playlist_data['tier_max'],
+                    'division': playlist_data['division'],
+                    'timestamp': timestamp,
+                }
+            )
+
+            objects.append(obj)
+
+        return objects
+
+    # {'online_id': '76561198181829054', 'platform': '1', 'playlist': 1}
+    def get_or_request(self, *args, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            if (
+                'playlist' not in kwargs or
+                    'online_id' not in kwargs or
+                    'platform' not in kwargs or
+                    kwargs['playlist'] not in settings.RANKED_PLAYLISTS
+            ):
+                raise
+
+            # Get the rating from the API.
+            rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+            player = rl.get_player_skills(PLATFORMS_MAPPINGS[kwargs['platform']], kwargs['online_id'])[0]
+
+            if kwargs['platform'] == PLATFORM_STEAM:
+                online_id = player['user_id']
+            else:
+                online_id = player['user_name']
+
+            timestamp = now()
+            return_obj = None
+
+            for playlist_data in player['player_skills']:
+                obj, _ = LeagueRating.objects.update_or_create(
+                    platform=kwargs['platform'],
+                    online_id=online_id,
+                    playlist=playlist_data['playlist'],
+                    defaults={
+                        'skill': playlist_data['skill'],
+                        'matches_played': playlist_data['matches_played'],
+                        'tier': playlist_data['tier'],
+                        'tier_max': playlist_data['tier_max'],
+                        'division': playlist_data['division'],
+                        'timestamp': timestamp,
+                    }
+                )
+
+                if playlist_data['playlist'] == kwargs['playlist']:
+                    return_obj = obj
+
+            if return_obj:
+                return return_obj
+        raise
+
+
 class LeagueRating(models.Model):
 
-    steamid = models.CharField(
-        max_length=300,
+    """
+    [
+        {
+            “user_name”: “Rocket_League1”,
+            “player_skills”: [
+                {
+                    “playlist”: 10,
+                    “skill”: 217,
+                    “matches_played”: 2,
+                    “tier”: 0,
+                    “tier_max”: 0,
+                    “division”: 0,
+                }
+            ]
+        }
+    ]
+    """
+
+    platform = models.CharField(
+        max_length=100,
         blank=True,
         null=True,
         db_index=True,
     )
 
-    season = models.ForeignKey(
-        Season,
-        default=get_default_season,
+    online_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        db_index=True,
     )
 
-    duels = models.PositiveIntegerField()
-    duels_division = models.IntegerField(
-        default=-1,
-    )
-    duels_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    duels_mmr = models.FloatField(
+    playlist = models.PositiveIntegerField(
+        choices=[(int(v), bytes(k, 'utf8')) for k, v in settings.PLAYLISTS.items()],
         default=0,
     )
 
-    doubles = models.PositiveIntegerField()
-    doubles_division = models.IntegerField(
-        default=-1,
-    )
-    doubles_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    doubles_mmr = models.FloatField(
+    skill = models.PositiveIntegerField(
         default=0,
     )
 
-    solo_standard = models.PositiveIntegerField()
-    solo_standard_division = models.IntegerField(
-        default=-1,
-    )
-    solo_standard_matches_played = models.PositiveIntegerField(
-        default=0,
-    )
-    solo_standard_mmr = models.FloatField(
+    matches_played = models.PositiveIntegerField(
         default=0,
     )
 
-    standard = models.PositiveIntegerField()
-    standard_division = models.IntegerField(
-        default=-1,
-    )
-    standard_matches_played = models.PositiveIntegerField(
+    tier = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.TIERS.items()],
         default=0,
     )
-    standard_mmr = models.FloatField(
+
+    tier_max = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.TIERS.items()],
+        default=0,
+    )
+
+    division = models.PositiveIntegerField(
+        choices=[(k, v) for k, v in settings.DIVISIONS.items()],
         default=0,
     )
 
@@ -270,8 +313,93 @@ class LeagueRating(models.Model):
         auto_now_add=True,
     )
 
+    objects = LeagueRatingManager()
+
+    def __str__(self):
+        return 'Platform: {}, Online ID: {}, Playlist: {}, Tier: {}'.format(
+            self.platform,
+            self.online_id,
+            self.playlist,
+            self.tier,
+        )
+
     class Meta:
         ordering = ['-timestamp']
+        unique_together = [['platform', 'online_id', 'playlist']]
+
+
+class PlayerStatsManager(models.Manager):
+
+    # {'online_id': '76561198181829054', 'platform': '1', 'playlist': 1}
+    def get_or_request(self, *args, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            online_id = kwargs.get('online_id', None)
+            platform = kwargs.get('platform', None)
+
+            if not online_id or not platform:
+                raise
+
+            if platform == 'steam':
+                online_id = int(online_id)
+
+            # Get the rating from the API.
+            rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+            stats = rl.get_stats_values_for_user(platform, online_id)
+
+            obj, _ = PlayerStats.objects.update_or_create(
+                platform=platform,
+                online_id=online_id,
+                defaults=stats[online_id]
+            )
+
+            return obj
+
+        raise
+
+
+class PlayerStats(models.Model):
+
+    platform = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+
+    online_id = models.CharField(
+        max_length=128,
+        blank=True,
+        null=True,
+        db_index=True,
+    )
+
+    wins = models.PositiveIntegerField(
+        default=0,
+    )
+
+    assists = models.PositiveIntegerField(
+        default=0,
+    )
+
+    goals = models.PositiveIntegerField(
+        default=0,
+    )
+
+    shots = models.PositiveIntegerField(
+        default=0,
+    )
+
+    mvps = models.PositiveIntegerField(
+        default=0,
+    )
+
+    saves = models.PositiveIntegerField(
+        default=0,
+    )
+
+    objects = PlayerStatsManager()
 
 
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])

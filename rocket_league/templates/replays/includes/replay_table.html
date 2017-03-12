@@ -4,7 +4,7 @@
     <thead>
         <tr>
             <th class="limited-width">#</th>
-            <th>Season</th>
+            <th>Playlist</th>
             <th>Score</th>
             <th>Type</th>
             <th>Map</th>
@@ -46,5 +46,5 @@
 </table>
 
 {% if page_obj %}
-    {% pagination page_obj %}
+    {% pagination page_obj pagination_key=pagination_key %}
 {% endif %}

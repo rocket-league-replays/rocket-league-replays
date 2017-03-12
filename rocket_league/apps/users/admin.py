@@ -6,8 +6,9 @@ from .models import LeagueRating, Profile
 
 
 class LeagueRatingAdmin(admin.ModelAdmin):
-    list_display = ['steamid', 'duels', 'doubles', 'solo_standard', 'standard', 'timestamp']
-    search_fields = ['steamid']
+    list_display = ['platform', 'online_id', 'timestamp']
+    search_fields = ['online_id']
+
 
 admin.site.register(LeagueRating, LeagueRatingAdmin)
 
@@ -24,6 +25,7 @@ class UserAdmin(UserAdmin):
 
     list_display = ['username', 'token', 'has_steam', 'is_staff']
     inlines = [ProfileInline]
+
 
 # Re-register UserAdmin
 admin.site.unregister(User)

@@ -1,8 +1,10 @@
+import math
 import re
 from itertools import zip_longest
 
 import bitstring
 from django.conf import settings
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -10,9 +12,9 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
 from django.utils.timezone import now
+from pyrope import Replay as Pyrope
 from social.apps.django_app.default.fields import JSONField
 
-from pyrope import Replay as Pyrope
 from .parser import parse_replay_header, parse_replay_netstream
 
 PRIVACY_PRIVATE = 1
@@ -22,11 +24,39 @@ PRIVACY_PUBLIC = 3
 PLATFORM_UNKNOWN = 0
 PLATFORM_STEAM = 1
 PLATFORM_PSN = 2
+PLATFORM_XBOX = 4
 
 PLATFORMS = {
     'Unknown': PLATFORM_UNKNOWN,
     'Steam': PLATFORM_STEAM,
     'PlayStation': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+}
+
+PLATFORMS_MAPPINGS = {
+    'unknown': PLATFORM_UNKNOWN,
+    'steam': PLATFORM_STEAM,
+    'Steam': PLATFORM_STEAM,
+    'PlayStation': PLATFORM_PSN,
+    'playstation': PLATFORM_PSN,
+    'ps4': PLATFORM_PSN,
+    'Xbox': PLATFORM_XBOX,
+    'xbox': PLATFORM_XBOX,
+    'xboxone': PLATFORM_XBOX,
+    'OnlinePlatform_PS4': PLATFORM_PSN,
+    'OnlinePlatform_Unknown': PLATFORM_UNKNOWN,
+    'OnlinePlatform_Dingo': PLATFORM_XBOX,
+    'OnlinePlatform_Steam': PLATFORM_STEAM,
+
+    # The next values are used for the official API.
+    PLATFORM_UNKNOWN: 'unknown',
+    str(PLATFORM_UNKNOWN): 'unknown',
+    PLATFORM_STEAM: 'steam',
+    str(PLATFORM_STEAM): 'steam',
+    PLATFORM_PSN: 'ps4',
+    str(PLATFORM_PSN): 'ps4',
+    PLATFORM_XBOX: 'xboxone',
+    str(PLATFORM_XBOX): 'xboxone',
 }
 
 
@@ -375,105 +405,43 @@ class Replay(models.Model):
 
         # Now we have the swing rating, adjust it by the total number of goals.
         # This gives us a "base value" for each replay and allows replays with
-        # lots of goals but not much swing to get reasonable rating.
-        swing_rating += (self.team_0_score + self.team_1_score) * goal_count_multiplier
+        # lots of goals but not much swing to get reasonable rating. Cap the goal
+        # multiplier at 5.
+        total_goals = self.team_0_score + self.team_1_score
+        if total_goals > 5:
+            total_goals = 5
 
-        # Decay the score based on the number of days since the game was played.
-        # This should keep the replay list fresh. Cap at a set number of days.
-        days_ago = (now().date() - self.timestamp.date()).days
-
-        day_cap = 75
-
-        if days_ago > day_cap:
-            days_ago = day_cap
-
-        # Make sure we're not dividing by zero.
-        if days_ago > 0:
-            days_ago = float(days_ago)
-            swing_rating -= swing_rating * days_ago / 100
+        swing_rating += total_goals * goal_count_multiplier
 
         return swing_rating
 
     def calculate_average_rating(self):
         from ..users.models import LeagueRating
 
-        players = self.player_set.filter(
-            platform__in=['OnlinePlatform_Steam', '1'],
-        ).exclude(
+        players = self.player_set.exclude(
             online_id__isnull=True,
         )
-
-        team_sizes = self.player_set.count() / 2
 
         num_player_ratings = 0
         total_player_ratings = 0
 
-        get_season = Season.objects.filter(
-            start_date__lte=self.timestamp,
-        )
-
         for player in players:
-            # Get the latest rating for this player.
-            ratings = LeagueRating.objects.filter(
-                steamid=player.online_id,
-                season_id=get_season[0].pk if get_season else get_default_season()
-            )
+            try:
+                # Get the latest rating for this player.
+                rating = LeagueRating.objects.get(
+                    platform=player.platform,
+                    online_id=player.online_id,
+                    playlist=self.playlist,
+                )
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels']:
-                    ratings = ratings.exclude(duels=0)
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles']:
-                    ratings = ratings.exclude(doubles=0)
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard']:
-                    ratings = ratings.exclude(solo_standard=0)
-                elif self.playlist == settings.PLAYLISTS['RankedStandard']:
-                    ratings = ratings.exclude(standard=0)
-            else:
-                if team_sizes == 1:
-                    ratings = ratings.exclude(duels=0)
-                elif team_sizes == 2:
-                    ratings = ratings.exclude(doubles=0)
-                elif team_sizes == 3:
-                    ratings = ratings.exclude(solo_standard=0, standard=0)
-
-                ratings = ratings[:1]
-
-            if len(ratings) > 0:
-                rating = ratings[0]
-            else:
+                total_player_ratings += rating.tier
+                num_player_ratings += 1
+            except LeagueRating.DoesNotExist:
+                # Should we get the ratings?
                 continue
 
-            if self.playlist:
-                if self.playlist == settings.PLAYLISTS['RankedDuels'] and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedDoubles'] and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedSoloStandard'] and rating.solo_standard > 0:
-                    total_player_ratings += rating.solo_standard
-                    num_player_ratings += 1
-                elif self.playlist == settings.PLAYLISTS['RankedStandard'] and rating.standard > 0:
-                    total_player_ratings += rating.standard
-                    num_player_ratings += 1
-            else:
-                if team_sizes == 1 and rating.duels > 0:  # Duels
-                    total_player_ratings += rating.duels
-                    num_player_ratings += 1
-                elif team_sizes == 2 and rating.doubles > 0:  # Doubles
-                    total_player_ratings += rating.doubles
-                    num_player_ratings += 1
-                elif team_sizes == 3 and (rating.solo_standard > 0 or rating.standard > 0):  # Standard or Solo Standard (can't tell which)
-                    if rating.solo_standard > 0 and rating.standard <= 0:
-                        total_player_ratings += rating.solo_standard
-                    elif rating.standard > 0 and rating.solo_standard <= 0:
-                        total_player_ratings += rating.standard
-                    else:
-                        total_player_ratings += (rating.solo_standard + rating.standard) / 2
-                    num_player_ratings += 1
-
         if num_player_ratings > 0:
-            return total_player_ratings / num_player_ratings
+            return math.ceil(total_player_ratings / num_player_ratings)
         return 0
 
     def eligible_for_feature(self, feature):
@@ -730,6 +698,33 @@ class Player(models.Model):
     )
 
     @cached_property
+    def get_rating_data(self):
+        from ..users.models import LeagueRating
+        from ..users.templatetags.ratings import tier_name
+
+        if self.replay.playlist not in settings.RANKED_PLAYLISTS:
+            return
+
+        try:
+            rating = LeagueRating.objects.get_or_request(
+                platform=self.platform,
+                online_id=self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+                playlist=self.replay.playlist,
+            )
+
+            return {
+                'image': static('img/tiers/icons/{}.png'.format(rating.tier)),
+                'tier_name': tier_name(rating.tier)
+            }
+        except LeagueRating.DoesNotExist:
+            pass
+
+        return {
+            'image': static('img/tiers/icons/0.png'),
+            'tier_name': 'Unranked'
+        }
+
+    @cached_property
     def vehicle_data(self):
         """
         {
@@ -815,6 +810,12 @@ class Player(models.Model):
                         components[mappings['type']].save()
 
         return components
+
+    def get_absolute_url(self):
+        return reverse('users:player', kwargs={
+            'platform': PLATFORMS_MAPPINGS[self.platform],
+            'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+        })
 
     def __str__(self):
         return '{} on Team {}'.format(

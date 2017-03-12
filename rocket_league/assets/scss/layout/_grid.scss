@@ -94,6 +94,10 @@ hr {
     margin-left: #{$column-gutter / 2};
   }
 
+  .flex-column {
+    flex: 1;
+  }
+
   // 25%
   .flex-3 {
     flex-basis: calc(50% - #{$column-gutter});

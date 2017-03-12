@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load cache pagination replays site %}
+
+{% block title %}{{ steam_info.personaname }} - {{ block.super }}{% endblock %}
+
+{% block content_primary %}
+<div class="row">
+    <div class="small-12 columns">
+        <h3>
+            {% if has_user %}
+                {% patreon_pledge_amount user=social_obj.user as user_patreon %}
+                {% if user_patreon > 0 %}
+                <a href="https://www.patreon.com/danielsamuels" title="This user is supporting Rocket League Replays on Patreon. Click to find out more!" target="_blank" class="crowned">
+                    <em class="icon-crown"></em>
+                </a>
+                {% endif %}
+            {% endif %}
+
+            {% if steam_info.avatar %}
+                <img src="{{ steam_info.avatar }}" alt="">
+            {% endif %}
+
+            {% if platform == 'steam' %}
+                {{ steam_info.personaname }}
+
+                <a href="{{ steam_info.profileurl }}" class="right" target="_blank">
+                    <em class="icon-steam-squared"></em>
+                </a>
+            {% else %}
+                {{ player_id }}
+            {% endif %}
+
+
+            {# See if this user has a Patreon pledge #}
+            {% if has_user %}
+                {% patreon_pledge_amount user=social_obj.user as user_patreon %}
+                {% if user_patreon >= settings.PATREON_SOCIAL_MEDIA_PRICE %}
+                    {# Bring in any additional social links #}
+                    {% if social_obj.user.profile.twitter_username %}
+                    <a href="https://twitter.com/{{ social_obj.user.profile.twitter_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-twitter-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.twitch_username %}
+                    <a href="https://www.twitch.tv/{{ social_obj.user.profile.twitch_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-twitch"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.reddit_username %}
+                    <a href="https://reddit.com/u/{{ social_obj.user.profile.reddit_username }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-reddit-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.youtube_url %}
+                    <a href="{{ social_obj.user.profile.youtube_url }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-youtube-squared"></em>
+                    </a>
+                    {% endif %}
+
+                    {% if social_obj.user.profile.facebook_url %}
+                    <a href="{{ social_obj.user.profile.facebook_url }}" class="right" target="_blank" rel="nofollow">
+                        <em class="icon-facebook-squared"></em>
+                    </a>
+                    {% endif %}
+
+                {% endif %}
+            {% endif %}
+        </h3>
+        <hr>
+    </div>
+</div>
+
+{% if stats %}
+{% cache 1800 player_stats player_id %}
+<div class="row">
+    <div class="medium-5 columns">
+        <table width="100%">
+            <tbody>
+                <tr>
+                    <td>Wins:</td>
+                    <td>{{ stats.wins }}</td>
+                </tr>
+
+                <tr>
+                    <td>Assists</td>
+                    <td>{{ stats.assists }}</td>
+                </tr>
+
+                <tr>
+                    <td>Goals</td>
+                    <td>{{ stats.goals }}</td>
+                </tr>
+
+                <tr>
+                    <td>Shots</td>
+                    <td>{{ stats.shots }}</td>
+                </tr>
+
+                <tr>
+                    <td>Saves</td>
+                    <td>{{ stats.saves }}</td>
+                </tr>
+
+                <tr>
+                    <td>MVPs</td>
+                    <td>{{ stats.mvps }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endcache %}
+{% endif %}
+
+    {% cache 1800 player_ratings_and_graph player_id %}
+    <div class="medium-7 columns">
+        {# Rating graph #}
+        {% include "users/includes/latest_ratings.html" with platform=platform player_id=player_id %}
+    </div>
+    {% endcache %}
+</div>
+
+{% if object_list %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h4>Appears in</h4>
+            {% include "replays/includes/replay_table.html" with disable_ordering=True %}
+        </div>
+    </div>
+{% endif %}
+
+{% with object_list=uploaded page_obj=uploaded_page_object pagination_key='up_page' %}
+    {% if object_list %}
+        <div class="row">
+            <div class="medium-12 columns">
+                <h4>Uploaded replays</h4>
+                {% include "replays/includes/replay_table.html" with disable_ordering=True %}
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+{% endblock %}

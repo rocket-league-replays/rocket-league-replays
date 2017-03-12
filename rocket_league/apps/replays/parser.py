@@ -383,6 +383,15 @@ def parse_replay_netstream(replay_id):
             if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
                 del value['Engine.PlayerReplicationInfo:Team']
 
+            # If an actor is getting their team value nuked, store what it was
+            # so we can use it later on.
+            if (
+                'Engine.PlayerReplicationInfo:Team' in value and
+                value['Engine.PlayerReplicationInfo:Team']['Value']['Int'] == -1 and
+                actors[actor_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int'] != -1
+            ):
+                actors[actor_id]['Engine.PlayerReplicationInfo:CachedTeam'] = actors[actor_id]['Engine.PlayerReplicationInfo:Team']
+
             # Merge the new properties with the existing.
             if actors[actor_id] != value:
                 actors[actor_id] = {**actors[actor_id], **value}
@@ -674,6 +683,40 @@ def parse_replay_netstream(replay_id):
         if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
             team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value']['Int'])
 
+        # Attempt to get the team ID from our cache.
+        if team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in value:
+            team = get_team(value['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int'])
+
+        if team == -1:
+            # If this is a 1v1 and the other player has a team, then put this
+            # player on the opposite team.
+            if len(player_actors) == 2:
+                pak = list(player_actors.keys())
+                other_player = player_actors[pak[(pak.index(actor_id) - 1) * -1]]
+
+                other_team = -1
+
+                if 'Engine.PlayerReplicationInfo:Team' in other_player and other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
+                    other_team = other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']
+
+                # Attempt to get the team ID from our cache.
+                if other_team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in other_player:
+                    other_team = other_player['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int']
+
+                if other_team != -1:
+                    # There's nothing more we can do.
+                    tdk = list(team_data.keys())
+                    team_id = tdk[(tdk.index(other_team) - 1) * 1]
+                    team = get_team(team_id)
+
+                    player_actors[actor_id]['Engine.PlayerReplicationInfo:Team'] = {
+                        'Type': 'FlaggedInt',
+                        'Value': {
+                            'Flag': True,
+                            'Int': team_id,
+                        }
+                    }
+
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
             player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
@@ -685,7 +728,7 @@ def parse_replay_netstream(replay_id):
             saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
             platform=PLATFORMS.get(system, system),
             online_id=online_id,
-            bot=False,  # TODO: Add a check for this.
+            bot=value.get('Engine.PlayerReplicationInfo:bBot', {'Value': False})['Value'],
             spectator='Engine.PlayerReplicationInfo:Team' not in value,
             actor_id=actor_id,
             unique_id=unique_id,

@@ -11,6 +11,7 @@ for the site, database, media and email sections below.
 import os
 import platform
 import sys
+from collections import OrderedDict
 
 if platform.python_implementation() == "PyPy":
     from psycopg2cffi import compat
@@ -380,6 +381,8 @@ PLAYLISTS = {
     'RocketLabs': 16,  # TODO: Check this is correct.
 }
 
+PLAYLISTS = OrderedDict(sorted(PLAYLISTS.items(), key=lambda t: t[0]))
+
 HUMAN_PLAYLISTS = {
     1: 'Unranked Duels',
     2: 'Unranked Doubles',
@@ -393,6 +396,8 @@ HUMAN_PLAYLISTS = {
     15: 'Snow Day',
     16: 'Rocket Labs',
 }
+
+RANKED_PLAYLISTS = [10, 11, 12, 13]
 
 TIERS = {
     0: 'Unranked',

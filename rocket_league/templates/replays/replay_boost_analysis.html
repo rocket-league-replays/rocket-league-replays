@@ -49,30 +49,9 @@
                             {% if not player.spectator %}
                             <tr>
                                 <td class="{% if player.team == 0 %}primary{% else %}secondary{% endif %}">
-                                    {# Try to get the latest rating for this player in this size. #}
-                                    {% with steam_id=player.online_id %}
-                                        {% latest_ratings as ratings %}
-
-                                        {% if player.replay.team_sizes == 1 and ratings.10 and ratings.10|league_image %}
-                                            {% with ratings.10|string as rating_string %}
-                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                    <img src="{% static url %}" alt="{% league_name ratings.10 %}" title="{% league_name ratings.10 %}">
-                                                {% endwith %}
-                                            {% endwith %}
-                                        {% elif player.replay.team_sizes == 2 and ratings.11 and ratings.11|league_image %}
-                                            {% with ratings.11|string as rating_string %}
-                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                    <img src="{% static url %}" alt="{% league_name ratings.11 %}" title="{% league_name ratings.11 %}">
-                                                {% endwith %}
-                                            {% endwith %}
-                                        {% elif player.replay.team_sizes == 3 and ratings.12 and ratings.12|league_image %}
-                                            {% with ratings.12|string as rating_string %}
-                                                {% with 'img/tiers/icons/'|add:rating_string|add:'.png' as url %}
-                                                    <img src="{% static url %}" alt="{% league_name ratings.12 %}" title="{% league_name ratings.12 %}">
-                                                {% endwith %}
-                                            {% endwith %}
-                                        {% else %}
-                                            <img src="{% static 'img/tiers/icons/0.png' %}" alt="{% league_name 0 %}" title="{% league_name 0 %}">
+                                    {% with player.get_rating_data as rating_data %}
+                                        {% if rating_data %}
+                                            <img src="{{ rating_data.image }}" alt="{{ rating_data.tier_name }}" title="{{ rating_data.tier_name }}">
                                         {% endif %}
                                     {% endwith %}
 
