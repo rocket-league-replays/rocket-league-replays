@@ -8,7 +8,7 @@ from django.db import models
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
-from rlapi import RocketLeagueAPI
+from rlapi.client import RocketLeagueAPI
 from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
 from social.backends.steam import USER_INFO
