@@ -81,7 +81,7 @@ class PublicProfileView(DetailView):
         response = super(PublicProfileView, self).get(request, *args, **kwargs)
 
         if self.object.profile.has_steam_connected():
-            return redirect('users:steam', steam_id=self.object.profile.steam_info()['steamid'])
+            return redirect('users:player', platform='steam', player_id=self.object.profile.steam_info()['steamid'])
 
         return response
 
@@ -125,7 +125,7 @@ class PlayerView(ListView):
                 xml = ET.fromstring(data.text)
 
                 kwargs['player_id'] = xml.findall('steamID64')[0].text
-                return redirect('users:steam', steam_id=kwargs['player_id'])
+                return redirect('users:player', platform='steam', player_id=kwargs['player_id'])
             except Exception as e:
                 raise Http404(e)
 
