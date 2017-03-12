@@ -2,7 +2,7 @@ bcrypt==3.1.2
 awscli==1.10.6
 twython==3.3.0
 django-debug-toolbar==1.4
-onespacemedia-cms==1.12.4
+onespacemedia-cms==1.12.7
 pathlib==1.0.1
 praw==3.2.1
 django-braces==1.8.1
