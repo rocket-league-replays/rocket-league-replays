@@ -6,8 +6,9 @@ from . import views
 urlpatterns = patterns(
     '',
     url(r'^user/(?P<username>[^/]+)/$', views.PublicProfileView.as_view(), name='profile'),
-    url(r'^steam/(?P<steam_id>[^/]+)/$', views.SteamView.as_view(), name='steam'),
-    url(r'^ps4/(?P<steam_id>[^/]+)/$', views.PS4View.as_view(), name='ps4'),
+
+    url(r'^(?P<platform>(steam|ps4|xboxone))/(?P<player_id>[^/]+)/$', views.PlayerView.as_view(), name='player'),
+
     url(r'^settings/$', views.SettingsView.as_view(), name='settings'),
     url(r'^settings/patreon/$', RedirectView.as_view(pattern_name='users:settings', permanent=False), name='patreon'),
     url(r'^profile/settings/$', views.UserSettingsView.as_view(), name='password'),

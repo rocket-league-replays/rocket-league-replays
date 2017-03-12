@@ -32,12 +32,20 @@
                 {% endif %}
             {% endif %}
 
-            <img src="{{ steam_info.avatar }}" alt="">
+            {% if steam_info.avatar %}
+                <img src="{{ steam_info.avatar }}" alt="">
+            {% endif %}
 
-            {{ steam_info.personaname }}
-            <a href="{{ steam_info.profileurl }}" class="right" target="_blank">
-                <em class="icon-steam-squared"></em>
-            </a>
+            {% if platform == 'steam' %}
+                {{ steam_info.personaname }}
+
+                <a href="{{ steam_info.profileurl }}" class="right" target="_blank">
+                    <em class="icon-steam-squared"></em>
+                </a>
+            {% else %}
+                {{ player_id }}
+            {% endif %}
+
 
             {# See if this user has a Patreon pledge #}
             {% if has_user %}
@@ -77,18 +85,12 @@
                 {% endif %}
             {% endif %}
         </h3>
-
-        {% display_names steam_info as names %}
-        {% if names %}
-        <p>Has also played as: {{ names }}</p>
-        {% endif %}
         <hr>
     </div>
 </div>
 
-{% cache 1800 player_stats steam_info.steamid %}
-{% steam_stats steam_info.steamid as stats %}
-
+{% if stats %}
+{% cache 1800 player_stats player_id %}
 <div class="row">
     <div class="medium-5 columns">
         <h4>Player stats</h4>
@@ -96,126 +98,58 @@
         <table width="100%">
             <tbody>
                 <tr>
-                    <td>Winning goals scored:</td>
-                    <td>{{ stats.winning_goals }}</td>
+                    <td>Wins:</td>
+                    <td>{{ stats.wins }}</td>
                 </tr>
 
                 <tr>
-                    <td>Goals scored within the last minute of the game:</td>
-                    <td>{{ stats.last_minute_goals }}</td>
+                    <td>Assists</td>
+                    <td>{{ stats.assists }}</td>
                 </tr>
 
                 <tr>
-                    <td>Number of times scored to put the game into overtime:</td>
-                    <td>{{ stats.overtime_triggering_goals }}</td>
+                    <td>Goals</td>
+                    <td>{{ stats.goals }}</td>
                 </tr>
 
                 <tr>
-                    <td>Number of times scored to put the game into overtime then scored the winning goal:</td>
-                    <td>{{ stats.overtime_triggering_and_winning_goals }}</td>
+                    <td>Shots</td>
+                    <td>{{ stats.shots }}</td>
                 </tr>
 
                 <tr>
-                    <td>Number of times caused overtime and then won:</td>
-                    <td>{{ stats.overtime_trigger_and_team_win }}</td>
-                </tr>
-
-                {% if stats.preferred_match_size %}
-                <tr>
-                    <td>Preferred match size:</td>
-                    <td>{{ stats.preferred_match_size }}v{{ stats.preferred_match_size }}</td>
-                </tr>
-                {% endif %}
-
-                {% if stats.preferred_role %}
-                <tr>
-                    <td>Preferred role:</td>
-                    <td>{{ stats.preferred_role }}</td>
-                </tr>
-                {% endif %}
-
-                {% comment %}
-                <tr>
-                    <td title="Higher score than everyone else on your team put together">Number of times you've carried your team:</td>
-                    <td>{{ stats.carries }}</td>
+                    <td>Saves</td>
+                    <td>{{ stats.saves }}</td>
                 </tr>
 
                 <tr>
-                    <td title="Higher score than everyone else put together">Number of times you've dominated the game:</td>
-                    <td>{{ stats.dominations }}</td>
+                    <td>MVPs</td>
+                    <td>{{ stats.mvps }}</td>
                 </tr>
-
-                <tr>
-                    <td>Biggest win:</td>
-                    <td>{{ stats.biggest_win }}</td>
-                </tr>
-                {% endcomment %}
-
-                {% if stats.highest_score %}
-                <tr>
-                    <td>Highest score in a game:</td>
-                    <td>{{ stats.highest_score }}</td>
-                </tr>
-                {% endif %}
-
-                {% if stats.most_goals %}
-                <tr>
-                    <td>Most goals in a game:</td>
-                    <td>{{ stats.most_goals }}</td>
-                </tr>
-                {% endif %}
-
-                {% if stats.most_shots %}
-                <tr>
-                    <td>Most shots in a game:</td>
-                    <td>{{ stats.most_shots }}</td>
-                </tr>
-                {% endif %}
-
-                {% if stats.most_assists %}
-                <tr>
-                    <td>Most assists in a game:</td>
-                    <td>{{ stats.most_assists }}</td>
-                </tr>
-                {% endif %}
-
-                {% if stats.most_saves %}
-                <tr>
-                    <td>Most saves in a game:</td>
-                    <td>{{ stats.most_saves }}</td>
-                </tr>
-                {% endif %}
             </tbody>
         </table>
     </div>
 {% endcache %}
+{% endif %}
 
-    {% cache 1800 player_ratings_and_graph steam_info.steamid %}
+    {% cache 1800 player_ratings_and_graph player_id %}
     <div class="medium-7 columns">
         {# Rating graph #}
-        {% include "users/includes/latest_ratings.html" with steam_id=steam_info.steamid %}
-
-        <p>Want to see more of your stats as well as some fancy charts? Check out your profile on <a href="https://rocketleaguestats.com/profile/steam/{{ steam_info.steamid }}" target="_blank">Rocket League Stats</a>!</p>
-
-        {# Scoreboard + totals #}
-        {% custom_scoreboard steam_info %}
-
+        {% include "users/includes/latest_ratings.html" with platform=platform player_id=player_id %}
     </div>
     {% endcache %}
 </div>
 
-{% with object_list=appears_in|slice:':10' %}
-    {% if object_list %}
-        <div class="row">
-            <div class="medium-12 columns">
-                <h4>Appears in</h4>
-                {% include "replays/includes/replay_table.html" with disable_ordering=True %}
-            </div>
+{% if object_list %}
+    <div class="row">
+        <div class="medium-12 columns">
+            <h4>Appears in</h4>
+            {% include "replays/includes/replay_table.html" with disable_ordering=True %}
         </div>
-    {% endif %}
-{% endwith %}
+    </div>
+{% endif %}
 
-{% with object_list=uploaded|slice:':10' %}
+{% with object_list=uploaded page_obj=uploaded_page_object pagination_key='up_page' %}
     {% if object_list %}
         <div class="row">
             <div class="medium-12 columns">

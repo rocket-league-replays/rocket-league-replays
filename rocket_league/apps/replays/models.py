@@ -39,8 +39,10 @@ PLATFORMS_MAPPINGS = {
     'Steam': PLATFORM_STEAM,
     'PlayStation': PLATFORM_PSN,
     'playstation': PLATFORM_PSN,
+    'ps4': PLATFORM_PSN,
     'Xbox': PLATFORM_XBOX,
     'xbox': PLATFORM_XBOX,
+    'xboxone': PLATFORM_XBOX,
     'OnlinePlatform_PS4': PLATFORM_PSN,
     'OnlinePlatform_Unknown': PLATFORM_UNKNOWN,
     'OnlinePlatform_Dingo': PLATFORM_XBOX,
@@ -706,7 +708,7 @@ class Player(models.Model):
         try:
             rating = LeagueRating.objects.get_or_request(
                 platform=self.platform,
-                online_id=self.online_id,
+                online_id=self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
                 playlist=self.replay.playlist,
             )
 
@@ -810,7 +812,10 @@ class Player(models.Model):
         return components
 
     def get_absolute_url(self):
-        return reverse('users:' + PLATFORMS_MAPPINGS[self.platform], args=[self.online_id])
+        return reverse('users:player', kwargs={
+            'platform': PLATFORMS_MAPPINGS[self.platform],
+            'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+        })
 
     def __str__(self):
         return '{} on Team {}'.format(

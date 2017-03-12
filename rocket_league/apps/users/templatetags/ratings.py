@@ -9,9 +9,9 @@ register = template.Library()
 
 @register.assignment_tag(takes_context=True)
 def latest_ratings(context):
-    return LeagueRating.objects.filter(
-        platform=PLATFORM_STEAM,
-        online_id=context['steam_id'],
+    return LeagueRating.objects.filter_or_request(
+        platform=context['platform'],
+        online_id=context['player_id'],
     )
 
 

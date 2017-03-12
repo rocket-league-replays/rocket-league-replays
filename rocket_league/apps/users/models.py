@@ -145,8 +145,9 @@ class Profile(models.Model):
 
     def get_absolute_url(self):
         if self.has_steam_connected():
-            return reverse('users:steam', kwargs={
-                'steam_id': self.user.social_auth.get(provider='steam').uid
+            return reverse('users:player', kwargs={
+                'platform': 'steam',
+                'player_id': self.user.social_auth.get(provider='steam').uid
             })
 
         return reverse('users:profile', kwargs={
@@ -155,6 +156,48 @@ class Profile(models.Model):
 
 
 class LeagueRatingManager(models.Manager):
+
+    def filter_or_request(self, **kwargs):
+        original_platform = kwargs['platform']
+        kwargs['platform'] = PLATFORMS_MAPPINGS[original_platform]
+
+        objects = self.filter(**kwargs)
+
+        if objects:
+            return objects
+
+        kwargs['platform'] = original_platform
+
+        # Get the rating from the API.
+        rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+        player = rl.get_player_skills(kwargs['platform'], kwargs['online_id'])[0]
+
+        if kwargs['platform'] == PLATFORM_STEAM:
+            online_id = player['user_id']
+        else:
+            online_id = player['user_name']
+
+        timestamp = now()
+        objects = []
+
+        for playlist_data in player['player_skills']:
+            obj, _ = LeagueRating.objects.update_or_create(
+                platform=kwargs['platform'],
+                online_id=online_id,
+                playlist=playlist_data['playlist'],
+                defaults={
+                    'skill': playlist_data['skill'],
+                    'matches_played': playlist_data['matches_played'],
+                    'tier': playlist_data['tier'],
+                    'tier_max': playlist_data['tier_max'],
+                    'division': playlist_data['division'],
+                    'timestamp': timestamp,
+                }
+            )
+
+            objects.append(obj)
+
+        return objects
 
     # {'online_id': '76561198181829054', 'platform': '1', 'playlist': 1}
     def get_or_request(self, *args, **kwargs):
@@ -199,10 +242,8 @@ class LeagueRatingManager(models.Manager):
                 if playlist_data['playlist'] == kwargs['playlist']:
                     return_obj = obj
 
-                if return_obj:
-                    return return_obj
-
-                raise
+            if return_obj:
+                return return_obj
         raise
 
 
@@ -287,6 +328,37 @@ class LeagueRating(models.Model):
         unique_together = [['platform', 'online_id', 'playlist']]
 
 
+class PlayerStatsManager(models.Manager):
+
+    # {'online_id': '76561198181829054', 'platform': '1', 'playlist': 1}
+    def get_or_request(self, *args, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            online_id = kwargs.get('online_id', None)
+            platform = kwargs.get('platform', None)
+
+            if not online_id or not platform:
+                raise
+
+            if platform == 'steam':
+                online_id = int(online_id)
+
+            # Get the rating from the API.
+            rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
+            stats = rl.get_stats_values_for_user(platform, online_id)
+
+            obj, _ = PlayerStats.objects.update_or_create(
+                platform=platform,
+                online_id=online_id,
+                defaults=stats[online_id]
+            )
+
+            return obj
+
+        raise
+
+
 class PlayerStats(models.Model):
 
     platform = models.CharField(
@@ -326,6 +398,8 @@ class PlayerStats(models.Model):
     saves = models.PositiveIntegerField(
         default=0,
     )
+
+    objects = PlayerStatsManager()
 
 
 User.token = property(lambda u: Token.objects.get_or_create(user=u)[0])
