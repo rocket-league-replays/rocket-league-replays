@@ -332,8 +332,12 @@ class Replay(models.Model):
         if not self.server_name:
             return 'N/A'
 
-        match = re.search(settings.SERVER_REGEX, self.server_name).groups()
-        return match[1]
+        match = re.search(settings.SERVER_REGEX, self.server_name)
+
+        if match:
+            return match.groups()[1]
+
+        return 'N/A'
 
     def lag_report_url(self):
         base_url = 'https://psyonixhr.wufoo.com/forms/game-server-performance-report'
