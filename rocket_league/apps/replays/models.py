@@ -819,7 +819,7 @@ class Player(models.Model):
         return components
 
     def get_absolute_url(self):
-        if self.bot or self.platform == '0':
+        if self.bot or self.platform == '0' or not self.platform:
             return '#1'
 
         return reverse('users:player', kwargs={
