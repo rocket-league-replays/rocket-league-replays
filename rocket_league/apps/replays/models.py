@@ -812,6 +812,9 @@ class Player(models.Model):
         return components
 
     def get_absolute_url(self):
+        if self.bot or self.platform == '0':
+            return '#1'
+
         return reverse('users:player', kwargs={
             'platform': PLATFORMS_MAPPINGS[self.platform],
             'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
