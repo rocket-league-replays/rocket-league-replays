@@ -170,7 +170,12 @@ class LeagueRatingManager(models.Manager):
 
         # Get the rating from the API.
         rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
-        player = rl.get_player_skills(kwargs['platform'], kwargs['online_id'])[0]
+        player = rl.get_player_skills(kwargs['platform'], kwargs['online_id'])
+
+        if player == "<h1>Server Error (500)</h1>":
+            return []
+
+        player = player[0]
 
         if kwargs['platform'] == PLATFORM_STEAM:
             online_id = player['user_id']
@@ -352,13 +357,16 @@ class PlayerStatsManager(models.Manager):
             rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
             stats = rl.get_stats_values_for_user(platform, online_id)
 
-            obj, _ = PlayerStats.objects.update_or_create(
-                platform=platform,
-                online_id=online_id,
-                defaults=stats[online_id]
-            )
+            if online_id in stats:
+                obj, _ = PlayerStats.objects.update_or_create(
+                    platform=platform,
+                    online_id=online_id,
+                    defaults=stats[online_id]
+                )
 
-            return obj
+                return obj
+
+            raise
 
         raise
 
