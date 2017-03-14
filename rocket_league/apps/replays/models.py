@@ -332,8 +332,12 @@ class Replay(models.Model):
         if not self.server_name:
             return 'N/A'
 
-        match = re.search(settings.SERVER_REGEX, self.server_name).groups()
-        return match[1]
+        match = re.search(settings.SERVER_REGEX, self.server_name)
+
+        if match:
+            return match.groups()[1]
+
+        return 'N/A'
 
     def lag_report_url(self):
         base_url = 'https://psyonixhr.wufoo.com/forms/game-server-performance-report'
@@ -774,16 +778,19 @@ class Player(models.Model):
 
             for index, component in enumerate(self.vehicle_loadout):
                 if component > 0:
-                    try:
-                        components[component_maps[index]] = Component.objects.get_or_create(
+                    get_component = Component.objects.filter(
+                        type=component_maps[index],
+                        internal_id=component,
+                    )
+
+                    if get_component.exists():
+                        components[component_maps[index]] = get_component[0]
+                    else:
+                        components[component_maps[index]] = Component.objects.create(
                             type=component_maps[index],
                             internal_id=component,
-                            defaults={
-                                'name': 'Unknown'
-                            }
-                        )[0]
-                    except Component.DoesNotExist:
-                        pass
+                            name='Unknown',
+                        )
 
         elif type(self.vehicle_loadout) == dict:
             component_maps = {
@@ -863,10 +870,15 @@ class Goal(models.Model):
         )
 
     def __str__(self):
-        return 'Goal {} by {}'.format(
-            self.number,
-            self.player,
-        )
+        try:
+            return 'Goal {} by {}'.format(
+                self.number,
+                self.player,
+            )
+        except Player.DoesNotExist:
+            return 'Goal {}'.format(
+                self.number,
+            )
 
     class Meta:
         ordering = ['frame']
