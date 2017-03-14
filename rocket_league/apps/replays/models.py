@@ -870,10 +870,15 @@ class Goal(models.Model):
         )
 
     def __str__(self):
-        return 'Goal {} by {}'.format(
-            self.number,
-            self.player,
-        )
+        try:
+            return 'Goal {} by {}'.format(
+                self.number,
+                self.player,
+            )
+        except Player.DoesNotExist:
+            return 'Goal {}'.format(
+                self.number,
+            )
 
     class Meta:
         ordering = ['frame']
