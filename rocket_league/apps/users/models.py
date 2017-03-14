@@ -203,7 +203,7 @@ class LeagueRatingManager(models.Manager):
     def get_or_request(self, *args, **kwargs):
         try:
             return self.get(**kwargs)
-        except self.model.DoesNotExist:
+        except self.model.DoesNotExist as e:
             if (
                 'playlist' not in kwargs or
                     'online_id' not in kwargs or
@@ -214,7 +214,11 @@ class LeagueRatingManager(models.Manager):
 
             # Get the rating from the API.
             rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
-            player = rl.get_player_skills(PLATFORMS_MAPPINGS[kwargs['platform']], kwargs['online_id'])[0]
+
+            try:
+                player = rl.get_player_skills(PLATFORMS_MAPPINGS[kwargs['platform']], kwargs['online_id'])[0]
+            except KeyError:  # Player not found.
+                raise e
 
             if kwargs['platform'] == PLATFORM_STEAM:
                 online_id = player['user_id']
