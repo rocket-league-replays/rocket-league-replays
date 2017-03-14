@@ -778,16 +778,19 @@ class Player(models.Model):
 
             for index, component in enumerate(self.vehicle_loadout):
                 if component > 0:
-                    try:
-                        components[component_maps[index]] = Component.objects.get_or_create(
+                    get_component = Component.objects.filter(
+                        type=component_maps[index],
+                        internal_id=component,
+                    )
+
+                    if get_component.exists():
+                        components[component_maps[index]] = get_component[0]
+                    else:
+                        components[component_maps[index]] = Component.objects.create(
                             type=component_maps[index],
                             internal_id=component,
-                            defaults={
-                                'name': 'Unknown'
-                            }
-                        )[0]
-                    except Component.DoesNotExist:
-                        pass
+                            name='Unknown',
+                        )
 
         elif type(self.vehicle_loadout) == dict:
             component_maps = {
