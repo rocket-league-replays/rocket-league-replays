@@ -16,8 +16,10 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from django.views.generic import (DetailView, FormView, ListView, UpdateView,
                                   View)
+
 from rest_framework import views
 from rest_framework.response import Response
+from rlapi.client import RocketLeagueAPI
 from social.apps.django_app.default.models import UserSocialAuth
 from social.backends.steam import USER_INFO
 
@@ -238,7 +240,10 @@ class PlayerView(ListView):
                 online_id=player_id,
             )
         except PlayerStats.DoesNotExist:
-            context['stats'] = None
+            context['stats'] = {
+                stat: 0
+                for stat in RocketLeagueAPI.STAT_TYPES
+            }
 
         return context
 
