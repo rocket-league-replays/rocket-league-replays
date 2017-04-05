@@ -9,7 +9,7 @@ django-braces==1.8.1
 django-cors-headers==2.0.1
 django-filter==0.10.0
 django-rest-swagger==0.3.3
-django-s3-storage==0.9.8
+django-s3-storage==0.9.11
 django>=1.8,<1.9
 git+https://github.com/onespacemedia/server-management@feature/python-3
 git+https://github.com/danielsamuels/pyrope.git
