@@ -8,7 +8,7 @@ praw==3.2.1
 django-braces==1.8.1
 django-cors-headers==2.0.1
 django-filter==0.10.0
-django-rest-swagger==0.3.3
+django-rest-swagger==2.1.1
 django-s3-storage==0.9.8
 django>=1.8,<1.9
 git+https://github.com/onespacemedia/server-management@feature/python-3
