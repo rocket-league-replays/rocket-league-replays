@@ -47,8 +47,13 @@ class ReplayListView(FilterView):
                 season_id=get_default_season()
             )
         else:
+            try:
+                season_id = int(self.request.GET['season'])
+            except ValueError:
+                season_id = get_default_season()
+
             qs = qs.filter(
-                season_id=self.request.GET['season'] or get_default_season()
+                season_id=season_id,
             )
 
         if 'order' in self.request.GET:
