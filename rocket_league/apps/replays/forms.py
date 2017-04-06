@@ -15,7 +15,7 @@ class ReplayUpdateForm(forms.ModelForm):
                 user_entered=False,
             ).count()
 
-            if team_players < kwargs['instance'].team_sizes:
+            if team_players and kwargs['instance'].team_sizes and team_players < kwargs['instance'].team_sizes:
                 # Fill in with extra fields.
                 for x in range(kwargs['instance'].team_sizes - team_players):
                     # Is there a user-entered value for this player already?
