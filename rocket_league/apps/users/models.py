@@ -355,7 +355,11 @@ class PlayerStatsManager(models.Manager):
 
             # Get the rating from the API.
             rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
-            stats = rl.get_stats_values_for_user(platform, online_id)
+
+            try:
+                stats = rl.get_stats_values_for_user(platform, online_id)
+            except Exception:
+                stats = {}
 
             if online_id in stats:
                 obj, _ = PlayerStats.objects.update_or_create(

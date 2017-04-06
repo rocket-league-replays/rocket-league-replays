@@ -809,17 +809,20 @@ class Player(models.Model):
 
             for component_type, mappings in component_maps.items():
                 if component_type in self.vehicle_loadout and self.vehicle_loadout[component_type]['Name']:
-                    components[mappings['type']] = Component.objects.get_or_create(
-                        type=mappings['type'],
-                        internal_id=self.vehicle_loadout[component_type]['Id'],
-                        defaults={
-                            'name': self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
-                        }
-                    )[0]
+                    try:
+                        components[mappings['type']] = Component.objects.get_or_create(
+                            type=mappings['type'],
+                            internal_id=self.vehicle_loadout[component_type]['Id'],
+                            defaults={
+                                'name': self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                            }
+                        )[0]
 
-                    if components[mappings['type']].name == 'Unknown':
-                        components[mappings['type']].name = self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
-                        components[mappings['type']].save()
+                        if components[mappings['type']].name == 'Unknown':
+                            components[mappings['type']].name = self.vehicle_loadout[component_type]['Name'].replace(mappings['replace'], '').replace('_', ' ')
+                            components[mappings['type']].save()
+                    except Exception:
+                        pass
 
         return components
 
