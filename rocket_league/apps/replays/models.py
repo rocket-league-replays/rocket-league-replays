@@ -48,6 +48,11 @@ PLATFORMS_MAPPINGS = {
     'OnlinePlatform_Dingo': PLATFORM_XBOX,
     'OnlinePlatform_Steam': PLATFORM_STEAM,
 
+    "{'Value': ['OnlinePlatform', 'OnlinePlatform_Steam']}": PLATFORM_STEAM,
+    "{'Value': ['OnlinePlatform', 'OnlinePlatform_Dingo']}": PLATFORM_XBOX,
+    "{'Value': ['OnlinePlatform', 'OnlinePlatform_PS4']}": PLATFORM_PSN,
+    "{'Value': ['OnlinePlatform', 'OnlinePlatform_Unknown']}": PLATFORM_UNKNOWN,
+
     # The next values are used for the official API.
     PLATFORM_UNKNOWN: 'unknown',
     str(PLATFORM_UNKNOWN): 'unknown',
