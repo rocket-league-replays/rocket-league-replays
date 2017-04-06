@@ -827,10 +827,13 @@ class Player(models.Model):
         if self.bot or self.platform == '0' or not self.platform:
             return '#1'
 
-        return reverse('users:player', kwargs={
-            'platform': PLATFORMS_MAPPINGS[self.platform],
-            'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
-        })
+        try:
+            return reverse('users:player', kwargs={
+                'platform': PLATFORMS_MAPPINGS[self.platform],
+                'player_id': self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+            })
+        except Exception:
+            return '#2'
 
     def __str__(self):
         return '{} on Team {}'.format(
