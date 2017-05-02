@@ -401,21 +401,25 @@ RANKED_PLAYLISTS = [10, 11, 12, 13]
 
 TIERS = {
     0: 'Unranked',
-    1: 'Prospect I',
-    2: 'Prospect II',
-    3: 'Prospect III',
-    4: 'Prospect Elite',
-    5: 'Challenger I',
-    6: 'Challenger II',
-    7: 'Challenger III',
-    8: 'Challenger Elite',
-    9: 'Rising Star',
-    10: 'Shooting Star',
-    11: 'All-Star',
-    12: 'Superstar',
-    13: 'Champion',
-    14: 'Super Champion',
-    15: 'Grand Champion'  # These players have a skill rating
+    1: 'Bronze I',
+    2: 'Bronze II',
+    3: 'Bronze III',
+    4: 'Silver I',
+    5: 'Silver II',
+    6: 'Silver III',
+    7: 'Gold I',
+    8: 'Gold II',
+    9: 'Gold III',
+    10: 'Platinum I',
+    11: 'Platinum II',
+    12: 'Platinum III',
+    13: 'Diamond I',
+    14: 'Diamond II',
+    15: 'Diamond III',
+    16: 'Champion I',
+    17: 'Champion II',
+    18: 'Champion III',
+    19: 'Grand Champion'  # These players have a skill rating
 }
 
 DIVISIONS = {
@@ -423,7 +427,7 @@ DIVISIONS = {
     1: 'Division II',
     2: 'Division III',
     3: 'Division IV',
-    4: 'Division V',  # Highest
+    4: 'Division V',  # Previous Highest
 }
 
 SLACK_URL = os.getenv('SLACK_URL', '')
