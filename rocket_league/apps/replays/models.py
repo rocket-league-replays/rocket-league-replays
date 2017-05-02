@@ -525,9 +525,13 @@ class Replay(models.Model):
     @cached_property
     def get_human_playlist(self):
         if not self.playlist:
-            return None
+            return 'Unknown'
 
-        return settings.HUMAN_PLAYLISTS.get(self.playlist, self.get_playlist_display())
+        display = self.get_playlist_display()
+        if display == self.playlist:
+            display = 'Unknown'
+
+        return settings.HUMAN_PLAYLISTS.get(self.playlist, display)
 
     def get_absolute_url(self):
         if self.replay_id:

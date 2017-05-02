@@ -33,7 +33,7 @@ def playlist_name(playlist, remove_prefix=False):
         if remove_prefix:
             return settings.HUMAN_PLAYLISTS[playlist].replace('Ranked ', '')
         return settings.HUMAN_PLAYLISTS[playlist]
-    return playlist
+    return 'Unknown'
 
 
 @register.simple_tag
