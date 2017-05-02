@@ -717,7 +717,7 @@ class Player(models.Model):
         try:
             rating = LeagueRating.objects.get_or_request(
                 platform=self.platform,
-                online_id=self.online_id if int(self.platform) == PLATFORM_STEAM else self.player_name,
+                online_id=self.online_id if PLATFORMS_MAPPINGS[self.platform] == PLATFORM_STEAM else self.player_name,
                 playlist=self.replay.playlist,
             )
 
