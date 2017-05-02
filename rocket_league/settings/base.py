@@ -395,6 +395,9 @@ HUMAN_PLAYLISTS = {
     13: 'Ranked Standard',
     15: 'Snow Day',
     16: 'Rocket Labs',
+    17: 'Hoops',
+    18: 'Rumble',
+    23: 'Dropshot',
 }
 
 RANKED_PLAYLISTS = [10, 11, 12, 13]
