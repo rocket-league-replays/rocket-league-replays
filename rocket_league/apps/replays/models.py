@@ -62,6 +62,8 @@ PLATFORMS_MAPPINGS = {
     str(PLATFORM_PSN): 'ps4',
     PLATFORM_XBOX: 'xboxone',
     str(PLATFORM_XBOX): 'xboxone',
+
+    None: PLATFORM_UNKNOWN,
 }
 
 
