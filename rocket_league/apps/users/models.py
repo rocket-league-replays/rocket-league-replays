@@ -8,12 +8,14 @@ from django.db import models
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
 from rest_framework.authtoken.models import Token
-from rlapi.client import RocketLeagueAPI
 from social.apps.django_app.default.fields import JSONField
 from social.apps.django_app.default.models import UID_LENGTH
 from social.backends.steam import USER_INFO
 
-from ..replays.models import PLATFORM_STEAM, PLATFORMS_MAPPINGS
+from rlapi.client import RocketLeagueAPI
+
+from ..replays.models import (PLATFORM_STEAM, PLATFORM_UNKNOWN,
+                              PLATFORMS_MAPPINGS)
 
 
 class Profile(models.Model):
@@ -221,7 +223,12 @@ class LeagueRatingManager(models.Manager):
             rl = RocketLeagueAPI(os.getenv('ROCKETLEAGUE_API_KEY'))
 
             try:
-                player = rl.get_player_skills(PLATFORMS_MAPPINGS[kwargs['platform']], kwargs['online_id'])[0]
+                platform = PLATFORMS_MAPPINGS[kwargs['platform']]
+
+                if platform == PLATFORM_UNKNOWN:
+                    return None
+
+                player = rl.get_player_skills(platform, kwargs['online_id'])[0]
             except KeyError:  # Player not found.
                 raise e
 
