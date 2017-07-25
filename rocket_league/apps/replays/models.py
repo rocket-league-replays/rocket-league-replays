@@ -727,6 +727,12 @@ class Player(models.Model):
                 playlist=self.replay.playlist,
             )
 
+            if not rating:
+                return {
+                    'image': static('img/tiers/icons/0.png'),
+                    'tier_name': tier_name(0)
+                }
+
             return {
                 'image': static('img/tiers/icons/{}.png'.format(rating.tier)),
                 'tier_name': tier_name(rating.tier)
