@@ -30,5 +30,5 @@ class Command(BaseCommand):
 
         print(settings_data)
 
-        with open('rocket_league/settings/secrets.py', 'w') as f:
+        with open(os.path.join(settings.SITE_ROOT, 'settings/secrets.py'), 'w') as f:
             f.write(settings_data)
