@@ -337,7 +337,7 @@ def parse_replay_netstream(replay_id):
 
         if index in goals:
             # Get the ball position.
-            ball_actor_id = list(filter(lambda x: actors[x]['Class'] == 'TAGame.Ball_TA', actors))[0]
+            ball_actor_id = list(filter(lambda x: actors[x]['Class'] in ['TAGame.Ball_TA', 'TAGame.Ball_Breakout_TA'], actors))[0]
             ball_position = actor_positions[ball_actor_id]
 
             # XXX: Update this to also register the hitter?
