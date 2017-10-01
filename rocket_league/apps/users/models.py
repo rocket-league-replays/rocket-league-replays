@@ -193,11 +193,11 @@ class LeagueRatingManager(models.Manager):
                 online_id=online_id,
                 playlist=playlist_data['playlist'],
                 defaults={
-                    'skill': playlist_data['skill'],
-                    'matches_played': playlist_data['matches_played'],
-                    'tier': playlist_data['tier'],
-                    'tier_max': playlist_data['tier_max'],
-                    'division': playlist_data['division'],
+                    'skill': playlist_data.get('skill', 0),
+                    'matches_played': playlist_data.get('matches_played', 0),
+                    'tier': playlist_data.get('tier', 0),
+                    'tier_max': playlist_data.get('tier_max', 0),
+                    'division': playlist_data.get('division', 0),
                     'timestamp': timestamp,
                 }
             )
@@ -369,6 +369,10 @@ class PlayerStatsManager(models.Manager):
                 stats = {}
 
             if online_id in stats:
+                for stat_type in ['wins', 'assists', 'goals', 'shots', 'mvps', 'saves']:
+                    if not stats.get(stat_type, None):
+                        stats[stat_type] = 0
+
                 obj, _ = PlayerStats.objects.update_or_create(
                     platform=platform,
                     online_id=online_id,
@@ -378,8 +382,6 @@ class PlayerStatsManager(models.Manager):
                 return obj
 
             raise
-
-        raise
 
 
 class PlayerStats(models.Model):
