@@ -567,7 +567,6 @@ class Replay(models.Model):
             # be called multiple times (for some reason..)
             self.file.seek(0)
 
-            file_path = self.file.path  # To help Opbeat
             file_url = self.file.url  # To help Opbeat
 
             try:
