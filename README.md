@@ -76,7 +76,7 @@ Follow the prompts and a user will be created which you can use to log in to the
 
 ### Getting a detailed replay parse
 
-If you want to generate the more complex stats, you'll need to get the application to run the [Octane](https://github.com/tfausak/octane/) binaries. The easiest way to do this is to open up a Python shell:
+If you want to generate the more complex stats, you'll need to get the application to run the [Rattletrap](https://github.com/tfausak/rattletrap/) binaries. The easiest way to do this is to open up a Python shell:
 
 ```
 $ python manage.py shell_plus
@@ -91,7 +91,7 @@ r.crashed_heatmap_parser = False
 r.save(parse_netstream=True)
 ```
 
-To process a different replay, simply change `pk=1` to reference your replay object.  The Octane binaries are automatically updated when you use `runserver`.
+To process a different replay, simply change `pk=1` to reference your replay object.  The Rattletrap binaries are automatically updated when you use `runserver`.
 
 ## Development notes
 
@@ -134,7 +134,7 @@ Replay packs are no longer generated on-demand, rather they're generated ahead o
 
 #### get_patrons
 
-This job uses the Patreon API to pull in the current list of Patreons so that they can receive their benefits.  
+This job uses the Patreon API to pull in the current list of Patreons so that they can receive their benefits.
 
 ```
 */10 * * * * python manage.py get_patrons --settings=rocket_league.settings.production
@@ -146,7 +146,7 @@ Annoyingly, Patreon requires the access token be refreshed every 30 days, so som
 curl -X POST -F "grant_type=refresh_token" -F "refresh_token=<value>" -F "client_id=<value>" -F "client_secret=<value>" "http://api.patreon.com/oauth2/token"
 ```
 
-The `client_id` and `client_secret` values come from the developers section of the Patreon website, the `refresh_token` comes from the previous refresh response.  This is the reason why the refresh value is stored in the [secrets.py](#secretspy) file. 
+The `client_id` and `client_secret` values come from the developers section of the Patreon website, the `refresh_token` comes from the previous refresh response.  This is the reason why the refresh value is stored in the [secrets.py](#secretspy) file.
 
 
 ### Worker servers

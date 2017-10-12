@@ -31,9 +31,9 @@ class Command(BaseCommand):
         replay_obj = Replay.objects.get(pk=options['replay'])
 
         if settings.DEBUG:
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
         else:
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
 
         Goal.objects.filter(replay=replay_obj).delete()
         Player.objects.filter(replay=replay_obj).delete()

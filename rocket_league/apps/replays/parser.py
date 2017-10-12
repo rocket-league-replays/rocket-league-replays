@@ -1,4 +1,5 @@
 import json
+from pprint import pprint
 import math
 import os
 import subprocess
@@ -15,6 +16,7 @@ from pyrope import Replay as Pyrope
 
 
 def distance(pos1, pos2):
+    print(pos1, pos2)
     xd = pos2[0] - pos1[0]
     yd = pos2[1] - pos1[1]
     zd = pos2[2] - pos1[2]
@@ -22,8 +24,8 @@ def distance(pos1, pos2):
     return math.sqrt(xd * xd + yd * yd + zd * zd)
 
 
-# Convert the Pyrope data structure to the Octane structure.
-def _pyrope_to_octane(replay):
+# Convert the Pyrope data structure to the rattletrap structure.
+def _pyrope_to_rattletrap(replay):
     data = {}
 
     simple_keys = [
@@ -52,7 +54,7 @@ def _pyrope_to_octane(replay):
             player_data = {}
             simple_keys = [
                 'Goals', 'Saves', 'OnlineID', 'Shots', 'Score', 'Team', 'bBot',
-                'Assists', 'Name'
+                'Assists', 'name'
             ]
 
             for key in simple_keys:
@@ -88,6 +90,119 @@ def _pyrope_to_octane(replay):
     }
 
 
+def get_value(data, key, default=None):
+    key_data = data.get(key, {
+        'kind': 'default',
+        'value': default,
+    })
+
+    if key_data['kind'] == 'default':
+        return key_data['value']
+    if key_data['kind'] == 'IntProperty':
+        return key_data['value']['int_property']
+    elif key_data['kind'] == 'StrProperty':
+        return key_data['value']['str_property']
+    elif key_data['kind'] == 'NameProperty':
+        return key_data['value']['name_property']
+    elif key_data['kind'] == 'FloatProperty':
+        return key_data['value']['float_property']
+    elif key_data['kind'] == 'ArrayProperty':
+        return [
+            item['value']
+            for item in key_data['value']['array_property']
+        ]
+        return
+    else:
+        raise Exception('get_value: {} not handled'.format(key_data['kind']))
+
+
+def get_replication_value(value):
+    key = list(value.keys())[0]
+    value = value[key]
+
+    if isinstance(value, dict):
+        if key == 'flagged_int_attribute_value':
+            return value['int']
+
+        elif key == 'unique_id_attribute_value':
+            if value['system_id'] == 1:
+                return {
+                    'local_id': value['local_id'],
+                    'remote_id': value['remote_id']['steam_id'],
+                    'system_id': value['system_id'],
+                }
+            elif value['system_id'] == 2:
+                return {
+                    'local_id': value['local_id'],
+                    'remote_id': value['remote_id']['play_station_id'][0],
+                    'system_id': value['system_id'],
+                }
+            elif value['system_id'] == 4:
+                return {
+                    'local_id': value['local_id'],
+                    'remote_id': value['remote_id']['xbox_id'],
+                    'system_id': value['system_id'],
+                }
+            else:
+                print('before raise', value)
+                raise Exception('Unhandled system ID {}'.format(value['system_id']))
+
+        elif key == 'party_leader_attribute_value':
+            if value['system_id'] == 1:
+                return value['id'][0]['steam_id']
+            elif value['system_id'] == 2:
+                return value['id'][0]['play_station_id'][0]
+            elif value['system_id'] == 4:
+                return value['id'][0]['xbox_id']
+            else:
+                print('before raise', value)
+                raise Exception('Unhandled system ID {}'.format(value['system_id']))
+        elif key in [
+            # Data we don't need.
+            'reservation_attribute_value',
+            'team_paint_attribute_value',
+            'explosion_attribute_value',
+            'extended_explosion_attribute_value',
+            'music_stinger_attribute_value',
+            'demolish_attribute_value',
+        ]:
+            return []
+
+        elif key in [
+            # Not sure about
+            'loadouts_online_attribute_value',
+            'loadouts_attribute_value',
+
+            # Definitely need
+            'rigid_body_state_attribute_value',
+            'cam_settings_attribute_value',
+            'loadout_attribute_value',
+            'pickup_attribute_value',
+            'location_attribute_value',
+        ]:
+            # print(key, value)
+            return value
+        else:
+            print('before raise', value)
+            print('get_replication_value: {} not handled'.format(key))
+            return []
+    else:
+        return value
+
+
+def flatten_value(value):
+    if isinstance(value, dict):
+        return value
+
+    return {
+        item['name']: {
+            'id': item['id']['value'],
+            'value': get_replication_value(item['value']),
+        }
+        for item in value
+    }
+
+
 def _parse_header(replay_obj, replay):
     from .models import BoostData, Goal, Map, Player, Season
 
@@ -100,27 +215,29 @@ def _parse_header(replay_obj, replay):
     assert BoostData.objects.filter(replay=replay_obj).count() == 0
 
     # Assign the metadata to the replay object.
-    replay_obj.replay_id = replay['Metadata']['Id']['Value']
+    header = replay['header']['properties']['value']
 
-    if 'TeamSize' in replay['Metadata']:
-        replay_obj.team_sizes = replay['Metadata']['TeamSize']['Value']
-    elif 'PlayerStats' in replay['Metadata']:
-        replay_obj.team_sizes = math.ceil(len(replay['Metadata']['PlayerStats']['Value']) / 2)
+    replay_obj.replay_id = get_value(header, 'Id')
 
-    replay_obj.team_0_score = replay['Metadata'].get('Team0Score', {'Value': 0})['Value']
-    replay_obj.team_1_score = replay['Metadata'].get('Team1Score', {'Value': 0})['Value']
-    replay_obj.player_name = replay['Metadata']['PlayerName']['Value']
-    replay_obj.player_team = replay['Metadata'].get('PrimaryPlayerTeam', {'Value': 0})['Value']
-    replay_obj.match_type = replay['Metadata']['MatchType']['Value']
-    replay_obj.keyframe_delay = replay['Metadata']['KeyframeDelay']['Value']
-    replay_obj.max_channels = replay['Metadata']['MaxChannels']['Value']
-    replay_obj.max_replay_size_mb = replay['Metadata']['MaxReplaySizeMB']['Value']
-    replay_obj.num_frames = replay['Metadata']['NumFrames']['Value']
-    replay_obj.record_fps = replay['Metadata']['RecordFPS']['Value']
+    if 'TeamSize' in header:
+        replay_obj.team_sizes = get_value(header, 'TeamSize')
+    elif 'PlayerStats' in header:
+        replay_obj.team_sizes = math.ceil(len(get_value(header, 'PlayerStats')) / 2.0)
 
-    if replay['Metadata'].get('MapName'):
-        map_obj, created = Map.objects.get_or_create(
-            slug=replay['Metadata']['MapName']['Value'].lower(),
+    replay_obj.team_0_score = get_value(header, 'Team0Score', 0)
+    replay_obj.team_1_score = get_value(header, 'Team1Score', 0)
+    replay_obj.player_name = get_value(header, 'PlayerName')
+    replay_obj.player_team = get_value(header, 'PrimaryPlayerTeam', 0)
+    replay_obj.match_type = get_value(header, 'MatchType')
+    replay_obj.keyframe_delay = get_value(header, 'KeyframeDelay')
+    replay_obj.max_channels = get_value(header, 'MaxChannels')
+    replay_obj.max_replay_size_mb = get_value(header, 'MaxReplaySizeMB')
+    replay_obj.num_frames = get_value(header, 'NumFrames')
+    replay_obj.record_fps = get_value(header, 'RecordFPS')
+
+    if get_value(header, 'MapName', False):
+        map_obj, _ = Map.objects.get_or_create(
+            slug=get_value(header, 'MapName').lower(),
         )
     else:
         map_obj = None
@@ -132,7 +249,7 @@ def _parse_header(replay_obj, replay):
             datetime.fromtimestamp(
                 time.mktime(
                     time.strptime(
-                        replay['Metadata']['Date']['Value'],
+                        get_value(header, 'Date'),
                         '%Y-%m-%d:%H-%M',
                     )
                 )
@@ -144,7 +261,7 @@ def _parse_header(replay_obj, replay):
             datetime.fromtimestamp(
                 time.mktime(
                     time.strptime(
-                        replay['Metadata']['Date']['Value'],
+                        get_value(header, 'Date'),
                         '%Y-%m-%d:%H-%M',
                     )
                 )
@@ -156,7 +273,7 @@ def _parse_header(replay_obj, replay):
             datetime.fromtimestamp(
                 time.mktime(
                     time.strptime(
-                        replay['Metadata']['Date']['Value'],
+                        get_value(header, 'Date'),
                         '%Y-%m-%d %H-%M-%S',
                     )
                 )
@@ -164,17 +281,13 @@ def _parse_header(replay_obj, replay):
             timezone.get_current_timezone()
         )
 
-    get_season = Season.objects.filter(
+    replay_obj.season = Season.objects.filter(
         start_date__lte=replay_obj.timestamp,
-    )
+    ).first()
 
-    if get_season:
-        replay_obj.season = get_season[0]
+    replay_obj.title = get_value(header, 'ReplayName', None)
 
-    if 'ReplayName' in replay['Metadata']:
-        replay_obj.title = replay['Metadata']['ReplayName']['Value']
-
-    return replay_obj, replay
+    return replay_obj, replay, header
 
 
 def parse_replay_header(replay_id):
@@ -184,15 +297,15 @@ def parse_replay_header(replay_id):
 
     replay = Pyrope(replay_obj.file.read())
 
-    replay = _pyrope_to_octane(replay)
-    replay_obj, replay = _parse_header(replay_obj, replay)
+    replay = _pyrope_to_rattletrap(replay)
+    replay_obj, replay, header = _parse_header(replay_obj, replay)
 
     # Create the player objects.
-    if 'PlayerStats' in replay['Metadata']:
-        for player in replay['Metadata']['PlayerStats']['Value']:
+    if 'PlayerStats' in header:
+        for player in get_value(header, 'PlayerStats', []):
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=player['Name'],
+                player_name=player['name'],
                 platform=player['Platform'],
                 saves=player['Saves'],
                 score=player['Score'],
@@ -205,7 +318,7 @@ def parse_replay_header(replay_id):
             )
     else:
         # The best we can do is to get the goal scorers and the player.
-        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']:
+        for goal in get_value(header, 'Goals', []):
             Player.objects.get_or_create(
                 replay=replay_obj,
                 player_name=goal['PlayerName']['Value'],
@@ -284,20 +397,25 @@ def parse_replay_netstream(replay_id):
 
                 os.system(command)
 
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output(
+                'rattletrap-binaries/rattletrap-*-osx decode {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
         else:
-            replay = json.loads(subprocess.check_output('octane-binaries/octane-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output(
+                'rattletrap-binaries/rattletrap-*-linux decode {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
     except subprocess.CalledProcessError:
         # Parsing the file failed.
         replay_obj.processed = False
         replay_obj.save()
         return
 
-    replay_obj, replay = _parse_header(replay_obj, replay)
+    replay_obj, replay, header = _parse_header(replay_obj, replay)
 
     goals = {
-        goal['frame']['Value']: {'PlayerName': goal['PlayerName']['Value'], 'PlayerTeam': goal['PlayerTeam']['Value']}
-        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
+        get_value(goal, 'frame'): {
+            'PlayerName': get_value(goal, 'PlayerName'),
+            'PlayerTeam': get_value(goal, 'PlayerTeam')
+        }
+        for goal in get_value(header, 'Goals', [])
     }
 
     last_hits = {
@@ -311,7 +429,7 @@ def parse_replay_netstream(replay_id):
     team_data = {}
     actor_positions = {}  # The current position data for all actors. Do we need this?
     player_cars = {}  # Car -> Player actor ID mappings.
-    ball_angularvelocity = None  # The current angular velocity of the ball.
+    ball_angular_velocity = None  # The current angular velocity of the ball.
     ball_possession = None  # The team currently in possession of the ball.
     cars_frozen = False  # Whether the cars are frozen in place (3.. 2.. 1..)
     shot_data = []  # The locations of the player and the ball when goals were scored.
@@ -327,7 +445,7 @@ def parse_replay_netstream(replay_id):
     heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(replay_obj.replay_id)
     location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(replay_obj.replay_id)
 
-    for index, frame in enumerate(replay['Frames']):
+    for index, frame in enumerate(replay['content']['frames']):
         # Add an empty location list for this frame.
         location_data.append([])
 
@@ -337,7 +455,7 @@ def parse_replay_netstream(replay_id):
 
         if index in goals:
             # Get the ball position.
-            ball_actor_id = list(filter(lambda x: actors[x]['Class'] in ['TAGame.Ball_TA', 'TAGame.Ball_Breakout_TA'], actors))[0]
+            ball_actor_id = list(filter(lambda x: actors[x]['class_name'] in ['TAGame.Ball_TA', 'TAGame.Ball_Breakout_TA'], actors))[0]
             ball_position = actor_positions[ball_actor_id]
 
             # XXX: Update this to also register the hitter?
@@ -356,67 +474,81 @@ def parse_replay_netstream(replay_id):
             }
 
         # Handle any new actors.
-        for actor_id, value in frame['Spawned'].items():
-            actor_id = int(actor_id)
+        for replication in frame['replications']:
+            actor_id = int(replication['actor_id']['value'])
+            replication_type = list(replication['value'].keys())[0]
+            value = replication['value'][replication_type]
+            flattened_value = flatten_value(value)
 
-            if actor_id not in actors:
-                actors[actor_id] = value
+            if replication_type == 'spawned_replication_value':
+                if actor_id not in actors:
+                    actors[actor_id] = value
 
-            if 'Engine.Pawn:PlayerReplicationInfo' in value:
-                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value'][1]
-                player_cars[player_actor_id] = actor_id
+                if 'Engine.Pawn:PlayerReplicationInfo' in flattened_value:
+                    player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['value']
+                    player_cars[player_actor_id] = actor_id
 
-            if value['Class'] == 'TAGame.Ball_TA':
-                ball_spawned = True
+                if value['class_name'] == 'TAGame.Ball_TA':
+                    ball_spawned = True
+                elif value['class_name'] == 'TAGame.PRI_TA':
+                    player_actors[actor_id] = value
+                    player_actors[actor_id]['joined'] = index
+                elif value['class_name'] == 'TAGame.Team_Soccar_TA':
+                    team_data[actor_id] = value['object_name'].replace('Archetypes.Teams.Team', '')
 
-            if value['Class'] == 'TAGame.PRI_TA':
-                player_actors[actor_id] = value
-                player_actors[actor_id]['joined'] = index
+            # Handle any updates to existing actors.
+            elif replication_type == 'updated_replication_value':
+                if (
+                    'Engine.PlayerReplicationInfo:Team' in flattened_value and
+                    not flattened_value['Engine.PlayerReplicationInfo:Team']['value']
+                ):
+                    del flattened_value['Engine.PlayerReplicationInfo:Team']
 
-            if value['Class'] == 'TAGame.Team_Soccar_TA':
-                team_data[actor_id] = value['Name'].replace('Archetypes.Teams.Team', '')
+                # If an actor is getting their team value nuked, store what it was
+                # so we can use it later on.
+                if (
+                    'Engine.PlayerReplicationInfo:Team' in flattened_value and
+                    flattened_value['Engine.PlayerReplicationInfo:Team']['value'] == -1 and
+                    actors[actor_id]['Engine.PlayerReplicationInfo:Team']['value'] != -1
+                ):
+                    actors[actor_id]['Engine.PlayerReplicationInfo:CachedTeam'] = actors[actor_id]['Engine.PlayerReplicationInfo:Team']
 
-        # Handle any updates to existing actors.
-        for actor_id, value in frame['Updated'].items():
-            actor_id = int(actor_id)
+                # Merge the new properties with the existing.
+                if actors[actor_id] != value:
+                    actors[actor_id] = {**actors[actor_id], **flattened_value}
 
-            if 'Engine.PlayerReplicationInfo:Team' in value and not value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
-                del value['Engine.PlayerReplicationInfo:Team']
+                    if actor_id in player_actors:
+                        player_actors[actor_id] = actors[actor_id]
 
-            # If an actor is getting their team value nuked, store what it was
-            # so we can use it later on.
-            if (
-                'Engine.PlayerReplicationInfo:Team' in value and
-                value['Engine.PlayerReplicationInfo:Team']['Value']['Int'] == -1 and
-                actors[actor_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int'] != -1
-            ):
-                actors[actor_id]['Engine.PlayerReplicationInfo:CachedTeam'] = actors[actor_id]['Engine.PlayerReplicationInfo:Team']
+                if 'Engine.Pawn:PlayerReplicationInfo' in flattened_value:
+                    player_actor_id = flattened_value['Engine.Pawn:PlayerReplicationInfo']['value']
+                    player_cars[player_actor_id] = actor_id
 
-            # Merge the new properties with the existing.
-            if actors[actor_id] != value:
-                actors[actor_id] = {**actors[actor_id], **value}
+            # Handle removing any destroyed actors.
+            elif replication_type == 'destroyed_replication_value':
+                del actors[actor_id]
 
                 if actor_id in player_actors:
-                    player_actors[actor_id] = actors[actor_id]
-
-            if 'Engine.Pawn:PlayerReplicationInfo' in value:
-                player_actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value']['Int']
-                player_cars[player_actor_id] = actor_id
-
-        # Handle removing any destroyed actors.
-        for actor_id in frame['Destroyed']:
-            del actors[actor_id]
-
-            if actor_id in player_actors:
-                player_actors[actor_id]['left'] = index
+                    player_actors[actor_id]['left'] = index
+            else:
+                raise Exception('Unhandled replication_type: {}'.format(replication_type))
 
         # Loop over actors which have changed in this frame.
-        for actor_id, value in {**frame['Spawned'], **frame['Updated']}.items():
-            actor_id = int(actor_id)
+        for replication in frame['replications']:
+            actor_id = int(replication['actor_id']['value'])
+            replication_type = list(replication['value'].keys())[0]
+            value = replication['value'][replication_type]
+            flattened_value = flatten_value(value)
+
+            if replication_type not in ['spawned_replication_value', 'updated_replication_value']:
+                continue
 
             # Look for any position data.
-            if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
-                actor_positions[actor_id] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
+            if 'TAGame.RBActor_TA:ReplicatedRBState' in flattened_value:
+                location = flattened_value['TAGame.RBActor_TA:ReplicatedRBState']['value']['location']
+                rotation = flattened_value['TAGame.RBActor_TA:ReplicatedRBState']['value']['rotation']
+
+                actor_positions[actor_id] = [location['x'], location['y'], location['z']]
 
                 # Get the player actor id.
                 real_actor_id = actor_id
@@ -430,14 +562,20 @@ def parse_replay_netstream(replay_id):
                     real_actor_id = 'ball'
 
                 data_dict = {'id': real_actor_id}
-                data_dict['x'], data_dict['y'], data_dict['z'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position']
-                data_dict['yaw'], data_dict['pitch'], data_dict['roll'] = value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Rotation']
+                data_dict['x'] = location['x']
+                data_dict['y'] = location['y']
+                data_dict['z'] = location['z']
+
+                data_dict['yaw'] = rotation['x']
+                data_dict['pitch'] = rotation['y']
+                data_dict['roll'] = rotation['z']
+
                 location_data[index].append(data_dict)
 
             # If this property exists, the ball has changed possession.
-            if 'TAGame.Ball_TA:HitTeamNum' in value:
+            if 'TAGame.Ball_TA:HitTeamNum' in flattened_value:
                 ball_hit = confirmed_ball_hit = True
-                hit_team_num = value['TAGame.Ball_TA:HitTeamNum']['Value']
+                hit_team_num = flattened_value['TAGame.Ball_TA:HitTeamNum']['value']
                 ball_possession = hit_team_num
 
                 # Clean up the actor positions.
@@ -453,8 +591,8 @@ def parse_replay_netstream(replay_id):
                         del actor_positions[actor_position]
 
             # Store the boost data for each actor at each frame where it changes.
-            if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in value:
-                boost_value = value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['Value']
+            if 'TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount' in flattened_value:
+                boost_value = flattened_value['TAGame.CarComponent_Boost_TA:ReplicatedBoostAmount']['value']
                 assert 0 <= boost_value <= 255, 'Boost value {} is not in range 0-255.'.format(boost_value)
 
                 if actor_id not in boost_data:
@@ -470,7 +608,7 @@ def parse_replay_netstream(replay_id):
 
                     unknown_boost_data[actor_id][index] = boost_value
                 else:
-                    car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['Value']['Int']
+                    car_id = actors[actor_id]['TAGame.CarComponent_TA:Vehicle']['value']
 
                     # Find out which player this car belongs to.
                     try:
@@ -496,19 +634,19 @@ def parse_replay_netstream(replay_id):
                         pass
 
             # Store the mapping of frame -> clock time.
-            if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in value:
-                seconds_mapping[index] = value['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['Value']
+            if 'TAGame.GameEvent_Soccar_TA:SecondsRemaining' in flattened_value:
+                seconds_mapping[index] = flattened_value['TAGame.GameEvent_Soccar_TA:SecondsRemaining']['value']
 
             # See if the cars are frozen in place.
-            if 'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in value:
-                if value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 3:
+            if 'TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining' in flattened_value:
+                if flattened_value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['value'] == 3:
                     cars_frozen = True
-                elif value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['Value'] == 0:
+                elif flattened_value['TAGame.GameEvent_TA:ReplicatedGameStateTimeRemaining']['value'] == 0:
                     cars_frozen = False
 
             # Get the camera details.
-            if 'TAGame.CameraSettingsActor_TA:ProfileSettings' in value:
-                if actors[actor_id]['Class'] == 'TAGame.CameraSettingsActor_TA':
+            if 'TAGame.CameraSettingsActor_TA:ProfileSettings' in flattened_value:
+                if actors[actor_id]['class_name'] == 'TAGame.CameraSettingsActor_TA':
                     # Define some short variable names to stop the next line
                     # being over 200 characters long.  This block of code
                     # makes new replays have a camera structure which is
@@ -521,24 +659,24 @@ def parse_replay_netstream(replay_id):
                     ps = 'TAGame.CameraSettingsActor_TA:ProfileSettings'
                     cs = 'TAGame.PRI_TA:CameraSettings'
 
-                    if csa in value:
-                        player_actor_id = value[csa]['Value']['Int']
-                        actors[player_actor_id][cs] = value[ps]['Value']
+                    if csa in flattened_value:
+                        player_actor_id = flattened_value[csa]['value']
+                        actors[player_actor_id][cs] = flattened_value[ps]['value']
 
-            if 'Engine.GameReplicationInfo:ServerName' in value:
-                replay_obj.server_name = value['Engine.GameReplicationInfo:ServerName']['Value']
+            if 'Engine.GameReplicationInfo:ServerName' in flattened_value:
+                replay_obj.server_name = flattened_value['Engine.GameReplicationInfo:ServerName']['value']
 
-            if 'ProjectX.GRI_X:ReplicatedGamePlaylist' in value:
-                replay_obj.playlist = value['ProjectX.GRI_X:ReplicatedGamePlaylist']['Value']
+            if 'ProjectX.GRI_X:ReplicatedGamePlaylist' in flattened_value:
+                replay_obj.playlist = flattened_value['ProjectX.GRI_X:ReplicatedGamePlaylist']['value']
 
-            if 'TAGame.GameEvent_Team_TA:MaxTeamSize' in value:
-                replay_obj.team_sizes = value['TAGame.GameEvent_Team_TA:MaxTeamSize']['Value']
+            if 'TAGame.GameEvent_Team_TA:MaxTeamSize' in flattened_value:
+                replay_obj.team_sizes = flattened_value['TAGame.GameEvent_Team_TA:MaxTeamSize']['value']
 
-            if 'TAGame.PRI_TA:MatchGoals' in value:
+            if 'TAGame.PRI_TA:MatchGoals' in flattened_value:
                 # Get the closest goal to this frame.
                 goal_actors[index] = actor_id
 
-            if 'Engine.TeamInfo:Score' in value:
+            if 'Engine.TeamInfo:Score' in flattened_value:
                 if index not in goal_actors:
                     goal_actors[index] = actor_id
 
@@ -547,7 +685,7 @@ def parse_replay_netstream(replay_id):
         ball = None
         ball_actor_id = None
         for actor_id, value in actors.items():
-            if value['Class'] == 'TAGame.Ball_TA':
+            if value['class_name'] == 'TAGame.Ball_TA':
                 ball_actor_id = actor_id
                 ball = value
                 break
@@ -555,16 +693,20 @@ def parse_replay_netstream(replay_id):
         ball_hit = False
 
         # Take a look at the ball this frame, has anything changed?
-        if ball and 'TAGame.RBActor_TA:ReplicatedRBState' in ball:
-            new_ball_angularvelocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['Value']['AngularVelocity']
+        if (
+            ball and
+            'TAGame.RBActor_TA:ReplicatedRBState' in ball and
+            'angular_velocity' in ball['TAGame.RBActor_TA:ReplicatedRBState']['value']
+        ):
+            new_ball_angular_velocity = ball['TAGame.RBActor_TA:ReplicatedRBState']['value']['angular_velocity']
 
             # The ball has *changed direction*, but not necessarily been hit (it
             # may have bounced).
 
-            if ball_angularvelocity != new_ball_angularvelocity:
+            if ball_angular_velocity != new_ball_angular_velocity:
                 ball_hit = True
 
-            ball_angularvelocity = new_ball_angularvelocity
+            ball_angular_velocity = new_ball_angular_velocity
 
             # Calculate the current distances between cars and the ball.
             # Do we have position data for the ball?
@@ -579,13 +721,13 @@ def parse_replay_netstream(replay_id):
                     if (
                         player_id in actors and
                         'Engine.PlayerReplicationInfo:Team' in actors[player_id] and
-                        actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
+                        actors[player_id]['Engine.PlayerReplicationInfo:Team']['value']
                     ):
-                        team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['Value']['Int']
+                        team_id = actors[player_id]['Engine.PlayerReplicationInfo:Team']['value']
 
                         try:
                             team_actor = actors[team_id]
-                            team = int(team_actor['Name'].replace('Archetypes.Teams.Team', ''))
+                            team = int(team_actor['name'].replace('Archetypes.Teams.Team', '').replace('GameEvent_Soccar_TA_', ''))
                         except KeyError:
                             team = -1
                     else:
@@ -618,31 +760,31 @@ def parse_replay_netstream(replay_id):
             moveable_actors = [
                 (actor_id, value)
                 for actor_id, value in actors.items()
-                if value['Class'] in ['TAGame.Ball_TA', 'TAGame.PRI_TA', 'TAGame.Car_TA'] and
+                if value['class_name'] in ['TAGame.Ball_TA', 'TAGame.PRI_TA', 'TAGame.Car_TA'] and
                 (
                     'TAGame.RBActor_TA:ReplicatedRBState' in value or
-                    'Position' in value
+                    'location' in value
                 )
             ]
 
             for actor_id, value in moveable_actors:
-                if value['Class'] == 'TAGame.Ball_TA':
+                if value['class_name'] == 'TAGame.Ball_TA':
                     actor_id = 'ball'
-                elif value['Class'] == 'TAGame.Car_TA':
+                elif value['class_name'] == 'TAGame.Car_TA':
                     if 'Engine.Pawn:PlayerReplicationInfo' not in value:
                         continue
 
-                    actor_id = value['Engine.Pawn:PlayerReplicationInfo']['Value']['Int']
+                    actor_id = value['Engine.Pawn:PlayerReplicationInfo']['value']
 
                 if 'TAGame.RBActor_TA:ReplicatedRBState' in value:
                     key = '{},{}'.format(
-                        value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][0],
-                        value['TAGame.RBActor_TA:ReplicatedRBState']['Value']['Position'][1],
+                        value['TAGame.RBActor_TA:ReplicatedRBState']['value']['location']['x'],
+                        value['TAGame.RBActor_TA:ReplicatedRBState']['value']['location']['y'],
                     )
-                elif 'Position' in value:
+                elif 'location' in value:
                     key = '{},{}'.format(
-                        value['Position'][0],
-                        value['Position'][1],
+                        value['location']['x'],
+                        value['location']['y'],
                     )
 
                 if actor_id not in heatmap_data:
@@ -656,23 +798,26 @@ def parse_replay_netstream(replay_id):
     def get_team(actor_id):
         if actor_id == -1:
             return -1
-        return int(actors[actor_id]['Name'].replace('Archetypes.Teams.Team', ''))
+
+        return int(actors[actor_id]['object_name'].replace('Archetypes.Teams.Team', ''))
 
     player_objects = {}
 
     # Make a dict of all the player actors and then do a bulk_create?
     for actor_id, value in player_actors.items():
         if 'Engine.PlayerReplicationInfo:UniqueId' in value:
-            system = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System']
-            unique_id = '{system}-{remote}-{local}'.format(
-                system=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['System'],
-                remote=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value'],
-                local=value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Local'],
-            )
-            online_id = value['Engine.PlayerReplicationInfo:UniqueId']['Value']['Remote']['Value']
+            system = value['Engine.PlayerReplicationInfo:UniqueId']['value']['system_id']
+            local_id = value['Engine.PlayerReplicationInfo:UniqueId']['value']['local_id']
+            online_id = value['Engine.PlayerReplicationInfo:UniqueId']['value']['remote_id']
 
-            if system == 'PlayStation' and 'Name' in online_id:
-                online_id = online_id['Name']
+            unique_id = '{system}-{remote}-{local}'.format(
+                system=system,
+                remote=online_id,
+                local=local_id,
+            )
+
+            if system == 'PlayStation' and 'name' in online_id:
+                online_id = online_id['name']
         else:
             system = 'Unknown'
             unique_id = ''
@@ -680,12 +825,12 @@ def parse_replay_netstream(replay_id):
 
         team = -1
 
-        if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
-            team = get_team(value['Engine.PlayerReplicationInfo:Team']['Value']['Int'])
+        if 'Engine.PlayerReplicationInfo:Team' in value and value['Engine.PlayerReplicationInfo:Team']['value']:
+            team = get_team(value['Engine.PlayerReplicationInfo:Team']['value'])
 
         # Attempt to get the team ID from our cache.
         if team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in value:
-            team = get_team(value['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int'])
+            team = get_team(value['Engine.PlayerReplicationInfo:CachedTeam']['value'])
 
         if team == -1:
             # If this is a 1v1 and the other player has a team, then put this
@@ -696,12 +841,12 @@ def parse_replay_netstream(replay_id):
 
                 other_team = -1
 
-                if 'Engine.PlayerReplicationInfo:Team' in other_player and other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']:
-                    other_team = other_player['Engine.PlayerReplicationInfo:Team']['Value']['Int']
+                if 'Engine.PlayerReplicationInfo:Team' in other_player and other_player['Engine.PlayerReplicationInfo:Team']['value']:
+                    other_team = other_player['Engine.PlayerReplicationInfo:Team']['value']
 
                 # Attempt to get the team ID from our cache.
                 if other_team == -1 and 'Engine.PlayerReplicationInfo:CachedTeam' in other_player:
-                    other_team = other_player['Engine.PlayerReplicationInfo:CachedTeam']['Value']['Int']
+                    other_team = other_player['Engine.PlayerReplicationInfo:CachedTeam']['value']
 
                 if other_team != -1:
                     # There's nothing more we can do.
@@ -719,22 +864,22 @@ def parse_replay_netstream(replay_id):
 
         player_objects[actor_id] = Player.objects.create(
             replay=replay_obj,
-            player_name=value['Engine.PlayerReplicationInfo:PlayerName']['Value'],
+            player_name=value['Engine.PlayerReplicationInfo:PlayerName']['value'],
             team=team,
-            score=value.get('TAGame.PRI_TA:MatchScore', {'Value': 0})['Value'],
-            goals=value.get('TAGame.PRI_TA:MatchGoals', {'Value': 0})['Value'],
-            shots=value.get('TAGame.PRI_TA:MatchShots', {'Value': 0})['Value'],
-            assists=value.get('TAGame.PRI_TA:MatchAssists', {'Value': 0})['Value'],
-            saves=value.get('TAGame.PRI_TA:MatchSaves', {'Value': 0})['Value'],
+            score=value.get('TAGame.PRI_TA:MatchScore', {'value': 0})['value'],
+            goals=value.get('TAGame.PRI_TA:MatchGoals', {'value': 0})['value'],
+            shots=value.get('TAGame.PRI_TA:MatchShots', {'value': 0})['value'],
+            assists=value.get('TAGame.PRI_TA:MatchAssists', {'value': 0})['value'],
+            saves=value.get('TAGame.PRI_TA:MatchSaves', {'value': 0})['value'],
             platform=PLATFORMS.get(system, system),
             online_id=online_id,
-            bot=value.get('Engine.PlayerReplicationInfo:bBot', {'Value': False})['Value'],
+            bot=value.get('Engine.PlayerReplicationInfo:bBot', {'value': False})['value'],
             spectator='Engine.PlayerReplicationInfo:Team' not in value,
             actor_id=actor_id,
             unique_id=unique_id,
             camera_settings=value.get('TAGame.PRI_TA:CameraSettings', None),
-            vehicle_loadout=value.get('TAGame.PRI_TA:ClientLoadout', {'Value': {}})['Value'],
-            total_xp=value.get('TAGame.PRI_TA:TotalXP', {'Value': 0})['Value'],
+            vehicle_loadout=value.get('TAGame.PRI_TA:ClientLoadout', {'value': {}})['value'],
+            total_xp=value.get('TAGame.PRI_TA:TotalXP', {'value': 0})['value'],
         )
 
         # Store the boost data for this player.
@@ -769,8 +914,8 @@ def parse_replay_netstream(replay_id):
         # hitting the ball.
 
         elif actor_id in actors:
-            if actors[actor_id]['Class'] == 'TAGame.Team_Soccar_TA':
-                own_goal_player, created = Player.objects.get_or_create(
+            if actors[actor_id]['class_name'] == 'TAGame.Team_Soccar_TA':
+                own_goal_player, _ = Player.objects.get_or_create(
                     replay=replay_obj,
                     player_name='Unknown player (own goal?)',
                     team=get_team(actor_id),
@@ -802,11 +947,11 @@ def parse_replay_netstream(replay_id):
 
     goal_data = [
         {
-            'PlayerName': goal['PlayerName']['Value'],
-            'PlayerTeam': goal['PlayerTeam']['Value'],
-            'frame': goal['frame']['Value'],
+            'PlayerName': get_value(goal, 'PlayerName'),
+            'PlayerTeam': get_value(goal, 'PlayerTeam'),
+            'frame': get_value(goal, 'frame'),
         }
-        for goal in replay['Metadata'].get('Goals', {'Value': []})['Value']
+        for goal in get_value(header, 'Goals', [])
     ]
 
     # Trim down the actors to just the information we care about.
@@ -814,9 +959,9 @@ def parse_replay_netstream(replay_id):
         actor_id: {
             'type': 'player',
             'join': data['joined'],
-            'left': data.get('left', replay['Metadata']['NumFrames']['Value']),
-            'team': data['Engine.PlayerReplicationInfo:Team']['Value']['Int'],
-            'name': data['Engine.PlayerReplicationInfo:PlayerName']['Value']
+            'left': data.get('left', get_value(header, 'NumFrames')),
+            'team': data['Engine.PlayerReplicationInfo:Team']['value'],
+            'name': data['Engine.PlayerReplicationInfo:PlayerName']['value']
         }
         for actor_id, data in player_actors.items()
         if 'Engine.PlayerReplicationInfo:Team' in data
