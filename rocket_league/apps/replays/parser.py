@@ -416,9 +416,24 @@ def parse_replay_netstream(replay_id):
                 replay_obj.file.path
             ), shell=True).decode('utf-8'))
         else:
-            replay = json.loads(subprocess.check_output(
-                'rattletrap-binaries/rattletrap-*-linux decode {}'.format(replay_obj.file.url
-                                                                          ), shell=True).decode('utf-8'))
+            command = 'wget {} -qO /tmp/{}'.format(
+                replay_obj.file.url,
+                replay_obj.file.name,
+            )
+
+            os.system(command)
+
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux decode {}'.format(
+                replay_obj.file.url
+            ), shell=True).decode('utf-8'))
+
+            command = 'rm /tmp/{}'.format(
+                replay_obj.file.url,
+                replay_obj.file.name,
+            )
+
+            os.system(command)
+
     except subprocess.CalledProcessError:
         # Parsing the file failed.
         replay_obj.processed = False
@@ -716,7 +731,6 @@ def parse_replay_netstream(replay_id):
 
                 if index not in goal_actors and tis_increased:
                     goal_actors[index] = actor_id
-
 
         # Work out which direction the ball is travelling and if it has
         # changed direction or speed.
