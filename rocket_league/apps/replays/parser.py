@@ -430,7 +430,6 @@ def parse_replay_netstream(replay_id):
             ), shell=True).decode('utf-8'))
 
             command = 'rm /tmp/{}'.format(
-                replay_obj.file.url,
                 replay_name,
             )
 
