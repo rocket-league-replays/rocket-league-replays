@@ -416,20 +416,22 @@ def parse_replay_netstream(replay_id):
                 replay_obj.file.path
             ), shell=True).decode('utf-8'))
         else:
+            replay_name = replay_obj.file.name.split('/')[-1]
+
             command = 'wget {} -qO /tmp/{}'.format(
                 replay_obj.file.url,
-                replay_obj.file.name.split('/')[-1],
+                replay_name,
             )
 
             os.system(command)
 
-            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux decode {}'.format(
-                replay_obj.file.url
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux decode /tmp/{}'.format(
+                replay_name,
             ), shell=True).decode('utf-8'))
 
             command = 'rm /tmp/{}'.format(
                 replay_obj.file.url,
-                replay_obj.file.name.split('/')[-1],
+                replay_name,
             )
 
             os.system(command)
