@@ -418,7 +418,7 @@ def parse_replay_netstream(replay_id):
         else:
             command = 'wget {} -qO /tmp/{}'.format(
                 replay_obj.file.url,
-                replay_obj.file.name,
+                replay_obj.file.name.split('/')[-1],
             )
 
             os.system(command)
@@ -429,7 +429,7 @@ def parse_replay_netstream(replay_id):
 
             command = 'rm /tmp/{}'.format(
                 replay_obj.file.url,
-                replay_obj.file.name,
+                replay_obj.file.name.split('/')[-1],
             )
 
             os.system(command)
