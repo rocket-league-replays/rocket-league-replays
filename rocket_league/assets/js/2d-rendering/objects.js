@@ -1,7 +1,7 @@
 /*global resource__arena_fieldlines, resource__arena_overlay, resource__arena_boost, resource__Car_Body_0, resource__Car_Body_1, resource__ball*/
 import THREE from 'three'
 import {textureLoader, scene, actorData, teamData} from './variables'
-import {r} from './utils'
+import {calculatePitch} from './utils'
 
 // Load the stadium outline.
 export function addStadium () {
@@ -76,7 +76,7 @@ export function addCar (name, actor) {
   console.log(`[${name}] Setting initial position`)
 
   mesh.position.set(actor.x * -1, actor.y, actor.z)
-  mesh.rotation.set(0, 0, r(90) + actor.pitch * Math.PI * -1)
+  mesh.rotation.set(0, 0, calculatePitch(actor.pitch))
 
   // Add the boost gauge.
   /*
@@ -141,7 +141,7 @@ export function addBall (name, actor) {
   console.log(`[${name}] Setting initial position`)
 
   mesh.position.set(actor.x * -1, actor.y, actor.z)
-  mesh.rotation.set(0, 0, actor.yaw * Math.PI)
+  mesh.rotation.set(0, 0, calculatePitch(actor.yaw))
 
   console.log(`[${name}] Render complete`)
 }

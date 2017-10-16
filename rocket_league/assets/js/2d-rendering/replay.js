@@ -24,7 +24,7 @@ import {
 } from './variables'
 
 import {addBall, addCar} from './objects'
-import {formatTime, r} from './utils'
+import {formatTime, calculatePitch} from './utils'
 
 export function loadGameData (url) {  // eslint-disable-line no-unused-vars
   init()
@@ -255,11 +255,22 @@ export function positionReplayObjects () {
         scaleFactor
       )
 
+      const full_min = 0
+      const full_max = 65536
+      const full_range = full_max - full_min
+
+      const deg_min = 0
+      const deg_max = 360
+      const deg_range = deg_max - deg_min
+
+      let pitch = (((actor.pitch - full_min) * deg_range) / full_range) + deg_min
+      pitch += 90
+
       // Looks close.
       carObject.rotation.set(
         0,
         0,
-        r(90) + actor.pitch * Math.PI * -1
+        calculatePitch(actor.pitch)
       )
     }
   })

@@ -3,6 +3,7 @@ import math
 import subprocess
 import time
 from datetime import datetime
+from sys import platform
 
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -30,7 +31,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         replay_obj = Replay.objects.get(pk=options['replay'])
 
-        if settings.DEBUG:
+        if settings.DEBUG or platform == 'darwin':
             replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-osx {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
         else:
             replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))

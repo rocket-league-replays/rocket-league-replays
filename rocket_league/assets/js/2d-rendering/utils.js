@@ -31,3 +31,22 @@ export function formatTime (time) {
   ret += `${secs.toFixed(0)}`
   return ret
 }
+
+export function calculatePitch (actor_pitch) {
+  const full_min = 0
+  const full_max = 65536
+  const full_range = full_max - full_min
+
+  const deg_min = -1
+  const deg_max = 1
+  const deg_range = deg_max - deg_min
+
+  let pitch = (((actor_pitch - full_min) * deg_range) / full_range) + deg_min
+
+  // r(90) + actor.pitch * Math.PI * -1
+  pitch += r(90)
+  pitch *= Math.PI
+  pitch *= -1
+
+  return pitch
+}

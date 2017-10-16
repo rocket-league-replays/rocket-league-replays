@@ -1,22 +1,24 @@
 import json
-from pprint import pprint
 import math
 import os
+import pdb
 import subprocess
 import time
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from pprint import pprint
+from sys import platform
 
 import pytz
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.utils import timezone
+
 from pyrope import Replay as Pyrope
 
 
 def distance(pos1, pos2):
-    print(pos1, pos2)
     xd = pos2[0] - pos1[0]
     yd = pos2[1] - pos1[1]
     zd = pos2[2] - pos1[2]
@@ -26,6 +28,8 @@ def distance(pos1, pos2):
 
 # Convert the Pyrope data structure to the rattletrap structure.
 def _pyrope_to_rattletrap(replay):
+    from .models import PLATFORMS_MAPPINGS
+
     data = {}
 
     simple_keys = [
@@ -36,42 +40,47 @@ def _pyrope_to_rattletrap(replay):
 
     for key in simple_keys:
         data[key] = {
-            'Value': replay.header.get(key, '')
+            'kind': 'default',
+            'value': replay.header.get(key, ''),
         }
 
     integers = ['Team0Score', 'Team1Score', 'NumFrames', 'PrimaryPlayerTeam']
 
     for key in integers:
-        if data[key]['Value'] == '':
-            data[key]['Value'] = 0
+        if data[key]['value'] == '':
+            data[key]['value'] = 0
 
     if 'PlayerStats' in replay.header:
         data['PlayerStats'] = {
-            'Value': []
+            'kind': 'ArrayProperty',
+            'value': {
+                'array_property': []
+            },
         }
 
         for player in replay.header['PlayerStats']:
             player_data = {}
             simple_keys = [
-                'Goals', 'Saves', 'OnlineID', 'Shots', 'Score', 'Team', 'bBot',
-                'Assists', 'name'
+                'Goals', 'Saves', 'Shots', 'Score', 'Team', 'bBot', 'Assists', 'Name', 'OnlineID',
             ]
 
             for key in simple_keys:
-                player_data[key] = player[key]
+                player_data[key] = {
+                    'kind': 'default',
+                    'value': player[key],
+                }
 
             player_data['Platform'] = {
-                'Value': [
-                    'OnlinePlatform',
-                    player['Platform']['OnlinePlatform']
-                ]
+                'kind': 'default',
+                'value': PLATFORMS_MAPPINGS[player['Platform']['OnlinePlatform']],
             }
 
-            data['PlayerStats']['Value'].append(player_data)
+            data['PlayerStats']['value']['array_property'].append({'value': player_data})
 
     if 'Goals' in replay.header:
         data['Goals'] = {
-            'Value': []
+            'kind': 'default',
+            'value': []
         }
 
         for goal in replay.header['Goals']:
@@ -80,13 +89,18 @@ def _pyrope_to_rattletrap(replay):
 
             for key in keys:
                 goal_data[key] = {
-                    'Value': goal[key]
+                    'kind': 'default',
+                    'value': goal[key],
                 }
 
-            data['Goals']['Value'].append(goal_data)
+            data['Goals']['value'].append(goal_data)
 
     return {
-        'Metadata': data
+        'header': {
+            'properties': {
+                'value': data,
+            }
+        }
     }
 
 
@@ -111,7 +125,6 @@ def get_value(data, key, default=None):
             item['value']
             for item in key_data['value']['array_property']
         ]
-        return
     else:
         raise Exception('get_value: {} not handled'.format(key_data['kind']))
 
@@ -144,8 +157,11 @@ def get_replication_value(value):
                     'system_id': value['system_id'],
                 }
             else:
-                print('before raise', value)
-                raise Exception('Unhandled system ID {}'.format(value['system_id']))
+                return {
+                    'local_id': value.get('local_id', 0),
+                    'remote_id': 0,
+                    'system_id': value['system_id'],
+                }
 
         elif key == 'party_leader_attribute_value':
             if value['system_id'] == 1:
@@ -155,8 +171,7 @@ def get_replication_value(value):
             elif value['system_id'] == 4:
                 return value['id'][0]['xbox_id']
             else:
-                print('before raise', value)
-                raise Exception('Unhandled system ID {}'.format(value['system_id']))
+                return 0
         elif key in [
             # Data we don't need.
             'reservation_attribute_value',
@@ -183,8 +198,8 @@ def get_replication_value(value):
             # print(key, value)
             return value
         else:
-            print('before raise', value)
-            print('get_replication_value: {} not handled'.format(key))
+            # print('before raise', value)
+            # print('get_replication_value: {} not handled'.format(key))
             return []
     else:
         return value
@@ -305,47 +320,47 @@ def parse_replay_header(replay_id):
         for player in get_value(header, 'PlayerStats', []):
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=player['name'],
-                platform=player['Platform'],
-                saves=player['Saves'],
-                score=player['Score'],
-                goals=player['Goals'],
-                shots=player['Shots'],
-                team=player['Team'],
-                assists=player['Assists'],
-                bot=player['bBot'],
-                online_id=player['OnlineID'],
+                player_name=get_value(player, 'Name'),
+                platform=get_value(player, 'Platform'),
+                saves=get_value(player, 'Saves'),
+                score=get_value(player, 'Score'),
+                goals=get_value(player, 'Goals'),
+                shots=get_value(player, 'Shots'),
+                team=get_value(player, 'Team'),
+                assists=get_value(player, 'Assists'),
+                bot=get_value(player, 'bBot'),
+                online_id=get_value(player, 'OnlineID'),
             )
     else:
         # The best we can do is to get the goal scorers and the player.
         for goal in get_value(header, 'Goals', []):
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=goal['PlayerName']['Value'],
-                team=goal['PlayerTeam']['Value'],
+                player_name=get_value(goal, 'PlayerName'),
+                team=get_value(goal, 'PlayerTeam'),
             )
 
-        if 'PlayerName' in replay['Metadata']:
+        if 'PlayerName' in header:
             team = 0
 
-            if 'PrimaryPlayerTeam' in replay['Metadata']:
-                team = replay['Metadata']['PrimaryPlayerTeam']['Value']
+            if 'PrimaryPlayerTeam' in header:
+                team = get_value(header, 'PrimaryPlayerTeam')
 
             Player.objects.get_or_create(
                 replay=replay_obj,
-                player_name=replay['Metadata']['PlayerName']['Value'],
+                player_name=get_value(header, 'PlayerName'),
                 team=team,
             )
 
     # Create the goal objects.
-    if 'Goals' in replay['Metadata']:
-        for index, goal in enumerate(replay['Metadata']['Goals']['Value']):
+    if 'Goals' in header:
+        for index, goal in enumerate(get_value(header, 'Goals', [])):
             player = None
 
             players = Player.objects.filter(
                 replay=replay_obj,
-                player_name=goal['PlayerName']['Value'],
-                team=goal['PlayerTeam']['Value']
+                player_name=get_value(goal, 'PlayerName'),
+                team=get_value(goal, 'PlayerTeam'),
             )
 
             if players.count() > 0:
@@ -353,14 +368,14 @@ def parse_replay_header(replay_id):
             else:
                 player = Player.objects.create(
                     replay=replay_obj,
-                    player_name=goal['PlayerName']['Value'],
-                    team=goal['PlayerTeam']['Value']
+                    player_name=get_value(goal, 'PlayerName'),
+                    team=get_value(goal, 'PlayerTeam'),
                 )
 
             try:
                 goal_obj = Goal.objects.get(
                     replay=replay_obj,
-                    frame=goal['frame']['Value'],
+                    frame=get_value(goal, 'frame'),
                     number=index + 1,
                     player=player,
                 )
@@ -371,7 +386,7 @@ def parse_replay_header(replay_id):
 
             Goal.objects.create(
                 replay=replay_obj,
-                frame=goal['frame']['Value'],
+                frame=get_value(goal, 'frame'),
                 number=index + 1,
                 player=player,
             )
@@ -387,7 +402,7 @@ def parse_replay_netstream(replay_id):
     replay_obj = Replay.objects.get(pk=replay_id)
 
     try:
-        if settings.DEBUG:
+        if settings.DEBUG or platform == 'darwin':
             if not os.path.isfile(replay_obj.file.path):
                 # Download the file.
                 command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
@@ -397,11 +412,13 @@ def parse_replay_netstream(replay_id):
 
                 os.system(command)
 
-            replay = json.loads(subprocess.check_output(
-                'rattletrap-binaries/rattletrap-*-osx decode {}'.format(replay_obj.file.path), shell=True).decode('utf-8'))
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-osx decode {}'.format(
+                replay_obj.file.path
+            ), shell=True).decode('utf-8'))
         else:
             replay = json.loads(subprocess.check_output(
-                'rattletrap-binaries/rattletrap-*-linux decode {}'.format(replay_obj.file.url), shell=True).decode('utf-8'))
+                'rattletrap-binaries/rattletrap-*-linux decode {}'.format(replay_obj.file.url
+                                                                          ), shell=True).decode('utf-8'))
     except subprocess.CalledProcessError:
         # Parsing the file failed.
         replay_obj.processed = False
@@ -425,10 +442,13 @@ def parse_replay_netstream(replay_id):
 
     actors = {}  # All actors
     player_actors = {}  # XXX: This will be used to make the replay.save() easier.
+    match_goals = {}
+    teaminfo_score = {}
     goal_actors = {}
     team_data = {}
     actor_positions = {}  # The current position data for all actors. Do we need this?
     player_cars = {}  # Car -> Player actor ID mappings.
+    boost_components = {}  # Archetypes.CarComponents.CarComponent_Boost objects
     ball_angular_velocity = None  # The current angular velocity of the ball.
     ball_possession = None  # The team currently in possession of the ball.
     cars_frozen = False  # Whether the cars are frozen in place (3.. 2.. 1..)
@@ -566,9 +586,10 @@ def parse_replay_netstream(replay_id):
                 data_dict['y'] = location['y']
                 data_dict['z'] = location['z']
 
-                data_dict['yaw'] = rotation['x']
-                data_dict['pitch'] = rotation['y']
-                data_dict['roll'] = rotation['z']
+                # print(rotation)
+                data_dict['roll'] = rotation['x']['value']
+                data_dict['pitch'] = rotation['y']['value']
+                data_dict['yaw'] = rotation['z']['value']
 
                 location_data[index].append(data_dict)
 
@@ -674,11 +695,28 @@ def parse_replay_netstream(replay_id):
 
             if 'TAGame.PRI_TA:MatchGoals' in flattened_value:
                 # Get the closest goal to this frame.
-                goal_actors[index] = actor_id
+                mg = flattened_value['TAGame.PRI_TA:MatchGoals']
+                mg_increased = False
+
+                if mg['value'] > match_goals.get(actor_id, 0):
+                    match_goals[actor_id] = mg['value']
+                    mg_increased = True
+
+                if index not in match_goals and mg_increased:
+                    goal_actors[index] = actor_id
+                    match_goals[actor_id] = mg['value']
 
             if 'Engine.TeamInfo:Score' in flattened_value:
-                if index not in goal_actors:
+                tis = flattened_value['Engine.TeamInfo:Score']
+                tis_increased = False
+
+                if tis['value'] > teaminfo_score.get(actor_id, 0):
+                    teaminfo_score[actor_id] = tis['value']
+                    tis_increased = True
+
+                if index not in goal_actors and tis_increased:
                     goal_actors[index] = actor_id
+
 
         # Work out which direction the ball is travelling and if it has
         # changed direction or speed.
@@ -727,7 +765,7 @@ def parse_replay_netstream(replay_id):
 
                         try:
                             team_actor = actors[team_id]
-                            team = int(team_actor['name'].replace('Archetypes.Teams.Team', '').replace('GameEvent_Soccar_TA_', ''))
+                            team = int(team_actor['object_name'].replace('Archetypes.Teams.Team', '').replace('GameEvent_Soccar_TA_', ''))
                         except KeyError:
                             team = -1
                     else:
@@ -815,9 +853,6 @@ def parse_replay_netstream(replay_id):
                 remote=online_id,
                 local=local_id,
             )
-
-            if system == 'PlayStation' and 'name' in online_id:
-                online_id = online_id['name']
         else:
             system = 'Unknown'
             unique_id = ''
