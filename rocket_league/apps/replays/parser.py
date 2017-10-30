@@ -284,17 +284,30 @@ def _parse_header(replay_obj, replay):
             timezone.get_current_timezone()
         )
     except ValueError:
-        replay_obj.timestamp = timezone.make_aware(
-            datetime.fromtimestamp(
-                time.mktime(
-                    time.strptime(
-                        get_value(header, 'Date'),
-                        '%Y-%m-%d %H-%M-%S',
+        try:
+            replay_obj.timestamp = timezone.make_aware(
+                datetime.fromtimestamp(
+                    time.mktime(
+                        time.strptime(
+                            get_value(header, 'Date'),
+                            '%Y-%m-%d %H-%M-%S',
+                        )
                     )
-                )
-            ),
-            timezone.get_current_timezone()
-        )
+                ),
+                timezone.get_current_timezone()
+            )
+        except pytz.exceptions.AmbiguousTimeError:
+            replay_obj.timestamp = timezone.make_aware(
+                datetime.fromtimestamp(
+                    time.mktime(
+                        time.strptime(
+                            get_value(header, 'Date'),
+                            '%Y-%m-%d %H-%M-%S',
+                        )
+                    )
+                ) + timedelta(hours=1),
+                timezone.get_current_timezone()
+            )
 
     replay_obj.season = Season.objects.filter(
         start_date__lte=replay_obj.timestamp,
