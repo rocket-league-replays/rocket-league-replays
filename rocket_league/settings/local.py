@@ -9,6 +9,7 @@ This file should be excluded from version control to keep the settings local.
 
 import os
 import os.path
+import pwd
 
 from .base import *
 
@@ -48,7 +49,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "HOST": "localhost",
         "NAME": "rocket_league",
-        "USER": os.getlogin(),
+        "USER": pwd.getpwuid(os.getuid())[0],
         "PASSWORD": "",
     },
 }
