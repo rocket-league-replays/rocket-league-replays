@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 import os
 import sys
 
@@ -13,7 +13,7 @@ if __name__ == "__main__":
     version_blacklist = []
 
     # Ensure Rattletrap is kept up-to-date.
-    if len(sys.argv) > 1 and 'runserver' in sys.argv[1]:
+    if len(sys.argv) > 1 and 'runserver' in sys.argv[1] and os.getenv('GITHUB_TOKEN', False):
         rattletrap_release = requests.get('https://api.github.com/repos/tfausak/rattletrap/releases/latest', headers={
             'Authorization': 'Token {}'.format(os.getenv('GITHUB_TOKEN', ''))
         }).json()
