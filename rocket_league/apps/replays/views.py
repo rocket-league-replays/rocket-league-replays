@@ -239,7 +239,10 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         response = super(ReplayCreateView, self).form_valid(form)
 
         # Add the replay to the netstream processing queue.
-        process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
+        if os.getenv('DISABLE_REDIS'):
+            process_netstream(self.object.pk)
+        else:
+            process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
 
         return response
 
