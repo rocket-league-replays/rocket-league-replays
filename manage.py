@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
                     print('Downloading {}'.format(asset['name']))
 
-                    os.system('wget -qP rattletrap-binaries/ {} && gunzip -f rattletrap-binaries/{} && chmod +x rattletrap-binaries/{}'.format(
+                    os.system('wget -qP rattletrap-binaries/ {} && chmod +x rattletrap-binaries/{}'.format(
                         asset['browser_download_url'],
                         asset['name'],
                         asset['name'].replace('.gz', ''),
