@@ -50,6 +50,7 @@ Note: If you're on OS X, the recommendation is to use [Postgres.app](http://post
 ```
 $ createdb rocket_league
 $ python manage.py migrate
+$ python manage.py bootstrap_pages
 ```
 
 ### Run the server
