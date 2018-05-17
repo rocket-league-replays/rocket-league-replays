@@ -4,7 +4,7 @@ Rocket League Replays is a fansite focused on providing post-match analysis of g
 
 This repository contains all of the code required to run the application, as well as the worker services which are used to process the data.
 
-## Installation
+## Installation
 
 Rocket League Replays only works with Python 3, it is not compatible with Python 2.
 
