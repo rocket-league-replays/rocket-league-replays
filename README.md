@@ -96,10 +96,10 @@ To process a different replay, simply change `pk=1` to reference your replay obj
 
 ## Development notes
 
-### Git Flow
+### Git Flow
 The project uses Git Flow - though somewhat loosely these days.  Feature branches are the most commonly used aspect of this workflow, just to keep new changes out of the develop branch until they're ready.  The site used to use releases, but that has been somewhat discontinued in favour of faster released from `develop`.
 
-### Code style
+### Code style
 
 The project code should conform to the standards of PEP8 and isort. In addition, the front-end systems have their own requirements which are enforced as a part of `npm run dev`.  The Python code styles are not currently strictly enforced.
 
@@ -125,7 +125,7 @@ This job is for pushing out the 'match of the day' to reddit and Twitter.
 0 20 * * * python manage.py social_post --settings=rocket_league.settings.production
 ```
 
-#### generate_replay_packs
+#### generate_replay_packs
 
 Replay packs are no longer generated on-demand, rather they're generated ahead of time and are then available for users to download.
 
@@ -150,7 +150,7 @@ curl -X POST -F "grant_type=refresh_token" -F "refresh_token=<value>" -F "client
 The `client_id` and `client_secret` values come from the developers section of the Patreon website, the `refresh_token` comes from the previous refresh response.  This is the reason why the refresh value is stored in the [secrets.py](#secretspy) file.
 
 
-### Worker servers
+### Worker servers
 
 The worker servers use a combination of Celery and Redis to communicate jobs across the internal private network.  Celery is kept running on the worker servers using Supervisor. The Supervisor configuration for Celery is as follows:
 
