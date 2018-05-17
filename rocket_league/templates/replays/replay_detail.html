@@ -278,7 +278,12 @@
                     <tr>
                         <td colspan="2" class="text-center">
                             <a href="{{ replay.file.url }}" target="_blank">Download this replay</a>
+                            {% if settings.DEBUG %}
+                                &nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;
+                                <a href="{% url 'replay:force_netstream_parse' pk=replay.id %}">Force local netstream parse</a>
+                            {% endif %}
                         </td>
+
                     </tr>
 
                     <tr>

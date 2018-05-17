@@ -7,9 +7,11 @@ urlpatterns = patterns(
     url(r'^$', views.ReplayListView.as_view(), name='list'),
     url(r'^map/(?P<slug>[^/]+)/$', views.ReplayListView.as_view(), name='list'),
 
+
     url(r'^(?P<pk>\d+)/$', views.ReplayDetailView.as_view(), name='detail'),
     url(r'^(?P<replay_id>[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})/$', views.ReplayDetailView.as_view(), name='detail'),
 
+    url(r'^(?P<pk>\d+)/netstream/$', views.ReplayNetstreamParseView.as_view(), name='force_netstream_parse'),
     url(r'^(?P<pk>\d+)/playback/$', views.ReplayPlaybackView.as_view(), name='playback'),
     url(r'^(?P<replay_id>[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12})/playback/$', views.ReplayPlaybackView.as_view(), name='playback'),
     url(r'^(?P<pk>\d+)/analysis/$', views.ReplayAnalysisView.as_view(), name='analysis'),

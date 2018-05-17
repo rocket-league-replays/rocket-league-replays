@@ -415,7 +415,7 @@ def parse_replay_netstream(replay_id):
     replay_obj = Replay.objects.get(pk=replay_id)
 
     try:
-        if settings.DEBUG or platform == 'darwin':
+        if settings.DEBUG and platform == 'darwin':
             if not os.path.isfile(replay_obj.file.path):
                 # Download the file.
                 command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(

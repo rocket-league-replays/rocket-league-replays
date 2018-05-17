@@ -287,6 +287,17 @@ class ReplayDeleteView(DeleteView):
         return super(ReplayDeleteView, self).dispatch(request, *args, **kwargs)
 
 
+class ReplayNetstreamParseView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        replay_obj = Replay.objects.get(pk=kwargs['pk'])
+        replay_obj.processed = False
+        replay_obj.crashed_heatmap_parser = False
+        replay_obj.save(parse_netstream=True)
+
+        return replay_obj.get_absolute_url()
+
 # Replay packs
 class ReplayPackCreateView(LoginRequiredMixin, CreateView):
     model = ReplayPack
