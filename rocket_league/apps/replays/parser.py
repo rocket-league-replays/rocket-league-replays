@@ -113,47 +113,47 @@ def get_value(data, key, default=None):
     if key_data['kind'] == 'default':
         return key_data['value']
     if key_data['kind'] == 'IntProperty':
-        return key_data['value']['int_property']
+        return key_data['value']['int']
     elif key_data['kind'] == 'StrProperty':
-        return key_data['value']['str_property']
+        return key_data['value']['str']
     elif key_data['kind'] == 'NameProperty':
-        return key_data['value']['name_property']
+        return key_data['value']['name']
     elif key_data['kind'] == 'FloatProperty':
-        return key_data['value']['float_property']
+        return key_data['value']['float']
     elif key_data['kind'] == 'ArrayProperty':
         return [
             item['value']
-            for item in key_data['value']['array_property']
+            for item in key_data['value']['array']
         ]
     else:
         raise Exception('get_value: {} not handled'.format(key_data['kind']))
 
 
-def get_replication_value(value):
+def get(value):
     key = list(value.keys())[0]
     value = value[key]
 
     if isinstance(value, dict):
-        if key == 'flagged_int_attribute_value':
+        if key == 'flagged_int':
             return value['int']
 
-        elif key == 'unique_id_attribute_value':
+        elif key == 'unique_id':
             if value['system_id'] == 1:
                 return {
                     'local_id': value['local_id'],
-                    'remote_id': value['remote_id']['steam_id'],
+                    'remote_id': value['remote_id']['steam'],
                     'system_id': value['system_id'],
                 }
             elif value['system_id'] == 2:
                 return {
                     'local_id': value['local_id'],
-                    'remote_id': value['remote_id']['play_station_id'][0],
+                    'remote_id': value['remote_id']['play_station'][0],
                     'system_id': value['system_id'],
                 }
             elif value['system_id'] == 4:
                 return {
                     'local_id': value['local_id'],
-                    'remote_id': value['remote_id']['xbox_id'],
+                    'remote_id': value['remote_id']['xbox'],
                     'system_id': value['system_id'],
                 }
             else:
@@ -163,43 +163,43 @@ def get_replication_value(value):
                     'system_id': value['system_id'],
                 }
 
-        elif key == 'party_leader_attribute_value':
+        elif key == 'party_leader':
             if value['system_id'] == 1:
-                return value['id'][0]['steam_id']
+                return value['id'][0]['steam']
             elif value['system_id'] == 2:
-                return value['id'][0]['play_station_id'][0]
+                return value['id'][0]['play_station'][0]
             elif value['system_id'] == 4:
-                return value['id'][0]['xbox_id']
+                return value['id'][0]['xbox']
             else:
                 return 0
         elif key in [
             # Data we don't need.
-            'reservation_attribute_value',
-            'team_paint_attribute_value',
-            'explosion_attribute_value',
-            'extended_explosion_attribute_value',
-            'music_stinger_attribute_value',
-            'demolish_attribute_value',
+            'reservation',
+            'team_paint',
+            'explosion',
+            'extended_explosion',
+            'music_stinger',
+            'demolish',
         ]:
             return []
 
         elif key in [
             # Not sure about
-            'loadouts_online_attribute_value',
-            'loadouts_attribute_value',
+            'loadouts_online',
+            'loadouts',
 
             # Definitely need
-            'rigid_body_state_attribute_value',
-            'cam_settings_attribute_value',
-            'loadout_attribute_value',
-            'pickup_attribute_value',
-            'location_attribute_value',
+            'rigid_body_state',
+            'cam_settings',
+            'loadout',
+            'pickup',
+            'location',
         ]:
             # print(key, value)
             return value
         else:
             # print('before raise', value)
-            # print('get_replication_value: {} not handled'.format(key))
+            # print('get: {} not handled'.format(key))
             return []
     else:
         return value
@@ -212,7 +212,7 @@ def flatten_value(value):
     return {
         item['name']: {
             'id': item['id']['value'],
-            'value': get_replication_value(item['value']),
+            'value': get(item['value']),
         }
         for item in value
     }
@@ -230,7 +230,7 @@ def _parse_header(replay_obj, replay):
     assert BoostData.objects.filter(replay=replay_obj).count() == 0
 
     # Assign the metadata to the replay object.
-    header = replay['header']['properties']['value']
+    header = replay['header']['body']['properties']['value']
 
     replay_obj.replay_id = get_value(header, 'Id')
 
@@ -416,43 +416,19 @@ def parse_replay_netstream(replay_id):
 
     try:
         if settings.DEBUG and platform == 'darwin':
-            if not os.path.isfile(replay_obj.file.path):
-                # Download the file.
-                command = 'wget https://media.rocketleaguereplays.com/{} -qO {}'.format(
-                    replay_obj.file.name,
-                    replay_obj.file.path,
-                )
-
-                os.system(command)
-
-            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-osx decode {}'.format(
-                replay_obj.file.path
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-osx -i {}'.format(
+                replay_obj.file.url
             ), shell=True).decode('utf-8'))
         else:
-            replay_name = replay_obj.file.name.split('/')[-1]
-
-            command = 'wget {} -qO /tmp/{}'.format(
-                replay_obj.file.url,
-                replay_name,
-            )
-
-            os.system(command)
-
-            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux decode /tmp/{}'.format(
-                replay_name,
+            replay = json.loads(subprocess.check_output('rattletrap-binaries/rattletrap-*-linux -i {}'.format(
+                replay_obj.file.path if settings.DEBUG else replay_obj.file.url,
             ), shell=True).decode('utf-8'))
 
-            command = 'rm /tmp/{}'.format(
-                replay_name,
-            )
-
-            os.system(command)
-
-    except subprocess.CalledProcessError:
+    except subprocess.CalledProcessError as e:
         # Parsing the file failed.
         replay_obj.processed = False
         replay_obj.save()
-        return
+        raise e
 
     replay_obj, replay, header = _parse_header(replay_obj, replay)
 
@@ -494,7 +470,7 @@ def parse_replay_netstream(replay_id):
     heatmap_json_filename = 'uploads/replay_json_files/{}.json'.format(replay_obj.replay_id)
     location_json_filename = 'uploads/replay_location_json_files/{}.json'.format(replay_obj.replay_id)
 
-    for index, frame in enumerate(replay['content']['frames']):
+    for index, frame in enumerate(replay['content']['body']['frames']):
         # Add an empty location list for this frame.
         location_data.append([])
 
@@ -529,7 +505,7 @@ def parse_replay_netstream(replay_id):
             value = replication['value'][replication_type]
             flattened_value = flatten_value(value)
 
-            if replication_type == 'spawned_replication_value':
+            if replication_type == 'spawned':
                 if actor_id not in actors:
                     actors[actor_id] = value
 
@@ -546,7 +522,7 @@ def parse_replay_netstream(replay_id):
                     team_data[actor_id] = value['object_name'].replace('Archetypes.Teams.Team', '')
 
             # Handle any updates to existing actors.
-            elif replication_type == 'updated_replication_value':
+            elif replication_type == 'updated':
                 if (
                     'Engine.PlayerReplicationInfo:Team' in flattened_value and
                     not flattened_value['Engine.PlayerReplicationInfo:Team']['value']
@@ -574,7 +550,7 @@ def parse_replay_netstream(replay_id):
                     player_cars[player_actor_id] = actor_id
 
             # Handle removing any destroyed actors.
-            elif replication_type == 'destroyed_replication_value':
+            elif replication_type == 'destroyed':
                 del actors[actor_id]
 
                 if actor_id in player_actors:
@@ -589,7 +565,7 @@ def parse_replay_netstream(replay_id):
             value = replication['value'][replication_type]
             flattened_value = flatten_value(value)
 
-            if replication_type not in ['spawned_replication_value', 'updated_replication_value']:
+            if replication_type not in ['spawned', 'updated']:
                 continue
 
             # Look for any position data.
