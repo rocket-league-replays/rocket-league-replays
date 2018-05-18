@@ -293,9 +293,11 @@ class ReplayNetstreamParseView(RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         replay_obj = Replay.objects.get(pk=kwargs['pk'])
-        replay_obj.processed = False
-        replay_obj.crashed_heatmap_parser = False
-        replay_obj.save(parse_netstream=True)
+
+        if settings.DEBUG:
+            replay_obj.processed = False
+            replay_obj.crashed_heatmap_parser = False
+            replay_obj.save(parse_netstream=True)
 
         return replay_obj.get_absolute_url()
 
