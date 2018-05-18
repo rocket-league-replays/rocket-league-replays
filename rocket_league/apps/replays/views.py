@@ -1,3 +1,4 @@
+import os
 import re
 
 from braces.views import LoginRequiredMixin
@@ -11,16 +12,16 @@ from django.views.generic import (CreateView, DeleteView, DetailView,
                                   RedirectView, UpdateView)
 from django_filters.views import FilterView
 from rest_framework import mixins, views, viewsets
-from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 from . import serializers
 from ...utils.forms import AjaxableResponseMixin
 from ..users.models import User
 from .filters import ReplayFilter, ReplayPackFilter
 from .forms import ReplayPackForm, ReplayUpdateForm
-from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED, Component,
-                     Goal, Map, Player, Replay, ReplayPack, Season,
+from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED,
+                     Component, Goal, Map, Player, Replay, ReplayPack, Season,
                      get_default_season)
 from .tasks import process_netstream
 from .templatetags.replays import process_boost_data
