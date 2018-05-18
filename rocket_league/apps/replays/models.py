@@ -1,3 +1,4 @@
+import logging
 import math
 import re
 from itertools import zip_longest
@@ -16,6 +17,8 @@ from pyrope import Replay as Pyrope
 from social.apps.django_app.default.fields import JSONField
 
 from .parser import parse_replay_header, parse_replay_netstream
+
+logger = logging.getLogger('rocket_league')
 
 PRIVACY_PRIVATE = 1
 PRIVACY_UNLISTED = 2
@@ -595,11 +598,14 @@ class Replay(models.Model):
         super(Replay, self).save(*args, **kwargs)
 
         if self.file and not self.processed:
-            if parse_netstream:
-                # Header parse?
-                parse_replay_netstream(self.pk)
-            else:
-                parse_replay_header(self.pk)
+            try:
+                if parse_netstream:
+                    # Header parse?
+                    parse_replay_netstream(self.pk)
+                else:
+                    parse_replay_header(self.pk)
+            except:
+                logger.exception('Replay save failed')
 
 
 class Player(models.Model):

@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 
@@ -26,6 +27,7 @@ from .models import (PRIVACY_PRIVATE, PRIVACY_PUBLIC, PRIVACY_UNLISTED,
 from .tasks import process_netstream
 from .templatetags.replays import process_boost_data
 
+logger = logging.getLogger('rocket_league')
 
 class ReplayListView(FilterView):
     model = Replay
@@ -240,10 +242,13 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
         response = super(ReplayCreateView, self).form_valid(form)
 
         # Add the replay to the netstream processing queue.
-        if os.getenv('DISABLE_REDIS'):
-            process_netstream(self.object.pk)
-        else:
-            process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
+        try:
+            if os.getenv('DISABLE_REDIS'):
+                process_netstream(self.object.pk)
+            else:
+                process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
+        except:
+            logger.exnetception('ReplayCreateView.form_valid parse failed')
 
         return response
 
