@@ -14,10 +14,5 @@
         "database": {
             "name": "rocket_league"
         }
-    },
-    "opbeat": {
-        "organization_id": "2dd102f6d15e4d888e5683e14a799465",
-        "app_id": "cfa7fb31c9",
-        "secret_token": "91d4ab84522796df52c4571568cfd6f1583b9e1d"
     }
 }

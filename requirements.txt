@@ -21,7 +21,7 @@ django-historylinks==1.1.0
 django-extensions==1.7.6
 django-cachalot==1.2.1
 djangorestframework==3.3.2
-opbeat==3.5.2
+raven==6.8.0
 python-social-auth==0.2.14
 Werkzeug==0.11.4
 python-memcached==1.58

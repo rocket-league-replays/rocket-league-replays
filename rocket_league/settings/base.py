@@ -10,6 +10,7 @@ for the site, database, media and email sections below.
 """
 import os
 import platform
+import raven
 import sys
 from collections import OrderedDict
 
@@ -117,6 +118,7 @@ USE_TZ = True
 
 # Auto-discovery of project location.
 
+BASE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SITE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
@@ -163,6 +165,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
 
     'social.apps.django_app.default',
+    'raven.contrib.django.raven_compat',
 ]
 
 # Additional static file locations.
@@ -452,6 +455,16 @@ PATREON_SOCIAL_MEDIA_PRICE = 100
 PATREON_PLAYBACK_PRICE = 300
 PATREON_BOOST_PRICE = 300
 PATREON_STREAM_LISTING_PRICE = 300
+
+import os
+import raven
+
+RAVEN_CONFIG = {
+    'dsn': os.getenv('RAVEN_DSN'),
+    # If you are using git, you can also automatically configure the
+    # release based on the git info.
+    'release': raven.fetch_git_sha(BASE_ROOT),
+}
 
 if 'test' in sys.argv:
     # The CMS tests use test-only models, which won't be loaded if we only load
