@@ -371,7 +371,7 @@ class PlayerStatsManager(models.Manager):
             if online_id in stats:
                 for stat_type in ['wins', 'assists', 'goals', 'shots', 'mvps', 'saves']:
                     if not stats.get(stat_type, None):
-                        stats[stat_type] = 0
+                        stats[online_id][stat_type] = 0
 
                 obj, _ = PlayerStats.objects.update_or_create(
                     platform=platform,
