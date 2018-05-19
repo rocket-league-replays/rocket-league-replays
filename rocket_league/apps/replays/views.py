@@ -248,7 +248,7 @@ class ReplayCreateView(AjaxableResponseMixin, CreateView):
             else:
                 process_netstream.apply_async([self.object.pk], queue=self.object.queue_priority)
         except:
-            logger.exnetception('ReplayCreateView.form_valid parse failed')
+            logger.exception('ReplayCreateView.form_valid parse failed')
 
         return response
 
