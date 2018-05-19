@@ -189,11 +189,11 @@ class Command(BaseCommand):
                                 online_id=online_id,
                                 playlist=playlist_data['playlist'],
                                 defaults={
-                                    'skill': playlist_data.get('skill', 0),
-                                    'matches_played': playlist_data.get('matches_played', 0),
-                                    'tier': playlist_data.get('tier', 0),
-                                    'tier_max': playlist_data.get('tier_max', 0),
-                                    'division': playlist_data.get('division', 0),
+                                    'skill': playlist_data.get('skill') or 0,
+                                    'matches_played': playlist_data.get('matches_played') or 0,
+                                    'tier': playlist_data.get('tier') or 0,
+                                    'tier_max': playlist_data.get('tier_max') or 0,
+                                    'division': playlist_data.get('division') or 0,
                                     'timestamp': timestamp,
                                 }
                             )
