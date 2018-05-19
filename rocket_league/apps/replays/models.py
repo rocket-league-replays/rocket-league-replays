@@ -239,7 +239,7 @@ class Replay(models.Model):
     )
 
     match_type = models.CharField(
-        max_length=7,
+        max_length=16,
         blank=True,
         null=True,
     )
