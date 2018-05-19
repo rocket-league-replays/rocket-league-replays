@@ -3,6 +3,7 @@ import os
 import re
 
 from braces.views import LoginRequiredMixin
+from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse

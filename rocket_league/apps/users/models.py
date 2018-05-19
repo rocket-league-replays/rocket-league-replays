@@ -176,6 +176,8 @@ class LeagueRatingManager(models.Manager):
 
         if player == "<h1>Server Error (500)</h1>":
             return []
+        elif 'detail' in player:
+            return []
 
         player = player[0]
 

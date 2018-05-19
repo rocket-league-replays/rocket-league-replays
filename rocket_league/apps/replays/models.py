@@ -28,12 +28,14 @@ PLATFORM_UNKNOWN = 0
 PLATFORM_STEAM = 1
 PLATFORM_PSN = 2
 PLATFORM_XBOX = 4
+PLATFORM_SWITCH = 6
 
 PLATFORMS = {
     'Unknown': PLATFORM_UNKNOWN,
     'Steam': PLATFORM_STEAM,
     'PlayStation': PLATFORM_PSN,
     'Xbox': PLATFORM_XBOX,
+    'Switch': PLATFORM_SWITCH,
 }
 
 PLATFORMS_MAPPINGS = {
@@ -46,10 +48,13 @@ PLATFORMS_MAPPINGS = {
     'Xbox': PLATFORM_XBOX,
     'xbox': PLATFORM_XBOX,
     'xboxone': PLATFORM_XBOX,
+    'switch': PLATFORM_SWITCH,
+    'Switch': PLATFORM_SWITCH,
     'OnlinePlatform_PS4': PLATFORM_PSN,
     'OnlinePlatform_Unknown': PLATFORM_UNKNOWN,
     'OnlinePlatform_Dingo': PLATFORM_XBOX,
     'OnlinePlatform_Steam': PLATFORM_STEAM,
+    'OnlinePlatform_NNX': PLATFORM_SWITCH,
 
     "{'Value': ['OnlinePlatform', 'OnlinePlatform_Steam']}": PLATFORM_STEAM,
     "{'Value': ['OnlinePlatform', 'OnlinePlatform_Dingo']}": PLATFORM_XBOX,
@@ -65,6 +70,8 @@ PLATFORMS_MAPPINGS = {
     str(PLATFORM_PSN): 'ps4',
     PLATFORM_XBOX: 'xboxone',
     str(PLATFORM_XBOX): 'xboxone',
+    PLATFORM_SWITCH: 'switch',
+    str(PLATFORM_SWITCH): 'switch',
 
     None: PLATFORM_UNKNOWN,
 }
@@ -570,7 +577,7 @@ class Replay(models.Model):
             # be called multiple times (for some reason..)
             self.file.seek(0)
 
-            file_url = self.file.url  # To help Opbeat
+            file_url = self.file.url  # To help the exception handler
 
             try:
                 replay = Pyrope(self.file.read())

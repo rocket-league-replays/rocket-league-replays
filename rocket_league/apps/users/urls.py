@@ -7,7 +7,7 @@ urlpatterns = patterns(
     '',
     url(r'^user/(?P<username>[^/]+)/$', views.PublicProfileView.as_view(), name='profile'),
 
-    url(r'^(?P<platform>(steam|ps4|xboxone))/(?P<player_id>[^/]+)/$', views.PlayerView.as_view(), name='player'),
+    url(r'^(?P<platform>(steam|ps4|xboxone|switch))/(?P<player_id>[^/]+)/$', views.PlayerView.as_view(), name='player'),
 
     url(r'^settings/$', views.SettingsView.as_view(), name='settings'),
     url(r'^settings/patreon/$', RedirectView.as_view(pattern_name='users:settings', permanent=False), name='patreon'),
