@@ -177,6 +177,9 @@ class Command(BaseCommand):
                     # While we're here, get their stats as well.
                     stats = rl.get_stats_values_for_user(PLATFORMS_MAPPINGS[platform], online_ids)
 
+                    if isinstance(stats, dict):
+                        stats = [stats]
+
                     for player in players:
                         if platform == PLATFORM_STEAM:
                             online_id = player['user_id']
