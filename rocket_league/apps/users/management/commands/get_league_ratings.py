@@ -201,5 +201,5 @@ class Command(BaseCommand):
                         PlayerStats.objects.update_or_create(
                             platform=platform,
                             online_id=online_id,
-                            defaults=stats[online_id]
+                            defaults=stats.get(online_id),
                         )
