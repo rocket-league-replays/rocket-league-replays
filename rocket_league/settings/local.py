@@ -50,7 +50,7 @@ DATABASES = {
         "HOST": "localhost",
         "NAME": "rocket_league",
         "USER": pwd.getpwuid(os.getuid())[0],
-        "PASSWORD": "",
+        "PASSWORD": "a",
     },
 }
 
