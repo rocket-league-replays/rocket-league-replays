@@ -44,7 +44,7 @@
     "gulp-watch": "^4.3.3",
     "jquery": "^2.1.4",
     "js-cookie": "^2.0.4",
-    "lodash": "^3.10.0",
+    "lodash": "^4.17.19",
     "merge-stream": "^0.1.8",
     "normalize.css": "^3.0.3",
     "object-assign": "^3.0.0",
