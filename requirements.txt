@@ -23,7 +23,7 @@ django-cachalot==1.2.1
 djangorestframework==3.3.2
 raven==6.8.0
 python-social-auth==0.2.14
-Werkzeug==0.11.4
+Werkzeug==2.2.3
 python-memcached==1.58
 celery[redis]==3.1.23
 django-celery==3.1.17
